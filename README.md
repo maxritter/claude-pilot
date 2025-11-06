@@ -149,25 +149,19 @@ Contributions welcome: custom skills, MCP integrations, workflow improvements, b
 - **[DetachHead/basedpyright](https://github.com/DetachHead/basedpyright)** - Enhanced Python type checker
 - **[python/mypy](https://github.com/python/mypy)** - Static type checker for Python
 - **[dotenvx/dotenvx](https://github.com/dotenvx/dotenvx)** - Environment variable management
-
-**Testing & Automation:**
 - **[postmanlabs/newman](https://github.com/postmanlabs/newman)** - End-to-End API testing
 - **[pytest-dev/pytest](https://github.com/pytest-dev/pytest)** - Python testing framework
 - **[qltysh/qlty](https://github.com/qltysh/qlty)** - Code quality automation
 
-**Claude Code Integration:**
-- **[campfirein/cipher](https://github.com/campfirein/cipher)** - Cross-session memory
-- **[zilliztech/claude-context](https://github.com/zilliztech/claude-context)** - Semantic code search
-- **[hagan/claudia-statusline](https://github.com/hagan/claudia-statusline)** - Status line integration
-
-**MCP Servers:**
-- **[campfirein/cipher](https://github.com/campfirein/cipher)** - Cross-session memory server
-- **[zilliztech/claude-context](https://github.com/zilliztech/claude-context)** - Semantic search server
-- **[upstash/context7](https://github.com/upstash/context7)** - Library documentation
-- **[ref-tools/ref-tools-mcp](https://github.com/ref-tools/ref-tools-mcp)** - Documentation search
-- **[mendableai/firecrawl-mcp](https://github.com/mendableai/firecrawl)** - Web scraping
-- **[bytebase/dbhub](https://github.com/bytebase/dbhub)** - PostgreSQL connectivity
-- **[chris-schra/mcp-funnel](https://github.com/chris-schra/mcp-funnel)** - Tool filtering
+**Claude Code Tools:**
+- **[campfirein/cipher](https://github.com/campfirein/cipher)** - CC Cross-session memory
+- **[zilliztech/claude-context](https://github.com/zilliztech/claude-context)** - CC Semantic code search
+- **[hagan/claudia-statusline](https://github.com/hagan/claudia-statusline)** - CC Status line integration
+- **[upstash/context7](https://github.com/upstash/context7)** - MCP Library documentation
+- **[ref-tools/ref-tools-mcp](https://github.com/ref-tools/ref-tools-mcp)** - MCP Documentation search
+- **[mendableai/firecrawl-mcp](https://github.com/mendableai/firecrawl)** - MCP Web scraping
+- **[bytebase/dbhub](https://github.com/bytebase/dbhub)** - MCP PostgreSQL connectivity
+- **[chris-schra/mcp-funnel](https://github.com/chris-schra/mcp-funnel)** - MCP Tool filtering
 
 ---
 

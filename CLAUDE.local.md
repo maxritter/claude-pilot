@@ -7,6 +7,35 @@
 **Standards:** TDD mandatory | DRY/YAGNI | Clean imports | Check diagnostics before/after
 **Evidence:** Show actual output, never claim "should work" | Tests must pass AND code must execute
 
+## Development Workflow
+
+### TDD (Test-Driven Development) - NON-NEGOTIABLE
+**RED-GREEN-REFACTOR:** Write test → Verify fail → Minimal code → Verify pass → Refactor → Repeat
+- **NO production code without failing test first**
+- Code before test = DELETE and restart with test
+- Test must initially FAIL (RED phase) to prove it tests something
+- Write minimal code to pass (GREEN phase)
+- Refactor while keeping tests green
+
+### Standard Development Flow (Every Task)
+1. **Diagnostics**: `mcp__ide__getDiagnostics()` - Check for existing errors
+2. **Knowledge**: `mcp__cipher__ask_cipher("How did we implement X? What patterns worked?")` - Query past learnings
+3. **Search**: `mcp__claude-context__search_code(path, query)` - Find similar code patterns
+4. **Research**: Use Ref/Context7/Firecrawl if needed for external docs
+5. **Test**: Write failing test FIRST (MANDATORY)
+6. **Implement**: Minimal code to pass test
+7. **Verify**: Run diagnostics + tests
+8. **Execute**: Run actual code and verify output (MANDATORY)
+9. **Store**: `mcp__cipher__ask_cipher("Store: Fixed issue Y using pattern Z")` - Save learnings
+
+### Verification Checklist (Before Marking Complete)
+- [ ] Test written and initially FAILED (RED phase)
+- [ ] Implementation code written
+- [ ] Test now PASSES (GREEN phase)
+- [ ] Actual code executed and output verified (not just "should work")
+- [ ] No diagnostics errors (`mcp__ide__getDiagnostics()` clean)
+- [ ] Learnings stored in Cipher for future reference
+
 ## MCP Servers Available
 
 ### Memory & Search

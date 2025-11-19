@@ -1,7 +1,7 @@
 """
 Shell Configuration Functions - Aliases and shell environment setup
 
-Manages shell RC files and aliases across bash and zsh
+Manages shell RC files and aliases across bash, zsh, and fish
 """
 
 from __future__ import annotations
@@ -102,6 +102,14 @@ def add_cc_alias(project_dir: Path) -> None:
 
     add_shell_alias(home / ".bashrc", bash_alias, ".bashrc", alias_name, project_dir)
     add_shell_alias(home / ".zshrc", bash_alias, ".zshrc", alias_name, project_dir)
+
+    # Fish shell uses different syntax
+    fish_config = home / ".config" / "fish" / "config.fish"
+    fish_alias = (
+        f"alias {alias_name}=\"cd '{project_dir}'; and "
+        f'nvm use 22; and python3 .claude/rules/build.py &>/dev/null; and clear; and dotenvx run -- claude"'
+    )
+    add_shell_alias(fish_config, fish_alias, "config.fish", alias_name, project_dir)
 
     print("")
     ui.print_success(f"Alias '{alias_name}' configured!")

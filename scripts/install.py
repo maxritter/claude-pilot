@@ -180,11 +180,18 @@ def remove_python_settings(settings_file: Path) -> None:
 
         settings_file.write_text(json.dumps(settings_data, indent=2) + "\n")
         ui.print_success("Configured settings.local.json without Python support")
+
+        # Also remove custom/python-rules.md if it exists
+        custom_python_rules = settings_file.parent / "rules" / "custom" / "python-rules.md"
+        if custom_python_rules.exists():
+            custom_python_rules.unlink()
+            ui.print_success("Removed custom/python-rules.md")
+
     except Exception as e:
         ui.print_warning(f"Failed to remove Python settings: {e}. You may need to manually edit settings.local.json")
 
 
-def install_claude_files(project_dir: Path, config, install_python: str, temp_dir: Path, local_mode: bool) -> int:
+def install_claude_files(project_dir: Path, config, install_python: str, local_mode: bool) -> int:
     """
     Install .claude files from repository.
 
@@ -192,29 +199,23 @@ def install_claude_files(project_dir: Path, config, install_python: str, temp_di
         project_dir: Project directory
         config: Download configuration
         install_python: Whether to install Python support ("Y"/"N")
-        temp_dir: Temporary directory for downloads
         local_mode: Whether running in local mode (skip cleaning to preserve source files)
 
     Returns:
         Number of files installed
     """
-    from lib import downloads, files, ui
+    from lib import downloads, ui
 
-    # Only clean standard directories when NOT in local mode
+    # Only clean standard directory when NOT in local mode
     # In local mode, we're working with the source repository and shouldn't delete files
     if not local_mode:
-        ui.print_status("Cleaning standard rules directories...")
-        standard_dirs = [
-            project_dir / ".claude" / "rules" / "standard" / "core",
-            project_dir / ".claude" / "rules" / "standard" / "extended",
-            project_dir / ".claude" / "rules" / "standard" / "workflow",
-        ]
-        for std_dir in standard_dirs:
-            if std_dir.exists():
-                import shutil
+        import shutil
 
-                shutil.rmtree(std_dir)
-                std_dir.mkdir(parents=True, exist_ok=True)
+        standard_dir = project_dir / ".claude" / "rules" / "standard"
+        if standard_dir.exists():
+            ui.print_status("Cleaning standard rules directory...")
+            shutil.rmtree(standard_dir)
+        standard_dir.mkdir(parents=True, exist_ok=True)
 
     ui.print_status("Installing .claude files...")
 
@@ -223,10 +224,6 @@ def install_claude_files(project_dir: Path, config, install_python: str, temp_di
 
     for file_path in claude_files:
         if not file_path:
-            continue
-
-        # Skip auto-generated directories (built by build.py)
-        if ".claude/commands/" in file_path or ".claude/skills/" in file_path:
             continue
 
         if "rules/custom/" in file_path:
@@ -238,13 +235,10 @@ def install_claude_files(project_dir: Path, config, install_python: str, temp_di
         if install_python.lower() not in ["y", "yes"] and "file_checker_python.py" in file_path:
             continue
 
-        if "rules/config.yaml" in file_path and (project_dir / ".claude" / "rules" / "config.yaml").exists():
-            temp_config = temp_dir / "config.yaml"
-            if downloads.download_file(file_path, temp_config, config):
-                files.merge_yaml_config(temp_config, project_dir / ".claude" / "rules" / "config.yaml")
-                file_count += 1
-                print("   ✓ config.yaml (merged with custom rules)")
-            continue
+        # Python rules in custom/ only installed if Python support selected
+        if "custom/python-rules.md" in file_path:
+            if install_python.lower() not in ["y", "yes"]:
+                continue
 
         dest_file = project_dir / file_path
         if downloads.download_file(file_path, dest_file, config):
@@ -321,6 +315,12 @@ def main() -> None:
             sys.exit(1)
 
         ui.print_status(f"Installing into: {project_dir}")
+
+        # Show version info - especially useful during upgrades
+        if (project_dir / ".claude").exists():
+            ui.print_status(f"Upgrading Claude CodePro to {VERSION}")
+        else:
+            ui.print_status(f"Installing Claude CodePro {VERSION}")
         print("")
 
         devcontainer.offer_devcontainer_setup(project_dir, config, args.non_interactive)
@@ -341,15 +341,14 @@ def main() -> None:
 
         ui.print_section("Installing Claude CodePro Files")
 
-        file_count = install_claude_files(project_dir, config, install_python, temp_dir, local_mode)
+        file_count = install_claude_files(project_dir, config, install_python, local_mode)
 
-        ui.print_status("Setting up custom rules directories...")
-        for category in ["core", "extended", "workflow"]:
-            custom_dir = project_dir / ".claude" / "rules" / "custom" / category
-            if not custom_dir.exists():
-                custom_dir.mkdir(parents=True, exist_ok=True)
-                (custom_dir / ".gitkeep").touch()
-                print(f"   ✓ Created custom/{category}/")
+        ui.print_status("Setting up custom rules directory...")
+        custom_dir = project_dir / ".claude" / "rules" / "custom"
+        if not custom_dir.exists():
+            custom_dir.mkdir(parents=True, exist_ok=True)
+            (custom_dir / ".gitkeep").touch()
+            print("   ✓ Created custom/")
 
         ui.print_status("Generating settings.local.json from template...")
         template_file = project_dir / ".claude" / "settings.local.template.json"
@@ -435,12 +434,11 @@ def main() -> None:
         ui.print_section("Building Rules")
         build_script = project_dir / ".claude" / "rules" / "build.py"
         if build_script.exists():
-            ui.print_status("Building Claude Code commands and skills...")
             try:
                 subprocess.run([sys.executable, str(build_script)], check=True, capture_output=True)
-                ui.print_success("Built commands and skills")
+                ui.print_success("Rules Built!")
             except subprocess.CalledProcessError:
-                ui.print_error("Failed to build commands and skills")
+                ui.print_error("Failed to build rules")
                 ui.print_warning("You may need to run 'python3 .claude/rules/build.py' manually")
         else:
             ui.print_warning("build.py not found, skipping")
@@ -490,12 +488,10 @@ def main() -> None:
         print("   → Run: /mcp        (Verify all MCP servers are online)")
         print("   → Run: /context    (Check context usage is below 20%)")
         print("")
-        print(f"{ui.YELLOW}STEP 5: Start Building!{ui.NC}")
+        print(f"{ui.YELLOW}STEP 5: Initialize Project Context{ui.NC}")
+        print("   → Run: /setup      Scans project, creates context, indexes codebase")
         print("")
-        print(f"   {ui.BLUE}For quick changes:{ui.NC}")
-        print("   → /quick           Fast development without spec-driven planning")
-        print("")
-        print(f"   {ui.BLUE}For complex features:{ui.NC}")
+        print(f"{ui.YELLOW}STEP 6: Start Building!{ui.NC}")
         print("   → /plan            Create detailed spec with TDD")
         print("   → /implement       Execute spec with mandatory testing")
         print("   → /verify          Run end-to-end quality checks")

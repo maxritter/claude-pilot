@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pytest pytest-cov pyyaml
+          python3 -m pip install pytest pytest-cov
 
       - name: Run unit tests with coverage
         run: |

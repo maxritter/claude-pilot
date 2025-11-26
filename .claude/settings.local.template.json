@@ -1,6 +1,5 @@
 {
   "env": {
-    "ANTHROPIC_CUSTOM_HEADERS": "anthropic-beta: interleaved-thinking-2025-05-14",
     "MAX_MCP_OUTPUT_TOKENS": "10000",
     "MAX_THINKING_TOKENS": "31999",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "63999",
@@ -54,17 +53,12 @@
       "SlashCommand(/implement:*)",
       "SlashCommand(/plan:*)",
       "SlashCommand(/verify:*)",
-      "SlashCommand(/quick:*)"
+      "SlashCommand(/setup:*)"
     ],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "Ref",
-    "claude-context",
-    "cipher",
-    "mcp-funnel"
-  ],
+  "enabledMcpjsonServers": ["Ref", "claude-context", "cipher", "mcp-funnel"],
   "hooks": {
     "PostToolUse": [
       {
@@ -87,6 +81,7 @@
     "command": "npx -y ccstatusline@latest",
     "padding": 0
   },
+  "model": "default",
   "outputStyle": "default",
   "spinnerTipsEnabled": false,
   "alwaysThinkingEnabled": true

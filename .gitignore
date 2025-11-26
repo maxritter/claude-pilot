@@ -225,9 +225,9 @@ __marimo__/
 data/
 
 # Claude Code
-.claude/settings.local.json
-.claude/commands/
-.claude/skills/
+settings.local.json
+.claude/CLAUDE.md
+CLAUDE.local.md
 
 # Kiro
 .kiro/

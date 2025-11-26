@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Rule Builder - Assembles slash commands and skills from markdown rules
+Rule Builder - Assembles CLAUDE.md and CLAUDE.local.md from rules
 
-Reads rules from .claude/rules/ and generates:
-- Slash commands in .claude/commands/
-- Skills in .claude/skills/*/SKILL.md
+Generates two files:
+- .claude/CLAUDE.md - Standard rules (from .claude/rules/standard/)
+- CLAUDE.local.md - Custom rules at project root (from .claude/rules/custom/)
+
+Both files are auto-generated on every `ccp` startup and should be git-ignored.
 """
 
 from __future__ import annotations
 
-import re
-import shutil
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -19,30 +19,11 @@ from typing import NamedTuple
 class RuleBuilderConfig(NamedTuple):
     """Configuration paths for rule builder."""
 
+    project_root: Path
     claude_dir: Path
     rules_dir: Path
-    commands_dir: Path
-    skills_dir: Path
 
 
-class Command(NamedTuple):
-    """Command configuration from config.yaml."""
-
-    name: str
-    description: str
-    model: str
-    inject_skills: bool
-    rules: list[tuple[str, str]]  # List of (source, rule_id) tuples
-
-
-class Skill(NamedTuple):
-    """Skill metadata."""
-
-    name: str
-    description: str
-
-
-# Color codes
 BLUE = "\033[0;36m"
 GREEN = "\033[0;32m"
 YELLOW = "\033[1;33m"
@@ -64,314 +45,108 @@ def log_warning(message: str) -> None:
     print(f"{YELLOW}⚠ {message}{NC}", file=sys.stderr)
 
 
-def log_source_header(source: str, is_first: bool) -> None:
-    """Log source header (Standard or Custom) with appropriate formatting."""
-    if is_first and source == "standard":
-        log_info("  📦 Standard Rules:")
-    elif is_first and source == "custom":
-        log_info("")
-        log_info("  🎨 Custom Rules:")
-
-
-def extract_description_from_markdown(content: str) -> str:
-    """Extract first non-heading line from markdown content as description."""
-    for line in content.splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            return line
-    return "No description"
-
-
-def load_rules(config: RuleBuilderConfig) -> tuple[dict[str, dict[str, str]], int, int]:
+def load_rules(rules_dir: Path, source: str) -> dict[str, str]:
     """
-    Load rules from standard and custom directories.
+    Load rules from flat directory (standard/ or custom/).
+
+    Args:
+        rules_dir: Base rules directory
+        source: Either "standard" or "custom"
 
     Returns:
-        Tuple of (rules dict, standard_count, custom_count)
-        rules dict format: {source: {rule_id: content}}
+        Dict mapping rule_id (filename stem) to content
     """
-    log_info("Loading rules...")
-    log_info("")
+    rules: dict[str, str] = {}
+    source_dir = rules_dir / source
 
-    rules: dict[str, dict[str, str]] = {"standard": {}, "custom": {}}
-    standard_count = 0
-    custom_count = 0
+    if not source_dir.exists():
+        return rules
 
-    for source in ["standard", "custom"]:
-        source_loaded = False
+    for md_file in sorted(source_dir.glob("*.md")):
+        rule_id = md_file.stem
+        try:
+            rules[rule_id] = md_file.read_text(encoding="utf-8")
+            log_success(f"  {source}/{md_file.name}")
+        except Exception as e:
+            log_warning(f"Failed to read {md_file.name}: {e}")
 
-        for category in ["core", "workflow", "extended"]:
-            category_dir = config.rules_dir / source / category
-            if not category_dir.exists():
-                continue
-
-            for md_file in sorted(category_dir.glob("*.md")):
-                if not source_loaded:
-                    log_source_header(source, True)
-                    source_loaded = True
-
-                rule_id = md_file.stem
-                rules[source][rule_id] = md_file.read_text()
-                log_success(f"    {category}/{md_file.name}")
-
-                if source == "standard":
-                    standard_count += 1
-                else:
-                    custom_count += 1
-
-    log_info("")
-    log_info(f"Total: {standard_count + custom_count} rules ({standard_count} standard, {custom_count} custom)")
-
-    return rules, standard_count, custom_count
+    return rules
 
 
-def discover_skills(config: RuleBuilderConfig) -> list[Skill]:
+def build_claude_md(config: RuleBuilderConfig, standard_rules: dict[str, str]) -> None:
     """
-    Discover skills from extended directories.
+    Build CLAUDE.md with standard rules.
 
-    Returns:
-        List of Skill objects
+    Args:
+        config: Rule builder configuration
+        standard_rules: Dict of standard rules
     """
-    log_info("Discovering skills...")
-    log_info("")
+    content: list[str] = [
+        "# Claude CodePro Rules",
+        "",
+        "**Auto-generated - DO NOT EDIT**",
+        "",
+        "**Regenerated on every `ccp` startup**",
+        "",
+        "---",
+        "",
+    ]
 
-    skills: list[Skill] = []
-    standard_count = 0
-    custom_count = 0
+    if standard_rules:
+        for rule_id in sorted(standard_rules.keys()):
+            content.append(standard_rules[rule_id].strip())
+            content.append("")
+            content.append("")
+            content.append("---")
+            content.append("")
 
-    for source in ["standard", "custom"]:
-        extended_dir = config.rules_dir / source / "extended"
-        if not extended_dir.exists():
-            continue
-
-        source_has_skills = False
-
-        for md_file in sorted(extended_dir.glob("*.md")):
-            if not source_has_skills:
-                log_source_header(source, True)
-                source_has_skills = True
-
-            skill_name = md_file.stem
-            description = extract_description_from_markdown(md_file.read_text())
-
-            skills.append(Skill(skill_name, description))
-            log_success(f"    @{skill_name}")
-
-            if source == "standard":
-                standard_count += 1
-            else:
-                custom_count += 1
-
-    log_info("")
-    log_info(f"Total: {len(skills)} skills ({standard_count} standard, {custom_count} custom)")
-
-    return skills
+    output_file = config.claude_dir / "CLAUDE.md"
+    output_file.write_text("\n".join(content), encoding="utf-8")
+    log_success(f"Generated CLAUDE.md ({len(standard_rules)} standard rules)")
 
 
-def format_skills_section(skills: list[Skill]) -> str:
-    """Format skills section for command files."""
-    if not skills:
-        return ""
-
-    lines = ["## Available Skills", ""]
-
-    testing = [f"@{s.name}" for s in skills if s.name.startswith("testing-")]
-    global_skills = [f"@{s.name}" for s in skills if s.name.startswith("global-")]
-    backend = [f"@{s.name}" for s in skills if s.name.startswith("backend-")]
-    frontend = [f"@{s.name}" for s in skills if s.name.startswith("frontend-")]
-
-    if testing:
-        lines.append(f"**Testing:** {' | '.join(testing)}")
-    if global_skills:
-        lines.append(f"**Global:** {' | '.join(global_skills)}")
-    if backend:
-        lines.append(f"**Backend:** {' | '.join(backend)}")
-    if frontend:
-        lines.append(f"**Frontend:** {' | '.join(frontend)}")
-
-    lines.append("")
-    return "\n".join(lines)
-
-
-def parse_yaml_commands(config: RuleBuilderConfig) -> list[Command]:
+def build_claude_local_md(config: RuleBuilderConfig, custom_rules: dict[str, str]) -> None:
     """
-    Parse commands from config.yaml.
+    Build CLAUDE.local.md with custom rules at project root.
 
-    Returns:
-        List of Command objects
+    Args:
+        config: Rule builder configuration
+        custom_rules: Dict of custom rules
     """
-    config_file = config.rules_dir / "config.yaml"
-    commands: list[Command] = []
+    content: list[str] = [
+        "# Custom Rules",
+        "",
+        "**Auto-generated - DO NOT EDIT**",
+        "",
+        "**Regenerated on every `ccp` startup**",
+        "",
+        "---",
+        "",
+    ]
 
-    current_command: str | None = None
-    description = ""
-    model = "sonnet"
-    inject_skills = False
-    rules_list: list[tuple[str, str]] = []
-    in_commands = False
-    in_rules = False
-    in_standard = False
-    in_custom = False
+    if custom_rules:
+        for rule_id in sorted(custom_rules.keys()):
+            content.append(custom_rules[rule_id].strip())
+            content.append("")
+            content.append("")
+            content.append("---")
+            content.append("")
 
-    for line in config_file.read_text().splitlines():
-        line = line.strip()
-
-        if not line or line.startswith("#"):
-            continue
-
-        if line == "commands:":
-            in_commands = True
-            continue
-
-        if in_commands:
-            if line == "rules:":
-                in_rules = True
-                in_standard = False
-                in_custom = False
-
-            elif line == "standard:":
-                in_standard = True
-                in_custom = False
-
-            elif line == "custom:":
-                in_standard = False
-                in_custom = True
-
-            elif match := re.match(r"^([a-z_-]+):$", line):
-                if line not in ["rules:", "standard:", "custom:"]:
-                    if current_command:
-                        commands.append(Command(current_command, description, model, inject_skills, rules_list[:]))
-
-                    current_command = match.group(1)
-                    description = ""
-                    model = "sonnet"
-                    inject_skills = False
-                    rules_list = []
-                    in_rules = False
-                    in_standard = False
-                    in_custom = False
-
-            elif match := re.match(r"^description:\s*(.+)$", line):
-                description = match.group(1)
-
-            elif match := re.match(r"^model:\s*(.+)$", line):
-                model = match.group(1)
-
-            elif match := re.match(r"^inject_skills:\s*(true|false)$", line):
-                inject_skills = match.group(1) == "true"
-
-            elif match := re.match(r"^-\s*(.+)$", line):
-                if in_rules:
-                    rule_name = match.group(1)
-                    if in_standard:
-                        rules_list.append(("standard", rule_name))
-                    elif in_custom:
-                        rules_list.append(("custom", rule_name))
-                    else:
-                        rules_list.append(("standard", rule_name))
-
-    if current_command:
-        commands.append(Command(current_command, description, model, inject_skills, rules_list))
-
-    return commands
-
-
-def build_commands(config: RuleBuilderConfig, rules: dict[str, dict[str, str]], skills: list[Skill]) -> int:
-    """
-    Build command files from config.yaml and rules.
-
-    Returns:
-        Number of commands built
-    """
-    log_info("")
-    log_info("Building commands...")
-
-    if config.commands_dir.exists():
-        shutil.rmtree(config.commands_dir)
-    config.commands_dir.mkdir(parents=True)
-
-    commands = parse_yaml_commands(config)
-    command_count = 0
-
-    for cmd in commands:
-        command_file = config.commands_dir / f"{cmd.name}.md"
-
-        content = [
-            "---",
-            f"description: {cmd.description}",
-            f"model: {cmd.model}",
-            "---",
-        ]
-
-        for source, rule_id in cmd.rules:
-            if rule_id in rules[source]:
-                content.append(rules[source][rule_id])
-                content.append("")
-            else:
-                log_warning(f"Rule '{rule_id}' not found in {source}/")
-
-        if cmd.inject_skills:
-            content.append(format_skills_section(skills))
-
-        command_file.write_text("\n".join(content))
-
-        if cmd.inject_skills:
-            log_success(f"Generated {cmd.name}.md (with skills)")
-        else:
-            log_success(f"Generated {cmd.name}.md")
-
-        command_count += 1
-
-    return command_count
-
-
-def build_skills(config: RuleBuilderConfig, rules: dict[str, dict[str, str]]) -> int:
-    """
-    Build skill files from extended rules.
-
-    Returns:
-        Number of skills built
-    """
-    log_info("")
-    log_info("Building skills...")
-
-    if config.skills_dir.exists():
-        shutil.rmtree(config.skills_dir)
-    config.skills_dir.mkdir(parents=True)
-
-    skill_count = 0
-
-    for source in ["standard", "custom"]:
-        extended_dir = config.rules_dir / source / "extended"
-        if not extended_dir.exists():
-            continue
-
-        for md_file in sorted(extended_dir.glob("*.md")):
-            rule_id = md_file.stem
-
-            if rule_id in rules[source]:
-                skill_dir = config.skills_dir / rule_id
-                skill_dir.mkdir(parents=True)
-
-                skill_file = skill_dir / "SKILL.md"
-                skill_file.write_text(rules[source][rule_id])
-
-                log_success(f"Generated {rule_id}/SKILL.md")
-                skill_count += 1
-
-    return skill_count
+    output_file = config.project_root / "CLAUDE.local.md"
+    output_file.write_text("\n".join(content), encoding="utf-8")
+    log_success(f"Generated CLAUDE.local.md ({len(custom_rules)} custom rules)")
 
 
 def main() -> None:
     """Main entry point."""
     script_dir = Path(__file__).parent.resolve()
     claude_dir = script_dir.parent
+    project_root = claude_dir.parent
 
     config = RuleBuilderConfig(
+        project_root=project_root,
         claude_dir=claude_dir,
         rules_dir=script_dir,
-        commands_dir=claude_dir / "commands",
-        skills_dir=claude_dir / "skills",
     )
 
     log_info("═══════════════════════════════════════════════════════")
@@ -383,18 +158,30 @@ def main() -> None:
         print(f"Error: Rules directory not found at {config.rules_dir}")
         sys.exit(1)
 
-    rules, _, _ = load_rules(config)
-    skills = discover_skills(config)
+    log_info("Loading rules...")
+    log_info("")
 
-    command_count = build_commands(config, rules, skills)
-    skill_count = build_skills(config, rules)
+    log_info("  📦 Standard Rules:")
+    standard_rules = load_rules(config.rules_dir, "standard")
+
+    log_info("")
+    log_info("  🎨 Custom Rules:")
+    custom_rules = load_rules(config.rules_dir, "custom")
+
+    total = len(standard_rules) + len(custom_rules)
+    log_info("")
+    log_info(f"Total: {total} rules ({len(standard_rules)} standard, {len(custom_rules)} custom)")
+
+    log_info("")
+    log_info("Building rule files...")
+    build_claude_md(config, standard_rules)
+    build_claude_local_md(config, custom_rules)
 
     log_info("")
     log_info("═══════════════════════════════════════════════════════")
     log_success("Claude CodePro Build Complete!")
-    log_info(f"   Commands: {command_count} files")
-    log_info(f"   Skills: {skill_count} files")
-    log_info(f"   Available skills: {len(skills)}")
+    log_info(f"   Standard: {len(standard_rules)} rules → .claude/CLAUDE.md")
+    log_info(f"   Custom:   {len(custom_rules)} rules → CLAUDE.local.md")
     log_info("═══════════════════════════════════════════════════════")
 
 

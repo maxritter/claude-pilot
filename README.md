@@ -8,6 +8,7 @@ Start shipping systematically with Spec-Driven Development, Skills, TDD, Semanti
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Optimized-blue)](https://claude.ai)
+![Opus 4.5](https://img.shields.io/badge/Opus_4.5-Compatible-purple.svg)
 ![Spec-Driven](https://img.shields.io/badge/Spec-Driven-orange.svg)
 ![TDD](https://img.shields.io/badge/TDD-Test--Driven--Development-green.svg)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](http://makeapullrequest.com)
@@ -36,26 +37,21 @@ The installer will guide you through the setup process with interactive prompts.
 
 ## 📦 What's Inside
 
-### 📋 Flexible Development Workflows via Slash Commands
+### 📋 Spec-Driven Workflow via Slash Commands
 
-**Quick Development** (For fast fixes, refactoring, experiments):
+- `/setup` - Initialize project context, semantic search indexing, and persistent memory
+- `/plan` - Based on your input asks the right questions → Detailed spec with exact code
+- `/implement` - Execute spec with mandatory TDD → Auto-manages context when full
+- `/verify` - End-to-end spec verification → All tests, quality, security
+- `/remember` - Stores learnings in cross-session memory → Continue after /clear
 
-- `/quick` - Fast, focused development without spec-driven overhead → No planning required (Sonnet 4.5)
+### 💡 Context-Loaded Rules System
 
-**Spec-Driven Workflow** (For complex features requiring planning and testing):
-
-- `/plan` - Based on your input asks the right questions → Detailed spec with exact code (Opus 4.1)
-- `/implement` - Execute spec with mandatory TDD → Auto-manages context when full (Sonnet 4.5)
-- `/remember` - Stores learnings in cross-session memory → Continue after /clear (Sonnet 4.5)
-- `/verify` - End-to-end spec verification → All tests, quality, security (Sonnet 4.5)
-
-### 💡 Modular Rules System with Auto-Generated Commands & Skills
-
-- **Rules Builder** - Automatically assembles commands and skills from markdown rules on every `ccp` startup
-- **Core Rules** - Coding standards, TDD enforcement, error handling, validation, context management
-- **Extended Rules** - Domain-specific rules auto-converted to skills, f. ex. @frontend-components
-- **Workflow Rules** - Command-specific behavior for /plan, /implement, /verify, /quick, /remember
-- **Flexible Customization** - Edit `.claude/rules/config.yaml` to adjust which rules apply to which commands
+- **Auto-Generated** - Regenerated on every `ccp` command from `.claude/rules/` markdown files
+- **Standard Rules** - Coding standards, TDD enforcement, systematic debugging, context management, etc. loaded into `.claude/CLAUDE.md`
+- **Custom Rules** - Project-specific rules (never touched by updates) loaded into `CLAUDE.local.md`
+- **Commands** - Workflow-specific modes: /plan, /implement, /verify, /remember, /setup
+- **Skills** - Domain-specific @-referenceable guides (e.g., @backend-python-standards)
 
 ### 🔌 Enhanced Context and Capabilities via MCP Servers
 
@@ -98,43 +94,18 @@ The installer will guide you through the setup process with interactive prompts.
 
 ### 👣 First Steps
 
-**For Quick Changes:**
-
-- Use `/quick` - Fast development for fixes, refactoring, or experiments without spec-driven planning
-- TDD not enforced, but best practices still apply via core rules and auto-injected skills
-
-**For Complex Features (Spec-Driven & TDD):**
-
 - Start with `/plan` - Provide your input and it will ask clarifying questions to create a spec
 - Use `/implement` to execute the spec with automatic TDD, best practices and context management
 - When context fills, `/remember` automatically updates your plan and stores learnings
 - After spec completion, run `/verify` to run end-to-end review, all tests, and quality checks
 
-### 🎯 Rules Builder
+### 🎯 Customizing Rules
 
-The system uses a modular rules-based architecture that automatically generates slash commands and skills:
+- **Standard Rules** in `.claude/rules/standard/` - Updated on install, don't modify
+- **Custom Rules** in `.claude/rules/custom/` - Your project-specific rules, never touched by updates
+- **Auto-Build** - `ccp` regenerates `.claude/CLAUDE.md` and `.claude/CLAUDE.local.md` at startup
 
-**Standard Rules** (always updated by install script):
-
-- `.claude/rules/standard/core/` - Fundamental rules injected into all commands
-- `.claude/rules/standard/workflow/` - Command-specific behavior (plan.md, implement.md, verify.md, quick.md, remember.md)
-- `.claude/rules/standard/extended/` - Domain-specific rules auto-converted to individual skills
-
-**Custom Rules** (never touched by install script):
-
-- `.claude/rules/custom/core/` - Your custom fundamental rules
-- `.claude/rules/custom/workflow/` - Your custom command behaviors
-- `.claude/rules/custom/extended/` - Your custom skills (auto-converted like standard rules)
-
-**Configuration:**
-
-- `.claude/rules/config.yaml` - Defines which rules are included in which commands
-  - `standard:` section - Lists standard rules (updated on install)
-  - `custom:` section - Lists your custom rules (always preserved)
-
-**Auto-Rebuild:** Commands and skills are automatically regenerated on every `ccp` startup, making customization seamless.
-
-**How Updates Work:** When you run the install script, standard rules are always updated to the latest version, while custom rules and the custom sections in config.yaml are never modified. This ensures you always get the latest features while preserving your customizations.
+Add custom rules by creating `.md` files in `.claude/rules/custom/` - they'll be included automatically on next `ccp` start.
 
 ## ⚖️ What Makes This Different
 

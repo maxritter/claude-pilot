@@ -1,10 +1,11 @@
+---
+description: Cross-session persistent memory storage for learnings within a session
+---
 # REMEMBER: Session Learnings with Structured Knowledge
 
 **Purpose:** Preserve architectural understanding, design decisions, and implementation learnings in Cipher before `/clear`.
 
-**Workflows:**
-- **With plan:** `/remember` → `/clear` → `/implement [plan]` (continues with fresh context)
-- **Without plan (/quick):** `/remember` → `/clear` → `/quick [task]` (continues quick work)
+**Workflows:** `/remember` → `/clear` → `/implement [plan]` (continues with fresh context)
 
 ## The Process
 

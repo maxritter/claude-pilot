@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 import tempfile
-from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -12,51 +11,14 @@ import pytest
 # Import the module under test
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / ".claude" / "rules"))
 from build import (
-    Command,
     RuleBuilderConfig,
-    Skill,
-    build_commands,
-    build_skills,
-    discover_skills,
-    format_skills_section,
+    build_claude_local_md,
+    build_claude_md,
     load_rules,
     log_info,
     log_success,
     log_warning,
-    parse_yaml_commands,
 )
-
-
-class TestSkillNamedTuple:
-    """Test Skill NamedTuple."""
-
-    def test_skill_creation_with_valid_data_creates_skill_object(self):
-        """Test that Skill can be created with name and description."""
-        skill = Skill(name="test-skill", description="Test description")
-
-        assert skill.name == "test-skill"
-        assert skill.description == "Test description"
-
-
-class TestCommandNamedTuple:
-    """Test Command NamedTuple."""
-
-    def test_command_creation_with_all_fields_creates_command_object(self):
-        """Test that Command can be created with all required fields."""
-        rules = [("standard", "rule1"), ("custom", "rule2")]
-        command = Command(
-            name="test",
-            description="Test command",
-            model="sonnet",
-            inject_skills=True,
-            rules=rules,
-        )
-
-        assert command.name == "test"
-        assert command.description == "Test command"
-        assert command.model == "sonnet"
-        assert command.inject_skills is True
-        assert command.rules == rules
 
 
 class TestRuleBuilderConfigNamedTuple:
@@ -64,22 +26,19 @@ class TestRuleBuilderConfigNamedTuple:
 
     def test_config_creation_with_path_objects_creates_config(self):
         """Test that RuleBuilderConfig can be created with Path objects."""
-        claude_dir = Path("/test/claude")
-        rules_dir = Path("/test/rules")
-        commands_dir = Path("/test/commands")
-        skills_dir = Path("/test/skills")
+        project_root = Path("/test")
+        claude_dir = Path("/test/.claude")
+        rules_dir = Path("/test/.claude/rules")
 
         config = RuleBuilderConfig(
+            project_root=project_root,
             claude_dir=claude_dir,
             rules_dir=rules_dir,
-            commands_dir=commands_dir,
-            skills_dir=skills_dir,
         )
 
+        assert config.project_root == project_root
         assert config.claude_dir == claude_dir
         assert config.rules_dir == rules_dir
-        assert config.commands_dir == commands_dir
-        assert config.skills_dir == skills_dir
 
 
 class TestLogFunctions:
@@ -100,7 +59,7 @@ class TestLogFunctions:
 
         captured = capsys.readouterr()
         assert "Success message" in captured.err
-        assert "✓" in captured.err
+        assert "\u2713" in captured.err  # Checkmark
         assert "\033[0;32m" in captured.err  # Green color code
         assert "\033[0m" in captured.err  # Reset code
 
@@ -110,99 +69,9 @@ class TestLogFunctions:
 
         captured = capsys.readouterr()
         assert "Warning message" in captured.err
-        assert "⚠" in captured.err
+        assert "\u26a0" in captured.err  # Warning symbol
         assert "\033[1;33m" in captured.err  # Yellow color code
         assert "\033[0m" in captured.err  # Reset code
-
-
-class TestFormatSkillsSection:
-    """Test format_skills_section function."""
-
-    def test_format_skills_section_with_empty_list_returns_empty_string(self):
-        """Test that empty skills list returns empty string."""
-        result = format_skills_section([])
-
-        assert result == ""
-
-    def test_format_skills_section_with_testing_skills_returns_testing_section(self):
-        """Test that testing skills are formatted in Testing section."""
-        skills = [
-            Skill("testing-anti-patterns", "Prevent testing anti-patterns"),
-            Skill("testing-writing-guidelines", "Writing guidelines"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "## Available Skills" in result
-        assert "**Testing:**" in result
-        assert "@testing-anti-patterns" in result
-        assert "@testing-writing-guidelines" in result
-
-    def test_format_skills_section_with_global_skills_returns_global_section(self):
-        """Test that global skills are formatted in Global section."""
-        skills = [
-            Skill("global-standards", "Global standards"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "**Global:**" in result
-        assert "@global-standards" in result
-
-    def test_format_skills_section_with_backend_skills_returns_backend_section(self):
-        """Test that backend skills are formatted in Backend section."""
-        skills = [
-            Skill("backend-api-standards", "API standards"),
-            Skill("backend-python-standards", "Python standards"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "**Backend:**" in result
-        assert "@backend-api-standards" in result
-        assert "@backend-python-standards" in result
-
-    def test_format_skills_section_with_frontend_skills_returns_frontend_section(self):
-        """Test that frontend skills are formatted in Frontend section."""
-        skills = [
-            Skill("frontend-css-standards", "CSS standards"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "**Frontend:**" in result
-        assert "@frontend-css-standards" in result
-
-    def test_format_skills_section_with_mixed_skills_returns_all_sections(self):
-        """Test that mixed skills are formatted in appropriate sections."""
-        skills = [
-            Skill("testing-anti-patterns", "Testing"),
-            Skill("global-standards", "Global"),
-            Skill("backend-api-standards", "Backend API"),
-            Skill("frontend-css-standards", "Frontend CSS"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "**Testing:**" in result
-        assert "**Global:**" in result
-        assert "**Backend:**" in result
-        assert "**Frontend:**" in result
-        assert "@testing-anti-patterns" in result
-        assert "@global-standards" in result
-        assert "@backend-api-standards" in result
-        assert "@frontend-css-standards" in result
-
-    def test_format_skills_section_skills_separated_by_pipe_in_same_category(self):
-        """Test that multiple skills in same category are pipe-separated."""
-        skills = [
-            Skill("backend-api-standards", "API"),
-            Skill("backend-python-standards", "Python"),
-        ]
-
-        result = format_skills_section(skills)
-
-        assert "@backend-api-standards | @backend-python-standards" in result
 
 
 @pytest.fixture
@@ -217,312 +86,237 @@ def temp_rules_dir():
 def config_with_rules(temp_rules_dir):
     """Create a RuleBuilderConfig with temporary directories."""
     claude_dir = temp_rules_dir.parent
-    commands_dir = claude_dir / "commands"
-    skills_dir = claude_dir / "skills"
+    project_root = claude_dir.parent
 
     return RuleBuilderConfig(
+        project_root=project_root,
         claude_dir=claude_dir,
         rules_dir=temp_rules_dir,
-        commands_dir=commands_dir,
-        skills_dir=skills_dir,
     )
 
 
 class TestLoadRules:
     """Test load_rules function."""
 
-    def test_load_rules_with_no_rules_returns_empty_dicts(self, config_with_rules):
-        """Test that load_rules returns empty dicts when no rules exist."""
-        rules, standard_count, custom_count = load_rules(config_with_rules)
+    def test_load_rules_with_no_directory_returns_empty_dict(self, temp_rules_dir):
+        """Test that load_rules returns empty dict when directory doesn't exist."""
+        rules = load_rules(temp_rules_dir, "standard")
 
-        assert rules == {"standard": {}, "custom": {}}
-        assert standard_count == 0
-        assert custom_count == 0
+        assert rules == {}
 
-    def test_load_rules_with_standard_core_rules_returns_rules_dict(self, config_with_rules):
-        """Test that load_rules loads standard core rules."""
-        # Create standard core rule
-        core_dir = config_with_rules.rules_dir / "standard" / "core"
-        core_dir.mkdir(parents=True)
-        (core_dir / "test-rule.md").write_text("# Test Rule\n\nTest content")
+    def test_load_rules_with_empty_directory_returns_empty_dict(self, temp_rules_dir):
+        """Test that load_rules returns empty dict when directory is empty."""
+        (temp_rules_dir / "standard").mkdir()
 
-        rules, standard_count, custom_count = load_rules(config_with_rules)
+        rules = load_rules(temp_rules_dir, "standard")
 
-        assert "test-rule" in rules["standard"]
-        assert rules["standard"]["test-rule"] == "# Test Rule\n\nTest content"
-        assert standard_count == 1
-        assert custom_count == 0
+        assert rules == {}
 
-    def test_load_rules_with_custom_workflow_rules_returns_rules_dict(self, config_with_rules):
-        """Test that load_rules loads custom workflow rules."""
-        # Create custom workflow rule
-        workflow_dir = config_with_rules.rules_dir / "custom" / "workflow"
-        workflow_dir.mkdir(parents=True)
-        (workflow_dir / "custom-workflow.md").write_text("# Custom Workflow")
+    def test_load_rules_with_standard_rules_returns_rules_dict(self, temp_rules_dir):
+        """Test that load_rules loads standard rules from flat directory."""
+        standard_dir = temp_rules_dir / "standard"
+        standard_dir.mkdir(parents=True)
+        (standard_dir / "test-rule.md").write_text("# Test Rule\n\nTest content")
 
-        rules, standard_count, custom_count = load_rules(config_with_rules)
+        rules = load_rules(temp_rules_dir, "standard")
 
-        assert "custom-workflow" in rules["custom"]
-        assert rules["custom"]["custom-workflow"] == "# Custom Workflow"
-        assert standard_count == 0
-        assert custom_count == 1
+        assert "test-rule" in rules
+        assert rules["test-rule"] == "# Test Rule\n\nTest content"
 
-    def test_load_rules_with_mixed_rules_returns_all_rules(self, config_with_rules):
-        """Test that load_rules loads both standard and custom rules."""
-        # Create standard core rule
-        core_dir = config_with_rules.rules_dir / "standard" / "core"
-        core_dir.mkdir(parents=True)
-        (core_dir / "standard-rule.md").write_text("Standard")
+    def test_load_rules_with_custom_rules_returns_rules_dict(self, temp_rules_dir):
+        """Test that load_rules loads custom rules from flat directory."""
+        custom_dir = temp_rules_dir / "custom"
+        custom_dir.mkdir(parents=True)
+        (custom_dir / "custom-rule.md").write_text("# Custom Rule")
 
-        # Create custom extended rule
-        extended_dir = config_with_rules.rules_dir / "custom" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "custom-rule.md").write_text("Custom")
+        rules = load_rules(temp_rules_dir, "custom")
 
-        rules, standard_count, custom_count = load_rules(config_with_rules)
+        assert "custom-rule" in rules
+        assert rules["custom-rule"] == "# Custom Rule"
 
-        assert "standard-rule" in rules["standard"]
-        assert "custom-rule" in rules["custom"]
-        assert standard_count == 1
-        assert custom_count == 1
+    def test_load_rules_with_multiple_rules_returns_all_rules(self, temp_rules_dir):
+        """Test that load_rules loads all markdown files in directory."""
+        standard_dir = temp_rules_dir / "standard"
+        standard_dir.mkdir(parents=True)
+        (standard_dir / "rule1.md").write_text("Rule 1")
+        (standard_dir / "rule2.md").write_text("Rule 2")
+        (standard_dir / "rule3.md").write_text("Rule 3")
 
+        rules = load_rules(temp_rules_dir, "standard")
 
-class TestDiscoverSkills:
-    """Test discover_skills function."""
+        assert len(rules) == 3
+        assert "rule1" in rules
+        assert "rule2" in rules
+        assert "rule3" in rules
 
-    def test_discover_skills_with_no_extended_rules_returns_empty_list(self, config_with_rules):
-        """Test that discover_skills returns empty list when no extended rules exist."""
-        skills = discover_skills(config_with_rules)
+    def test_load_rules_ignores_non_markdown_files(self, temp_rules_dir):
+        """Test that load_rules only loads .md files."""
+        standard_dir = temp_rules_dir / "standard"
+        standard_dir.mkdir(parents=True)
+        (standard_dir / "rule.md").write_text("Markdown")
+        (standard_dir / "config.yaml").write_text("yaml: true")
+        (standard_dir / "script.py").write_text("print('hello')")
+        (standard_dir / ".gitkeep").write_text("")
 
-        assert skills == []
+        rules = load_rules(temp_rules_dir, "standard")
 
-    def test_discover_skills_with_standard_extended_rule_returns_skill(self, config_with_rules):
-        """Test that discover_skills finds skills in standard/extended."""
-        extended_dir = config_with_rules.rules_dir / "standard" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "testing-anti-patterns.md").write_text(
-            "Prevent common testing anti-patterns.\n\nMore content here."
-        )
+        assert len(rules) == 1
+        assert "rule" in rules
 
-        skills = discover_skills(config_with_rules)
+    def test_load_rules_returns_sorted_order(self, temp_rules_dir):
+        """Test that load_rules returns rules in sorted order."""
+        standard_dir = temp_rules_dir / "standard"
+        standard_dir.mkdir(parents=True)
+        (standard_dir / "zebra.md").write_text("Z")
+        (standard_dir / "alpha.md").write_text("A")
+        (standard_dir / "beta.md").write_text("B")
 
-        assert len(skills) == 1
-        assert skills[0].name == "testing-anti-patterns"
-        assert skills[0].description == "Prevent common testing anti-patterns."
+        rules = load_rules(temp_rules_dir, "standard")
 
-    def test_discover_skills_extracts_first_non_heading_line_as_description(self, config_with_rules):
-        """Test that discover_skills extracts first non-heading line as description."""
-        extended_dir = config_with_rules.rules_dir / "standard" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "backend-api-standards.md").write_text(
-            "# API Standards\n\nDesign RESTful APIs.\n\nMore details."
-        )
-
-        skills = discover_skills(config_with_rules)
-
-        assert skills[0].description == "Design RESTful APIs."
-
-    def test_discover_skills_with_custom_extended_rules_returns_skills(self, config_with_rules):
-        """Test that discover_skills finds custom extended skills."""
-        extended_dir = config_with_rules.rules_dir / "custom" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "custom-skill.md").write_text("Custom skill description")
-
-        skills = discover_skills(config_with_rules)
-
-        assert len(skills) == 1
-        assert skills[0].name == "custom-skill"
+        # Check that keys are sorted
+        assert list(rules.keys()) == ["alpha", "beta", "zebra"]
 
 
-class TestParseYamlCommands:
-    """Test parse_yaml_commands function."""
+class TestBuildClaudeMd:
+    """Test build_claude_md function."""
 
-    def test_parse_yaml_commands_with_empty_file_returns_empty_list(self, config_with_rules):
-        """Test that parse_yaml_commands returns empty list for empty config."""
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text("")
+    def test_build_claude_md_creates_file_in_claude_dir(self, config_with_rules):
+        """Test that build_claude_md creates CLAUDE.md in .claude directory."""
+        standard_rules = {"test": "# Test"}
 
-        commands = parse_yaml_commands(config_with_rules)
+        build_claude_md(config_with_rules, standard_rules)
 
-        assert commands == []
+        output_file = config_with_rules.claude_dir / "CLAUDE.md"
+        assert output_file.exists()
 
-    def test_parse_yaml_commands_with_simple_command_returns_command(self, config_with_rules):
-        """Test that parse_yaml_commands parses a simple command."""
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            """commands:
-  test:
-    description: Test command
-    model: sonnet
-    inject_skills: false
-    rules:
-      standard:
-        - rule1
-"""
-        )
+    def test_build_claude_md_includes_header(self, config_with_rules):
+        """Test that build_claude_md includes auto-generated header."""
+        standard_rules = {"test": "# Test"}
 
-        commands = parse_yaml_commands(config_with_rules)
+        build_claude_md(config_with_rules, standard_rules)
 
-        assert len(commands) == 1
-        assert commands[0].name == "test"
-        assert commands[0].description == "Test command"
-        assert commands[0].model == "sonnet"
-        assert commands[0].inject_skills is False
-        assert commands[0].rules == [("standard", "rule1")]
+        content = (config_with_rules.claude_dir / "CLAUDE.md").read_text()
+        assert "# Claude CodePro Rules" in content
+        assert "Auto-generated - DO NOT EDIT" in content
+        assert "Regenerated on every `ccp` startup" in content
 
-    def test_parse_yaml_commands_with_inject_skills_true_sets_flag(self, config_with_rules):
-        """Test that inject_skills: true is parsed correctly."""
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            """commands:
-  plan:
-    description: Plan tasks
-    model: haiku
-    inject_skills: true
-    rules:
-      standard:
-        - planning
-"""
-        )
+    def test_build_claude_md_includes_standard_rules(self, config_with_rules):
+        """Test that build_claude_md includes standard rules content."""
+        standard_rules = {"coding-standards": "## Coding Standards\n\nWrite clean code."}
 
-        commands = parse_yaml_commands(config_with_rules)
+        build_claude_md(config_with_rules, standard_rules)
 
-        assert commands[0].inject_skills is True
+        content = (config_with_rules.claude_dir / "CLAUDE.md").read_text()
+        assert "## Coding Standards" in content
+        assert "Write clean code." in content
 
-    def test_parse_yaml_commands_with_custom_rules_includes_custom_source(self, config_with_rules):
-        """Test that custom rules are parsed with correct source."""
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            """commands:
-  custom_cmd:
-    description: Custom command
-    rules:
-      custom:
-        - custom-rule
-"""
-        )
+    def test_build_claude_md_rules_separated_by_dividers(self, config_with_rules):
+        """Test that rules are separated by horizontal dividers."""
+        standard_rules = {"rule1": "## Rule 1", "rule2": "## Rule 2"}
 
-        commands = parse_yaml_commands(config_with_rules)
+        build_claude_md(config_with_rules, standard_rules)
 
-        assert commands[0].rules == [("custom", "custom-rule")]
+        content = (config_with_rules.claude_dir / "CLAUDE.md").read_text()
+        assert content.count("---") >= 3  # Header divider + at least 2 rule dividers
 
-    def test_parse_yaml_commands_with_multiple_commands_returns_all(self, config_with_rules):
-        """Test that multiple commands are parsed."""
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            "commands:\n"
-            "  first:\n"
-            "    description: First\n"
-            "    rules:\n"
-            "      standard:\n"
-            "        - rule1\n"
-            "  second:\n"
-            "    description: Second\n"
-            "    rules:\n"
-            "      standard:\n"
-            "        - rule2\n"
-        )
+    def test_build_claude_md_handles_empty_rules(self, config_with_rules):
+        """Test that build_claude_md handles empty rules dict."""
+        standard_rules = {}
 
-        commands = parse_yaml_commands(config_with_rules)
+        build_claude_md(config_with_rules, standard_rules)
 
-        assert len(commands) == 2
-        assert commands[0].name == "first"
-        assert commands[1].name == "second"
+        output_file = config_with_rules.claude_dir / "CLAUDE.md"
+        assert output_file.exists()
+        content = output_file.read_text()
+        assert "# Claude CodePro Rules" in content
+
+    def test_build_claude_md_strips_whitespace(self, config_with_rules):
+        """Test that build_claude_md strips trailing whitespace from rules."""
+        standard_rules = {"rule": "## Rule\n\nContent\n\n\n"}
+
+        build_claude_md(config_with_rules, standard_rules)
+
+        content = (config_with_rules.claude_dir / "CLAUDE.md").read_text()
+        assert "Content\n\n\n\n" not in content
+
+    def test_build_claude_md_uses_utf8_encoding(self, config_with_rules):
+        """Test that build_claude_md handles UTF-8 content correctly."""
+        standard_rules = {"unicode": "## Unicode Test\n\nEmoji: \U0001f680 Greek: \u03b1\u03b2\u03b3"}
+
+        build_claude_md(config_with_rules, standard_rules)
+
+        content = (config_with_rules.claude_dir / "CLAUDE.md").read_text(encoding="utf-8")
+        assert "\U0001f680" in content
+        assert "\u03b1\u03b2\u03b3" in content
 
 
-class TestBuildCommands:
-    """Test build_commands function."""
+class TestBuildClaudeLocalMd:
+    """Test build_claude_local_md function."""
 
-    def test_build_commands_creates_command_files(self, config_with_rules):
-        """Test that build_commands creates command files."""
-        # Setup rules
-        core_dir = config_with_rules.rules_dir / "standard" / "core"
-        core_dir.mkdir(parents=True)
-        (core_dir / "test-rule.md").write_text("# Test Rule Content")
+    def test_build_claude_local_md_creates_file_at_project_root(self, config_with_rules):
+        """Test that build_claude_local_md creates CLAUDE.local.md at project root."""
+        custom_rules = {"test": "# Test"}
 
-        # Setup config
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            """commands:
-  test:
-    description: Test command
-    model: sonnet
-    inject_skills: false
-    rules:
-      standard:
-        - test-rule
-"""
-        )
+        build_claude_local_md(config_with_rules, custom_rules)
 
-        rules = {"standard": {"test-rule": "# Test Rule Content"}, "custom": {}}
-        skills = []
+        output_file = config_with_rules.project_root / "CLAUDE.local.md"
+        assert output_file.exists()
 
-        count = build_commands(config_with_rules, rules, skills)
+    def test_build_claude_local_md_includes_header(self, config_with_rules):
+        """Test that build_claude_local_md includes auto-generated header."""
+        custom_rules = {"test": "# Test"}
 
-        assert count == 1
-        command_file = config_with_rules.commands_dir / "test.md"
-        assert command_file.exists()
-        content = command_file.read_text()
-        assert "description: Test command" in content
-        assert "model: sonnet" in content
-        assert "# Test Rule Content" in content
+        build_claude_local_md(config_with_rules, custom_rules)
 
-    def test_build_commands_with_inject_skills_includes_skills_section(self, config_with_rules):
-        """Test that build_commands includes skills section when inject_skills is true."""
-        # Setup config
-        config_file = config_with_rules.rules_dir / "config.yaml"
-        config_file.write_text(
-            """commands:
-  plan:
-    description: Plan command
-    model: sonnet
-    inject_skills: true
-    rules:
-      standard: []
-"""
-        )
+        content = (config_with_rules.project_root / "CLAUDE.local.md").read_text()
+        assert "# Custom Rules" in content
+        assert "Auto-generated - DO NOT EDIT" in content
+        assert "Regenerated on every `ccp` startup" in content
 
-        rules = {"standard": {}, "custom": {}}
-        skills = [Skill("testing-anti-patterns", "Testing patterns")]
+    def test_build_claude_local_md_includes_custom_rules(self, config_with_rules):
+        """Test that build_claude_local_md includes custom rules content."""
+        custom_rules = {"my-rule": "## My Rule\n\nCustom content."}
 
-        count = build_commands(config_with_rules, rules, skills)
+        build_claude_local_md(config_with_rules, custom_rules)
 
-        command_file = config_with_rules.commands_dir / "plan.md"
-        content = command_file.read_text()
-        assert "## Available Skills" in content
-        assert "@testing-anti-patterns" in content
+        content = (config_with_rules.project_root / "CLAUDE.local.md").read_text()
+        assert "## My Rule" in content
+        assert "Custom content." in content
 
+    def test_build_claude_local_md_rules_separated_by_dividers(self, config_with_rules):
+        """Test that rules are separated by horizontal dividers."""
+        custom_rules = {"rule1": "## Rule 1", "rule2": "## Rule 2"}
 
-class TestBuildSkills:
-    """Test build_skills function."""
+        build_claude_local_md(config_with_rules, custom_rules)
 
-    def test_build_skills_creates_skill_directories(self, config_with_rules):
-        """Test that build_skills creates SKILL.md files in skill directories."""
-        # Setup extended rules
-        extended_dir = config_with_rules.rules_dir / "standard" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "testing-anti-patterns.md").write_text("# Testing Anti-patterns\n\nContent")
+        content = (config_with_rules.project_root / "CLAUDE.local.md").read_text()
+        assert content.count("---") >= 3
 
-        rules = {"standard": {"testing-anti-patterns": "# Testing Anti-patterns\n\nContent"}, "custom": {}}
+    def test_build_claude_local_md_handles_empty_rules(self, config_with_rules):
+        """Test that build_claude_local_md handles empty rules dict."""
+        custom_rules = {}
 
-        count = build_skills(config_with_rules, rules)
+        build_claude_local_md(config_with_rules, custom_rules)
 
-        assert count == 1
-        skill_file = config_with_rules.skills_dir / "testing-anti-patterns" / "SKILL.md"
-        assert skill_file.exists()
-        assert skill_file.read_text() == "# Testing Anti-patterns\n\nContent"
+        output_file = config_with_rules.project_root / "CLAUDE.local.md"
+        assert output_file.exists()
+        content = output_file.read_text()
+        assert "# Custom Rules" in content
 
-    def test_build_skills_with_custom_extended_creates_custom_skills(self, config_with_rules):
-        """Test that build_skills creates custom skill files."""
-        # Setup custom extended rule
-        extended_dir = config_with_rules.rules_dir / "custom" / "extended"
-        extended_dir.mkdir(parents=True)
-        (extended_dir / "custom-skill.md").write_text("Custom content")
+    def test_build_claude_local_md_strips_whitespace(self, config_with_rules):
+        """Test that build_claude_local_md strips trailing whitespace from rules."""
+        custom_rules = {"rule": "## Rule\n\nContent\n\n\n"}
 
-        rules = {"standard": {}, "custom": {"custom-skill": "Custom content"}}
+        build_claude_local_md(config_with_rules, custom_rules)
 
-        count = build_skills(config_with_rules, rules)
+        content = (config_with_rules.project_root / "CLAUDE.local.md").read_text()
+        assert "Content\n\n\n\n" not in content
 
-        assert count == 1
-        skill_file = config_with_rules.skills_dir / "custom-skill" / "SKILL.md"
-        assert skill_file.exists()
+    def test_build_claude_local_md_uses_utf8_encoding(self, config_with_rules):
+        """Test that build_claude_local_md handles UTF-8 content correctly."""
+        custom_rules = {"unicode": "## Unicode\n\nEmoji: \U0001f680"}
+
+        build_claude_local_md(config_with_rules, custom_rules)
+
+        content = (config_with_rules.project_root / "CLAUDE.local.md").read_text(encoding="utf-8")
+        assert "\U0001f680" in content

@@ -318,38 +318,39 @@ class TestRemovePythonSettings:
 class TestInstallClaudeFiles:
     """Test install_claude_files function."""
 
-    def test_install_claude_files_cleans_standard_directories_when_not_local_mode(self):
-        """Test that install_claude_files removes and recreates standard directories when not in local mode."""
+    def test_install_claude_files_cleans_standard_directory_when_not_local_mode(self):
+        """Test that install_claude_files removes and recreates standard directory when not in local mode."""
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
-            core_dir = project_dir / ".claude" / "rules" / "standard" / "core"
-            core_dir.mkdir(parents=True)
-            (core_dir / "old_file.md").write_text("old content")
+            standard_dir = project_dir / ".claude" / "rules" / "standard"
+            standard_dir.mkdir(parents=True)
+            (standard_dir / "old_file.md").write_text("old content")
 
             mock_config = Mock()
 
             with patch("lib.downloads.get_repo_files", return_value=[]):
-                install_claude_files(project_dir, mock_config, "N", Path(tmpdir), local_mode=False)
+                install_claude_files(project_dir, mock_config, "N", local_mode=False)
 
-            assert core_dir.exists()
-            assert not (core_dir / "old_file.md").exists()
+            # Standard dir should exist but old files should be removed
+            assert standard_dir.exists()
+            assert not (standard_dir / "old_file.md").exists()
 
-    def test_install_claude_files_preserves_standard_directories_in_local_mode(self):
-        """Test that install_claude_files preserves standard directories when in local mode."""
+    def test_install_claude_files_preserves_standard_directory_in_local_mode(self):
+        """Test that install_claude_files preserves standard directory when in local mode."""
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
-            core_dir = project_dir / ".claude" / "rules" / "standard" / "core"
-            core_dir.mkdir(parents=True)
-            old_file = core_dir / "old_file.md"
+            standard_dir = project_dir / ".claude" / "rules" / "standard"
+            standard_dir.mkdir(parents=True)
+            old_file = standard_dir / "old_file.md"
             old_file.write_text("old content")
 
             mock_config = Mock()
 
             with patch("lib.downloads.get_repo_files", return_value=[]):
-                install_claude_files(project_dir, mock_config, "N", Path(tmpdir), local_mode=True)
+                install_claude_files(project_dir, mock_config, "N", local_mode=True)
 
             # In local mode, existing files should be preserved
-            assert core_dir.exists()
+            assert standard_dir.exists()
             assert old_file.exists()
             assert old_file.read_text() == "old content"
 
@@ -361,7 +362,7 @@ class TestInstallClaudeFiles:
 
             with patch("lib.downloads.get_repo_files", return_value=[".claude/rules/custom/test.md"]):
                 with patch("lib.downloads.download_file") as mock_download:
-                    count = install_claude_files(project_dir, mock_config, "Y", Path(tmpdir), local_mode=False)
+                    count = install_claude_files(project_dir, mock_config, "Y", local_mode=False)
 
                     mock_download.assert_not_called()
                     assert count == 0
@@ -374,7 +375,7 @@ class TestInstallClaudeFiles:
 
             with patch("lib.downloads.get_repo_files", return_value=[".claude/hooks/file_checker_python.py"]):
                 with patch("lib.downloads.download_file") as mock_download:
-                    count = install_claude_files(project_dir, mock_config, "N", Path(tmpdir), local_mode=False)
+                    count = install_claude_files(project_dir, mock_config, "N", local_mode=False)
 
                     mock_download.assert_not_called()
                     assert count == 0
@@ -387,7 +388,7 @@ class TestInstallClaudeFiles:
 
             with patch("lib.downloads.get_repo_files", return_value=[".claude/hooks/file_checker_python.py"]):
                 with patch("lib.downloads.download_file", return_value=True) as mock_download:
-                    count = install_claude_files(project_dir, mock_config, "Y", Path(tmpdir), local_mode=False)
+                    count = install_claude_files(project_dir, mock_config, "Y", local_mode=False)
 
                     assert mock_download.call_count == 1
                     assert count == 1

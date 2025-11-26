@@ -90,16 +90,17 @@ def bootstrap_download(repo_path: str, dest_path: Path, local_mode: bool, local_
 
 
 def download_lib_modules(project_dir: Path, local_mode: bool, local_repo_dir: Path | None) -> None:
-    """Download all library modules before importing."""
+    """Download all library modules before importing (always overwrites for upgrades)."""
     lib_dir = project_dir / "scripts" / "lib"
     lib_dir.mkdir(parents=True, exist_ok=True)
+
+    init_file = lib_dir / "__init__.py"
+    if not init_file.exists():
+        init_file.touch()
 
     for module in LIB_MODULES:
         repo_path = f"scripts/lib/{module}"
         dest_path = lib_dir / module
-
-        if dest_path.exists():
-            continue
 
         if not bootstrap_download(repo_path, dest_path, local_mode, local_repo_dir):
             print(f"Warning: Failed to download lib/{module}", file=sys.stderr)
@@ -116,7 +117,6 @@ def generate_settings_file(template_file: Path, settings_file: Path, project_dir
         non_interactive: Whether running in non-interactive mode
     """
     if not template_file.exists():
-        # Import ui module (assumes it's already imported in main)
         from lib import ui
 
         ui.print_warning("settings.local.template.json not found, skipping generation")
@@ -205,8 +205,6 @@ def install_claude_files(project_dir: Path, config, install_python: str, local_m
     """
     from lib import downloads, ui
 
-    # Only clean standard directory when NOT in local mode
-    # In local mode, we're working with the source repository and shouldn't delete files
     if not local_mode:
         import shutil
 

@@ -126,8 +126,8 @@ class TestDownloadLibModules:
             assert lib_dir.exists()
             assert lib_dir.is_dir()
 
-    def test_download_lib_modules_skips_existing_files(self):
-        """Test that download_lib_modules skips files that already exist."""
+    def test_download_lib_modules_overwrites_existing_files_for_upgrades(self):
+        """Test that download_lib_modules always downloads files (even if they exist) to support upgrades."""
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
             lib_dir = project_dir / "scripts" / "lib"
@@ -135,12 +135,12 @@ class TestDownloadLibModules:
             existing_file = lib_dir / "ui.py"
             existing_file.write_text("existing content")
 
-            with patch("install.bootstrap_download") as mock_download:
+            with patch("install.bootstrap_download", return_value=True) as mock_download:
                 download_lib_modules(project_dir, False, None)
 
-                # bootstrap_download should not be called for existing file
+                # bootstrap_download SHOULD be called for existing file to enable upgrades
                 calls = [call[0][0] for call in mock_download.call_args_list]
-                assert "scripts/lib/ui.py" not in calls
+                assert "scripts/lib/ui.py" in calls
 
     def test_download_lib_modules_downloads_all_missing_modules(self):
         """Test that download_lib_modules attempts to download all missing modules."""

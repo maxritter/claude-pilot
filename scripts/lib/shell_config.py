@@ -94,7 +94,7 @@ def add_cc_alias(project_dir: Path) -> None:
     home = Path.home()
     bash_alias = (
         f"alias {alias_name}=\"cd '{project_dir}' && "
-        f'nvm use 22 && python3 .claude/rules/build.py &>/dev/null && clear && dotenvx run -- claude"'
+        f'nvm use 22 && python3 .claude/rules/build.py &>/dev/null && clear && dotenvx run claude"'
     )
 
     add_shell_alias(home / ".bashrc", bash_alias, ".bashrc", alias_name, project_dir)
@@ -103,7 +103,7 @@ def add_cc_alias(project_dir: Path) -> None:
     fish_config = home / ".config" / "fish" / "config.fish"
     fish_alias = (
         f"alias {alias_name}=\"cd '{project_dir}'; and "
-        f'nvm use 22; and python3 .claude/rules/build.py &>/dev/null; and clear; and dotenvx run -- claude"'
+        f'nvm use 22; and python3 .claude/rules/build.py &>/dev/null; and clear; and dotenvx run claude"'
     )
     add_shell_alias(fish_config, fish_alias, "config.fish", alias_name, project_dir)
 

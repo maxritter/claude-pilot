@@ -74,8 +74,12 @@ def validate_license_key(license_key: str) -> tuple[bool, str]:
 
             return False, result.get("message", "Invalid license key")
 
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False, "Invalid license key"
+        return False, f"License server error: HTTP {e.code}"
     except urllib.error.URLError as e:
-        return False, f"Network error: {e}"
+        return False, f"Network error: {e.reason}"
     except json.JSONDecodeError:
         return False, "Invalid response from license server"
     except Exception as e:
@@ -219,11 +223,26 @@ def prompt_for_premium(non_interactive: bool, project_dir: Path | None = None) -
     if has_license.lower() not in ["y", "yes"]:
         return None
 
-    license_key = input("Enter your license key: ").strip()
-    if not license_key:
-        return None
+    # Allow up to 3 attempts to enter a valid license key
+    for attempt in range(3):
+        license_key = input("Enter your license key: ").strip()
+        if not license_key:
+            return None
 
-    return license_key
+        ui.print_status("Validating license key...")
+        valid, message = validate_license_key(license_key)
+
+        if valid:
+            ui.print_success(message)
+            return license_key
+
+        ui.print_error(f"License validation failed: {message}")
+        if attempt < 2:
+            retry = input("Try again? (y/N): ").strip()
+            if retry.lower() not in ["y", "yes"]:
+                return None
+
+    return None
 
 
 def install_premium_with_key(
@@ -232,18 +251,20 @@ def install_premium_with_key(
     version: str,
     local_mode: bool = False,
     local_repo_dir: Path | None = None,
+    skip_validation: bool = False,
 ) -> bool:
     """Install premium features with a pre-validated license key."""
     from lib import ui
 
-    ui.print_status("Validating license key...")
-    valid, message = validate_license_key(license_key)
+    if not skip_validation:
+        ui.print_status("Validating license key...")
+        valid, message = validate_license_key(license_key)
 
-    if not valid:
-        ui.print_error(f"License validation failed: {message}")
-        return False
+        if not valid:
+            ui.print_error(f"License validation failed: {message}")
+            return False
 
-    ui.print_success(message)
+        ui.print_success(message)
 
     # Save license key to .env file
     save_license_to_env(project_dir, license_key)

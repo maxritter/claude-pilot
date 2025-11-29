@@ -476,7 +476,12 @@ def main() -> None:
         ui.print_section("Premium Features")
         if premium_license_key:
             is_premium = premium.install_premium_with_key(
-                project_dir, premium_license_key, VERSION, local_mode, local_repo_dir
+                project_dir,
+                premium_license_key,
+                VERSION,
+                local_mode,
+                local_repo_dir,
+                skip_validation=True,  # Already validated in prompt_for_premium
             )
         else:
             is_premium = False

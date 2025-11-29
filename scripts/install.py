@@ -19,7 +19,7 @@ from pathlib import Path
 # This VERSION is updated by releasebot during release
 # - In main branch: VERSION = "main"
 # - In release tags: VERSION = "v2.4.0" (or whatever the release version is)
-VERSION = "v2.5.6"
+VERSION = "v2.5.7"
 REPO_URL = "https://github.com/maxritter/claude-codepro"
 
 

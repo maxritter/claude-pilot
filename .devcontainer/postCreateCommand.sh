@@ -5,4 +5,4 @@
 set -e
 
 # Download and run the installer (version updated by semantic-release)
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.0.10/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.0.11/install.sh | bash

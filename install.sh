@@ -50,5 +50,6 @@ else
 fi
 
 # Make executable and run with 'install' command
+# Redirect stdin from /dev/tty to allow interactive input when piped
 chmod +x "$INSTALL_PATH"
-exec "$INSTALL_PATH" install "$@"
+exec "$INSTALL_PATH" install "$@" < /dev/tty

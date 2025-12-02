@@ -1,4 +1,4 @@
 """Claude CodePro Installer - Professional step-based installation pipeline."""
 
-__version__ = "3.0.12"
+__version__ = "3.0.13"
 __build__ = "dev"  # Updated by CI during release builds

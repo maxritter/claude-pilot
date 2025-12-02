@@ -14,7 +14,7 @@ class TestBuildHelpers:
 
     def test_get_platform_suffix_returns_string(self):
         """get_platform_suffix returns a string."""
-        from installer.build_cicd import get_platform_suffix
+        from installer.build import get_platform_suffix
 
         result = get_platform_suffix()
         assert isinstance(result, str)
@@ -24,7 +24,7 @@ class TestBuildHelpers:
     @patch("platform.machine", return_value="x86_64")
     def test_get_platform_suffix_linux_x86_64(self, mock_machine, mock_system):
         """get_platform_suffix returns linux-x86_64."""
-        from installer.build_cicd import get_platform_suffix
+        from installer.build import get_platform_suffix
 
         result = get_platform_suffix()
         assert result == "linux-x86_64"
@@ -33,7 +33,7 @@ class TestBuildHelpers:
     @patch("platform.machine", return_value="arm64")
     def test_get_platform_suffix_darwin_arm64(self, mock_machine, mock_system):
         """get_platform_suffix returns darwin-arm64."""
-        from installer.build_cicd import get_platform_suffix
+        from installer.build import get_platform_suffix
 
         result = get_platform_suffix()
         assert result == "darwin-arm64"
@@ -44,7 +44,7 @@ class TestBuildTimestamp:
 
     def test_set_build_timestamp_returns_version_and_timestamp(self):
         """set_build_timestamp returns (version, timestamp) tuple."""
-        from installer.build_cicd import set_build_timestamp
+        from installer.build import set_build_timestamp
 
         version, timestamp = set_build_timestamp()
         assert isinstance(version, str)
@@ -55,7 +55,7 @@ class TestBuildTimestamp:
     def test_reset_build_timestamp_sets_dev(self):
         """reset_build_timestamp resets to dev."""
         from installer import __build__
-        from installer.build_cicd import reset_build_timestamp, set_build_timestamp
+        from installer.build import reset_build_timestamp, set_build_timestamp
 
         # Set a timestamp first
         set_build_timestamp()
@@ -77,6 +77,6 @@ class TestBuildWithPyinstaller:
 
     def test_build_with_pyinstaller_exists(self):
         """build_with_pyinstaller function exists."""
-        from installer.build_cicd import build_with_pyinstaller
+        from installer.build import build_with_pyinstaller
 
         assert callable(build_with_pyinstaller)

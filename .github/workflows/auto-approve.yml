@@ -17,9 +17,7 @@ jobs:
   auto-approve:
     name: Auto-approve
     runs-on: ubuntu-latest
-    if: |
-      github.event.pull_request.user.login == 'dependabot[bot]' &&
-      contains(github.event.pull_request.labels.*.name, 'auto-approve')
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
 
     steps:
       - name: Auto-approve Dependabot PR

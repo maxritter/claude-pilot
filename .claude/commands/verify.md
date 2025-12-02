@@ -136,19 +136,20 @@ Run automated quality tools and fix any issues found.
 
 Run end-to-end tests as appropriate for the application type.
 
-#### For APIs: Newman/Postman Collection Testing
+#### For APIs: Manual or Automated API Testing
 
 **When applicable:** REST APIs, GraphQL APIs, authentication systems, microservices
 
-**Check for Postman collections:**
-- Look in `postman/collections/`, `tests/postman/`, or similar directories
-- Common files: `api-tests.json`, `*.postman_collection.json`
-
-**If collections exist, run Newman:**
+**Test with curl:**
 ```bash
-newman run postman/collections/api-tests.json \
-  -e postman/environments/dev.json \
-  --reporters cli,json
+# Health check
+curl -s http://localhost:8000/health | jq
+
+# CRUD operations
+curl -X POST http://localhost:8000/api/resource -H "Content-Type: application/json" -d '{"name": "test"}'
+curl -s http://localhost:8000/api/resource/1 | jq
+curl -X PUT http://localhost:8000/api/resource/1 -H "Content-Type: application/json" -d '{"name": "updated"}'
+curl -X DELETE http://localhost:8000/api/resource/1
 ```
 
 **Verify:**
@@ -157,14 +158,8 @@ newman run postman/collections/api-tests.json \
 - Authentication flows work correctly
 - CRUD operations complete successfully
 - Error scenarios return proper error codes
-- Chained requests (using saved variables) work
 
 **If failures:** Analyze failure → Check API endpoint → Fix implementation → Re-run → Continue until all pass
-
-**If no collections exist but API endpoints were added:**
-- Consider creating basic Postman collection for new endpoints
-- At minimum: test health check, main CRUD operations
-- Document endpoint testing approach in PR/commit
 
 ### Step 9: Final Verification
 

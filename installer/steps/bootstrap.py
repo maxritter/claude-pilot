@@ -62,22 +62,24 @@ class BootstrapStep(BaseStep):
                 else:
                     ui.status(f"Detected existing installation at {claude_dir}")
 
-            backup_name = f".claude.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            backup_path = ctx.project_dir / backup_name
+            ctx.config["is_upgrade"] = True
 
-            if ui:
-                ui.status(f"Creating backup at {backup_name}...")
+            # Skip backup in local mode (development)
+            if not ctx.local_mode:
+                backup_name = f".claude.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                backup_path = ctx.project_dir / backup_name
 
-            try:
-                shutil.copytree(claude_dir, backup_path)
-                ctx.config["backup_path"] = str(backup_path)
-                ctx.config["is_upgrade"] = True
                 if ui:
-                    ui.success(f"Backup created: {backup_name}")
-            except (OSError, shutil.Error) as e:
-                if ui:
-                    ui.warning(f"Could not create backup: {e}")
-                ctx.config["is_upgrade"] = True
+                    ui.status(f"Creating backup at {backup_name}...")
+
+                try:
+                    shutil.copytree(claude_dir, backup_path)
+                    ctx.config["backup_path"] = str(backup_path)
+                    if ui:
+                        ui.success(f"Backup created: {backup_name}")
+                except (OSError, shutil.Error) as e:
+                    if ui:
+                        ui.warning(f"Could not create backup: {e}")
         else:
             if ui:
                 ui.status("Fresh installation detected")

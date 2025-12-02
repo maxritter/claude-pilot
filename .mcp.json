@@ -16,8 +16,10 @@
       ]
     },
     "cipher": {
-      "command": "cipher",
+      "command": "npx",
       "args": [
+        "-y",
+        "@byterover/cipher",
         "--mode",
         "mcp",
         "--agent",

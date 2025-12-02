@@ -5,8 +5,9 @@ Builds standalone executables for distribution using PyInstaller.
 Run from the repository root.
 
 Usage:
-    python -m installer.build_cicd         # Build for current platform
-    python -m installer.build_cicd --clean # Clean build directory first
+    python -m installer.build              # CI/CD build with platform suffix
+    python -m installer.build --local      # Local build, deploys to .claude/bin
+    python -m installer.build --clean      # Clean build directory first
 """
 
 from __future__ import annotations
@@ -20,7 +21,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 INSTALLER_DIR = Path(__file__).parent
+PROJECT_ROOT = INSTALLER_DIR.parent
 BUILD_DIR = INSTALLER_DIR / "dist"
+BIN_DIR = PROJECT_ROOT / ".claude" / "bin"
 INIT_FILE = INSTALLER_DIR / "__init__.py"
 
 
@@ -72,13 +75,16 @@ __build__ = "dev"  # Updated by CI during release builds
     INIT_FILE.write_text(content)
 
 
-def build_with_pyinstaller() -> Path:
+def build_with_pyinstaller(*, local: bool = False) -> Path:
     """Build using PyInstaller."""
     print("Building with PyInstaller...")
 
-    output_name = f"ccp-installer-{get_platform_suffix()}"
-    if platform.system() == "Windows":
-        output_name += ".exe"
+    if local:
+        output_name = "ccp-installer"
+    else:
+        output_name = f"ccp-installer-{get_platform_suffix()}"
+        if platform.system() == "Windows":
+            output_name += ".exe"
 
     cmd = [
         sys.executable,
@@ -96,7 +102,6 @@ def build_with_pyinstaller() -> Path:
         "--clean",
         "--noconfirm",
         "--hidden-import=rich",
-        "--hidden-import=InquirerPy",
         "--hidden-import=httpx",
         "--hidden-import=typer",
         "--hidden-import=platformdirs",
@@ -111,9 +116,24 @@ def build_with_pyinstaller() -> Path:
     return BUILD_DIR / output_name
 
 
+def deploy_to_bin(binary: Path) -> Path:
+    """Deploy binary to .claude/bin for local testing."""
+    BIN_DIR.mkdir(parents=True, exist_ok=True)
+    dst = BIN_DIR / binary.name
+    print(f"Deploying to {dst}...")
+    shutil.copy2(binary, dst)
+    dst.chmod(0o755)
+    return dst
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Build ccp-installer binary")
+    parser.add_argument(
+        "--local",
+        action="store_true",
+        help="Local build: no platform suffix, deploys to .claude/bin",
+    )
     parser.add_argument(
         "--clean",
         action="store_true",
@@ -127,15 +147,27 @@ def main() -> int:
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
 
-    version, timestamp = set_build_timestamp()
-    print(f"Version: {version}")
-    print(f"Build timestamp: {timestamp}")
+    # Only set build timestamp for CI/CD builds
+    if args.local:
+        version = get_current_version()
+        print(f"Version: {version}")
+        print("Build timestamp: dev (local build)")
+    else:
+        version, timestamp = set_build_timestamp()
+        print(f"Version: {version}")
+        print(f"Build timestamp: {timestamp}")
 
     try:
-        output = build_with_pyinstaller()
+        output = build_with_pyinstaller(local=args.local)
 
         print(f"\n✓ Built: {output}")
         print(f"  Size: {output.stat().st_size / 1024 / 1024:.1f} MB")
+
+        if args.local:
+            deployed = deploy_to_bin(output)
+            print(f"\n✓ Deployed: {deployed}")
+            print("\nRestart Claude Code to use the new binary.")
+
         return 0
 
     except subprocess.CalledProcessError as e:
@@ -143,7 +175,9 @@ def main() -> int:
         return 1
 
     finally:
-        reset_build_timestamp()
+        # Only reset if we set it (CI/CD builds)
+        if not args.local:
+            reset_build_timestamp()
 
 
 if __name__ == "__main__":

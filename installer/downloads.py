@@ -10,8 +10,6 @@ from typing import Callable
 
 import httpx
 
-from installer.errors import DownloadError
-
 
 @dataclass
 class DownloadConfig:
@@ -149,7 +147,7 @@ def download_with_retry(
     max_retries: int = 3,
 ) -> bool:
     """Download a file with retry logic for transient failures."""
-    for attempt in range(max_retries):
+    for _ in range(max_retries):
         if download_file(repo_path, dest_path, config):
             return True
     return False

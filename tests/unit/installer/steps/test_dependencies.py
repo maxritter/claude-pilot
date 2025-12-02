@@ -110,12 +110,6 @@ class TestDependencyInstallFunctions:
 
         assert callable(install_python_tools)
 
-    def test_install_newman_exists(self):
-        """install_newman function exists."""
-        from installer.steps.dependencies import install_newman
-
-        assert callable(install_newman)
-
     def test_install_dotenvx_exists(self):
         """install_dotenvx function exists."""
         from installer.steps.dependencies import install_dotenvx
@@ -123,41 +117,13 @@ class TestDependencyInstallFunctions:
         assert callable(install_dotenvx)
 
 
-class TestNewmanDotenvxInstall:
-    """Test newman and dotenvx installation."""
+class TestDotenvxInstall:
+    """Test dotenvx installation."""
 
     @patch("installer.steps.dependencies.command_exists")
     @patch("subprocess.run")
-    def test_install_newman_calls_npm(self, mock_run, mock_cmd_exists):
-        """install_newman calls npm install."""
-        from installer.steps.dependencies import install_newman
-
-        mock_cmd_exists.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
-
-        result = install_newman()
-
-        # Should call npm install
-        mock_run.assert_called()
-        call_args = mock_run.call_args[0][0]
-        assert "npm" in call_args
-        assert "newman" in call_args
-
-    @patch("installer.steps.dependencies.command_exists")
-    def test_install_newman_skips_if_exists(self, mock_cmd_exists):
-        """install_newman skips if already installed."""
-        from installer.steps.dependencies import install_newman
-
-        mock_cmd_exists.return_value = True
-
-        result = install_newman()
-
-        assert result is True
-
-    @patch("installer.steps.dependencies.command_exists")
-    @patch("subprocess.run")
-    def test_install_dotenvx_calls_npm(self, mock_run, mock_cmd_exists):
-        """install_dotenvx calls npm install."""
+    def test_install_dotenvx_calls_native_installer(self, mock_run, mock_cmd_exists):
+        """install_dotenvx calls native shell installer."""
         from installer.steps.dependencies import install_dotenvx
 
         mock_cmd_exists.return_value = False
@@ -165,11 +131,11 @@ class TestNewmanDotenvxInstall:
 
         result = install_dotenvx()
 
-        # Should call npm install
+        # Should call curl shell installer
         mock_run.assert_called()
         call_args = mock_run.call_args[0][0]
-        assert "npm" in call_args
-        assert "@dotenvx/dotenvx" in call_args
+        assert "bash" in call_args
+        assert "dotenvx.sh" in call_args[2]  # The curl command is the 3rd arg
 
     @patch("installer.steps.dependencies.command_exists")
     def test_install_dotenvx_skips_if_exists(self, mock_cmd_exists):

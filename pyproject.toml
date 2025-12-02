@@ -6,12 +6,10 @@ requires-python = ">=3.13,<3.14"
 readme = "README.md"
 dependencies = [
     "rich>=14.0.0",
-    "InquirerPy>=0.3.4",
     "httpx>=0.28.1",
     "typer>=0.15.3",
     "platformdirs>=4.3.6",
     "pyinstaller>=6.17.0",
-    "nuitka>=2.8.9",
 ]
 
 [dependency-groups]
@@ -29,11 +27,11 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["scripts", "installer", "."]
+pythonpath = ["installer", "."]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-testpaths = ["tests/e2e", "scripts"]
+testpaths = ["tests/e2e"]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
@@ -99,13 +97,13 @@ ignore = [
 [tool.vulture]
 exclude = [".venv/**", "target/**", "**/.tox/**", "**/build/**"]
 min_confidence = 80
-paths = ["scripts"]
+paths = ["installer"]
 
 [tool.mypy]
 ignore_missing_imports = true
 
 [tool.basedpyright]
-include = ["scripts", "installer"]
+include = ["installer"]
 exclude = [
     "**/node_modules",
     "**/__pycache__",

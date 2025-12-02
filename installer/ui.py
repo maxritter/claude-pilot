@@ -1,11 +1,11 @@
-"""UI abstraction layer - Rich and InquirerPy wrapper with enhanced styling."""
+"""UI abstraction layer - Rich wrapper with simple input prompts."""
 
 from __future__ import annotations
 
+import getpass
 from contextlib import contextmanager
 from typing import Any, Iterator
 
-from InquirerPy import inquirer
 from rich.console import Console as RichConsole
 from rich.panel import Panel
 from rich.progress import (
@@ -52,7 +52,7 @@ class ProgressTask:
 
 
 class Console:
-    """Console wrapper for Rich and InquirerPy with enhanced styling."""
+    """Console wrapper for Rich with simple input prompts."""
 
     def __init__(self, non_interactive: bool = False):
         self._console = RichConsole(theme=CCP_THEME)
@@ -68,12 +68,12 @@ class Console:
     def banner(self) -> None:
         """Print the Claude CodePro banner with feature highlights."""
         logo = """
-[bold cyan]   _____ _                 _        _____          _      _____
-  / ____| |               | |      / ____|        | |    |  __ \\
- | |    | | __ _ _   _  __| | ___ | |     ___   __| | ___| |__) | __ ___
- | |    | |/ _` | | | |/ _` |/ _ \\| |    / _ \\ / _` |/ _ \\  ___/ '__/ _ \\
- | |____| | (_| | |_| | (_| |  __/| |___| (_) | (_| |  __/ |   | | | (_) |
-  \\_____|_|\\__,_|\\__,_|\\__,_|\\___| \\_____\\___/ \\__,_|\\___|_|   |_|  \\___/[/bold cyan]
+[bold cyan]   _____ _                 _          _____          _      _____
+  / ____| |               | |        / ____|        | |    |  __ \\
+ | |    | | __ _ _   _  __| | ___   | |     ___   __| | ___| |__) | __ ___
+ | |    | |/ _` | | | |/ _` |/ _ \\  | |    / _ \\ / _` |/ _ \\  ___/ '__/ _ \\
+ | |____| | (_| | |_| | (_| |  __/  | |___| (_) | (_| |  __/ |   | | | (_) |
+  \\_____|_|\\__,_|\\__,_|\\__,_|\\___|   \\_____\\___/ \\__,_|\\___|_|   |_|  \\___/[/bold cyan]
 """
         self._console.print(logo)
 
@@ -273,49 +273,83 @@ class Console:
             self._console.print(f"  {icon} {item} [{status}]")
 
     def confirm(self, message: str, default: bool = True) -> bool:
-        """Prompt for yes/no confirmation with styled prompt."""
+        """Prompt for yes/no confirmation."""
         if self._non_interactive:
             return default
 
+        default_str = "Y/n" if default else "y/N"
         self._console.print()
-        confirm_prompt = getattr(inquirer, "confirm")
-        return confirm_prompt(message=message, default=default).execute()  # type: ignore[no-any-return]
+        self._console.print(f"  [bold cyan]?[/bold cyan] {message} [{default_str}]: ", end="")
+
+        try:
+            response = input().strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            self._console.print()
+            return default
+
+        if not response:
+            return default
+        return response in ("y", "yes", "true", "1")
 
     def select(self, message: str, choices: list[str]) -> str:
-        """Prompt for single selection from choices with styled menu."""
+        """Prompt for single selection from choices."""
         if self._non_interactive:
             return choices[0] if choices else ""
 
         self._console.print()
-        select_prompt = getattr(inquirer, "select")
-        return select_prompt(message=message, choices=choices).execute()  # type: ignore[no-any-return]
+        self._console.print(f"  [bold cyan]?[/bold cyan] {message}")
+        for i, choice in enumerate(choices, 1):
+            self._console.print(f"    [bold magenta]{i}.[/bold magenta] {choice}")
+        self._console.print(f"  Enter choice [1-{len(choices)}]: ", end="")
+
+        try:
+            response = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            self._console.print()
+            return choices[0] if choices else ""
+
+        try:
+            idx = int(response) - 1
+            if 0 <= idx < len(choices):
+                return choices[idx]
+        except ValueError:
+            pass
+
+        return choices[0] if choices else ""
 
     def input(self, message: str, default: str = "") -> str:
-        """Prompt for text input with styled prompt."""
+        """Prompt for text input."""
         if self._non_interactive:
             return default
 
         self._console.print()
-        text_prompt = getattr(inquirer, "text")
-        return text_prompt(message=message, default=default).execute()  # type: ignore[no-any-return]
+        prompt = f"  [bold cyan]?[/bold cyan] {message}"
+        if default:
+            prompt += f" [{default}]"
+        prompt += ": "
+        self._console.print(prompt, end="")
+
+        try:
+            response = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            self._console.print()
+            return default
+
+        return response if response else default
 
     def password(self, message: str) -> str:
         """Prompt for hidden password input."""
         if self._non_interactive:
             return ""
 
-        from InquirerPy import inquirer
-
         self._console.print()
-        secret_fn = getattr(inquirer, "secret")
-        return secret_fn(
-            message=message,
-            style={
-                "questionmark": "#ff9d00 bold",
-                "question": "",
-                "answer": "#5fd700",
-            },
-        ).execute()
+        self._console.print(f"  [bold cyan]?[/bold cyan] {message}: ", end="")
+
+        try:
+            return getpass.getpass(prompt="")
+        except (EOFError, KeyboardInterrupt):
+            self._console.print()
+            return ""
 
     def print(self, message: str = "") -> None:
         """Print a plain message."""

@@ -1,5 +1,7 @@
 # Git Commit Standards
 
+**When user explicitly instructs you to commit, execute the commit directly.** Only ask for confirmation when the user hasn't given clear instructions. Never push without user approval.
+
 ## Commit Message Format
 
 **Always use `fix:` prefix by default** unless the user explicitly requests a different type.
@@ -32,11 +34,17 @@ BREAKING CHANGE: Old scripts/install.py removed"
 
 ## When to Use Different Types
 
-| Type | Use When |
-|------|----------|
-| `fix:` | Default for all changes, bug fixes, improvements, refactoring |
-| `feat:` | User explicitly says "new feature" or "add feature" |
-| `docs:` | Documentation-only changes (no code) |
-| `chore:` | Maintenance tasks that shouldn't trigger release |
+| Type | Use When | Release |
+|------|----------|---------|
+| `fix:` | Default for all changes, bug fixes, improvements | Patch |
+| `feat:` | User explicitly says "new feature" or "add feature" | Minor |
+| `docs:` | Documentation-only changes (no code) | None |
+| `chore:` | Maintenance tasks that shouldn't trigger release | None |
+| `refactor:` | Code restructuring without behavior change | None |
+| `test:` | Adding or updating tests only | None |
+| `perf:` | Performance improvements | Patch |
+| `style:` | Formatting, whitespace (no logic change) | None |
+| `build:` | Build system or dependency changes | None |
+| `ci:` | CI/CD configuration changes | None |
 
 **When in doubt, use `fix:`**

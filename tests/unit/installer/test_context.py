@@ -87,12 +87,6 @@ class TestErrorHierarchy:
 
         assert issubclass(PreflightError, FatalInstallError)
 
-    def test_download_error_is_install_error(self):
-        """DownloadError inherits from InstallError."""
-        from installer.errors import DownloadError, InstallError
-
-        assert issubclass(DownloadError, InstallError)
-
     def test_config_error_is_install_error(self):
         """ConfigError inherits from InstallError."""
         from installer.errors import ConfigError, InstallError
@@ -103,22 +97,14 @@ class TestErrorHierarchy:
         """All errors can have a message."""
         from installer.errors import (
             ConfigError,
-            DownloadError,
             FatalInstallError,
             InstallError,
             PreflightError,
         )
 
-        for exc_class in [InstallError, FatalInstallError, PreflightError, DownloadError, ConfigError]:
+        for exc_class in [InstallError, FatalInstallError, PreflightError, ConfigError]:
             exc = exc_class("test message")
             assert str(exc) == "test message"
-
-    def test_download_error_has_url_attribute(self):
-        """DownloadError can have url attribute."""
-        from installer.errors import DownloadError
-
-        exc = DownloadError("Failed to download", url="https://example.com")
-        assert exc.url == "https://example.com"
 
     def test_preflight_error_has_check_name_attribute(self):
         """PreflightError can have check_name attribute."""

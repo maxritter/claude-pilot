@@ -70,8 +70,7 @@ def validate_license_key(license_key: str) -> tuple[bool, str]:
                 if purchase.get("disputed"):
                     return False, "License is disputed"
 
-                uses = result.get("uses", 0)
-                return True, f"License valid (activation #{uses})"
+                return True, "License valid"
 
             return False, result.get("message", "Invalid license key")
 
@@ -100,9 +99,12 @@ def download_premium_binary(
     dest_path = dest_dir / "ccp-premium"
 
     if local_mode and local_repo_dir:
+        # Try platform-specific name first, then generic name
         source_path = local_repo_dir / "premium" / "dist" / binary_name
         if not source_path.exists():
-            return False, f"Premium binary not found at {source_path}"
+            source_path = local_repo_dir / "premium" / "dist" / "ccp-premium"
+        if not source_path.exists():
+            return False, f"Premium binary not found at {local_repo_dir / 'premium' / 'dist'}"
 
         try:
             dest_dir.mkdir(parents=True, exist_ok=True)
@@ -210,10 +212,10 @@ class PremiumStep(BaseStep):
             ctx.ui.print("  Get a license at: [bold cyan]www.claude-code.pro[/bold cyan]")
             ctx.ui.print()
 
-            if ctx.ui.confirm("Do you have a premium license key?", default=False):
-                key = ctx.ui.input("Enter your license key")
-                if key and key.strip():
-                    return key.strip()
+            # Ask for the license key directly, allowing user to skip by pressing Enter
+            key = ctx.ui.input("Enter premium license key (or press Enter to skip)")
+            if key and key.strip():
+                return key.strip()
 
         return None
 
@@ -280,17 +282,25 @@ class PremiumStep(BaseStep):
             ui.success(f"Installed premium binary to {result}")
 
         if not ctx.non_interactive and ui:
-            ui.print()
-            ui.section("Rules Supervisor (Gemini API)")
-            ui.status("The Rules Supervisor uses Gemini to analyze coding sessions.")
-            ui.print("  • Cost: Very low (~$0.01 per session analysis)")
-            ui.print("  • Get API key at: https://aistudio.google.com/apikey")
-            ui.print()
+            import os
 
-            if ui.confirm("Configure Gemini API key?", default=False):
-                gemini_key = ui.password("Enter your Gemini API key")
-                if gemini_key:
-                    save_env_var(ctx.project_dir, "GEMINI_API_KEY", gemini_key)
+            env_file = ctx.project_dir / ".env"
+            gemini_already_set = os.environ.get("GEMINI_API_KEY") or (
+                env_file.exists() and "GEMINI_API_KEY=" in env_file.read_text()
+            )
+
+            if gemini_already_set:
+                ui.success("GEMINI_API_KEY already set, skipping")
+            else:
+                ui.print()
+                ui.section("Rules Supervisor (Gemini API)")
+                ui.status("The Rules Supervisor uses Gemini to analyze coding sessions.")
+                ui.print("  • Get API key at: https://aistudio.google.com/apikey")
+                ui.print()
+
+                gemini_key = ui.input("Enter Gemini API key (or press Enter to skip)", default="")
+                if gemini_key and gemini_key.strip():
+                    save_env_var(ctx.project_dir, "GEMINI_API_KEY", gemini_key.strip())
                     ui.success("Saved Gemini API key to .env")
                 else:
                     ui.warning("No key entered. Rules Supervisor will be disabled.")

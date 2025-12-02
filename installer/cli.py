@@ -19,7 +19,6 @@ from installer.steps.devcontainer import DevcontainerStep
 from installer.steps.environment import EnvironmentStep
 from installer.steps.finalize import FinalizeStep
 from installer.steps.git_setup import GitSetupStep
-from installer.steps.migration import MigrationStep
 from installer.steps.preflight import PreflightStep
 from installer.steps.premium import PremiumStep
 from installer.steps.shell_config import ShellConfigStep
@@ -38,7 +37,6 @@ def get_all_steps() -> list[BaseStep]:
         PreflightStep(),
         DevcontainerStep(),
         BootstrapStep(),
-        MigrationStep(),
         GitSetupStep(),
         ClaudeFilesStep(),
         ConfigFilesStep(),
@@ -108,12 +106,22 @@ def install(
     console.banner()
     console.info(f"Build: {__build__}")
 
+    effective_local_repo_dir = local_repo_dir if local_repo_dir else (Path.cwd() if local else None)
+
+    install_python = not skip_python
+    if not skip_python and not non_interactive:
+        console.print()
+        console.print("  [bold]Do you want to install advanced Python features?[/bold]")
+        console.print("  This includes: uv, ruff, mypy, basedpyright, and Python quality hooks")
+        install_python = console.confirm("Install Python support?", default=True)
+
     ctx = InstallContext(
         project_dir=Path.cwd(),
-        install_python=not skip_python,
-        non_interactive=non_interactive or skip_env,
+        install_python=install_python,
+        non_interactive=non_interactive,
+        skip_env=skip_env,
         local_mode=local,
-        local_repo_dir=local_repo_dir,
+        local_repo_dir=effective_local_repo_dir,
         ui=console,
     )
 

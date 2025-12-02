@@ -61,8 +61,8 @@ jobs:
               apt-get install -y python3 python3-pip && \
               python3 -m pip install --upgrade pip && \
               python3 -m pip install pyinstaller rich && \
-              python3 -m pip install InquirerPy httpx typer platformdirs && \
-              cd installer && python3 build_cicd.py
+              python3 -m pip install httpx typer platformdirs && \
+              cd installer && python3 build.py
             "
 
       - name: Upload artifact
@@ -94,15 +94,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Build binary
         working-directory: installer
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pyinstaller rich InquirerPy httpx
+          python -m pip install pyinstaller rich httpx
           python -m pip install typer platformdirs
-          python build_cicd.py
+          python build.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
@@ -154,7 +154,7 @@ jobs:
               apt-get install -y python3 python3-pip && \
               python3 -m pip install --upgrade pip && \
               python3 -m pip install pyinstaller && \
-              python3 build_cicd.py
+              python3 build.py
             "
 
       - name: Upload artifact
@@ -198,14 +198,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Build binary
         working-directory: premium
         run: |
           python -m pip install --upgrade pip
           python -m pip install pyinstaller
-          python build_cicd.py
+          python build.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
@@ -223,16 +223,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install pytest pytest-cov
-          python3 -m pip install rich InquirerPy httpx typer platformdirs
+          python3 -m pip install rich httpx typer platformdirs
 
       - name: Run unit tests with coverage
         run: |

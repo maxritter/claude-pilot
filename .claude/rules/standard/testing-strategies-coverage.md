@@ -139,12 +139,12 @@ When implementing functionality:
 
 ### E2E Testing Patterns
 
-**For APIs (Newman/Postman):**
+**For APIs:**
 
 ```bash
-newman run postman/collections/api-tests.json \
-  -e postman/environments/dev.json \
-  --reporters cli,json
+# Test with curl
+curl -s http://localhost:8000/health | jq
+curl -X POST http://localhost:8000/api/resource -H "Content-Type: application/json" -d '{"name": "test"}'
 ```
 
 Test assertions:

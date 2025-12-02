@@ -89,8 +89,8 @@ class PreflightStep(BaseStep):
 
         if ui:
             ui.status("Checking Python version...")
-        python_ok = check_python_version("3.8")
-        results.append(("Python 3.8+", python_ok, f"Found Python {sys.version_info.major}.{sys.version_info.minor}"))
+        python_ok = check_python_version("3.9")
+        results.append(("Python 3.9+", python_ok, f"Found Python {sys.version_info.major}.{sys.version_info.minor}"))
 
         if not ctx.local_mode:
             if ui:

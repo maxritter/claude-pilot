@@ -102,6 +102,104 @@ class TestPremiumHelpers:
             assert "hooks" not in updated or not updated.get("hooks")
 
 
+class TestGetPremiumKey:
+    """Test PremiumStep._get_premium_key()."""
+
+    def test_get_premium_key_returns_context_key_if_set(self):
+        """_get_premium_key returns key from context if already set."""
+        from installer.context import InstallContext
+        from installer.steps.premium import PremiumStep
+        from installer.ui import Console
+
+        step = PremiumStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                premium_key="EXISTING-KEY",
+                ui=Console(non_interactive=True),
+            )
+            assert step._get_premium_key(ctx) == "EXISTING-KEY"
+
+    def test_get_premium_key_returns_env_key_if_set(self):
+        """_get_premium_key returns key from CCP_LICENSE_KEY env var."""
+        from installer.context import InstallContext
+        from installer.steps.premium import PremiumStep
+        from installer.ui import Console
+
+        step = PremiumStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                premium_key=None,
+                ui=Console(non_interactive=True),
+            )
+            with patch.dict("os.environ", {"CCP_LICENSE_KEY": "ENV-KEY"}):
+                assert step._get_premium_key(ctx) == "ENV-KEY"
+
+    def test_get_premium_key_returns_none_in_non_interactive(self):
+        """_get_premium_key returns None in non-interactive mode without key."""
+        from installer.context import InstallContext
+        from installer.steps.premium import PremiumStep
+        from installer.ui import Console
+
+        step = PremiumStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                premium_key=None,
+                non_interactive=True,
+                ui=Console(non_interactive=True),
+            )
+            with patch.dict("os.environ", {}, clear=True):
+                assert step._get_premium_key(ctx) is None
+
+    def test_get_premium_key_prompts_for_key_directly(self):
+        """_get_premium_key prompts for key directly (not yes/no then key)."""
+        from installer.context import InstallContext
+        from installer.steps.premium import PremiumStep
+        from installer.ui import Console
+
+        step = PremiumStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ui = Console(non_interactive=False)
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                premium_key=None,
+                non_interactive=False,
+                ui=ui,
+            )
+
+            # Mock ui.input to return a license key directly
+            with patch.object(ui, "input", return_value="DIRECT-KEY"):
+                with patch.dict("os.environ", {}, clear=True):
+                    result = step._get_premium_key(ctx)
+                    assert result == "DIRECT-KEY"
+                    # Verify input was called (not confirm)
+                    ui.input.assert_called_once()
+
+    def test_get_premium_key_returns_none_when_user_skips(self):
+        """_get_premium_key returns None when user presses Enter to skip."""
+        from installer.context import InstallContext
+        from installer.steps.premium import PremiumStep
+        from installer.ui import Console
+
+        step = PremiumStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ui = Console(non_interactive=False)
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                premium_key=None,
+                non_interactive=False,
+                ui=ui,
+            )
+
+            # Mock ui.input to return empty string (user pressed Enter to skip)
+            with patch.object(ui, "input", return_value=""):
+                with patch.dict("os.environ", {}, clear=True):
+                    result = step._get_premium_key(ctx)
+                    assert result is None
+
+
 class TestPremiumRun:
     """Test PremiumStep.run()."""
 

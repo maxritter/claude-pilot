@@ -18,6 +18,7 @@ class InstallContext:
     install_python: bool = True
     premium_key: str | None = None
     non_interactive: bool = False
+    skip_env: bool = False
     local_mode: bool = False
     local_repo_dir: Path | None = None
     completed_steps: list[str] = field(default_factory=list)

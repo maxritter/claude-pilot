@@ -137,8 +137,9 @@ class FinalizeStep(BaseStep):
 
         ui.rule()
         ui.print()
-        ui.print("  [bold cyan]📚 Learn more:[/bold cyan] https://www.claude-code.pro")
-        ui.print("  [bold cyan]💬 Questions?[/bold cyan]  https://github.com/maxritter/claude-codepro/issues")
+        ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/claude-codepro")
+        ui.print("  [bold magenta]💎 Premium Features:[/bold magenta] https://www.claude-code.pro")
+        ui.print("  [bold cyan]🐛 Bugs, Features, PRs:[/bold cyan] https://github.com/maxritter/claude-codepro/issues")
         ui.print()
 
     def rollback(self, ctx: InstallContext) -> None:

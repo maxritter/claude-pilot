@@ -23,14 +23,6 @@ class PreflightError(FatalInstallError):
         self.check_name = check_name
 
 
-class DownloadError(InstallError):
-    """Download or network error."""
-
-    def __init__(self, message: str, url: str | None = None):
-        super().__init__(message)
-        self.url = url
-
-
 class ConfigError(InstallError):
     """Configuration error."""
 

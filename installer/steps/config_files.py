@@ -68,9 +68,8 @@ class ConfigFilesStep(BaseStep):
     name = "config_files"
 
     def check(self, ctx: InstallContext) -> bool:
-        """Check if config files exist."""
-        settings_file = ctx.project_dir / ".claude" / "settings.local.json"
-        return settings_file.exists()
+        """Always returns False - settings should always be regenerated from template."""
+        return False
 
     def run(self, ctx: InstallContext) -> None:
         """Generate settings and merge MCP configs."""
@@ -159,19 +158,22 @@ class ConfigFilesStep(BaseStep):
                         ui.warning(f"Failed to parse .mcp.json: {e}")
 
         funnel_file = ctx.project_dir / ".mcp-funnel.json"
-        if ui:
-            ui.status("Installing MCP Funnel configuration...")
-        with tempfile.TemporaryDirectory() as tmpdir:
-            temp_funnel = Path(tmpdir) / ".mcp-funnel.json"
-            if download_file(".mcp-funnel.json", temp_funnel, config):
-                try:
-                    new_config = json.loads(temp_funnel.read_text())
-                    merge_mcp_config(funnel_file, new_config)
-                    if ui:
-                        ui.success("Installed .mcp-funnel.json")
-                except json.JSONDecodeError as e:
-                    if ui:
-                        ui.warning(f"Failed to parse .mcp-funnel.json: {e}")
+        if not funnel_file.exists():
+            if ui:
+                ui.status("Installing MCP Funnel configuration...")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                temp_funnel = Path(tmpdir) / ".mcp-funnel.json"
+                if download_file(".mcp-funnel.json", temp_funnel, config):
+                    try:
+                        funnel_file.write_text(temp_funnel.read_text())
+                        if ui:
+                            ui.success("Installed .mcp-funnel.json")
+                    except Exception as e:
+                        if ui:
+                            ui.warning(f"Failed to install .mcp-funnel.json: {e}")
+        else:
+            if ui:
+                ui.success(".mcp-funnel.json already exists, skipping")
 
     def rollback(self, ctx: InstallContext) -> None:
         """Remove generated config files."""

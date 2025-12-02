@@ -2,7 +2,7 @@
 
 <img src="docs/img/logo.png" alt="Claude CodePro" width="400">
 
-### A Professional System for Building Quality Code with Claude Code (CC)
+### Professional Development Environment for Claude Code (CC)
 
 Start shipping systematically with Spec-Driven Development, Skills, TDD, Semantic Search, Persistent Memory, Context Management, Quality Hooks, Modular Rules System, and much more 🚀
 
@@ -65,13 +65,12 @@ The installer will guide you through the setup process with interactive prompts.
 - **Post-Edit Hooks** - Automated formatting and code checking after every edit
 - **Qlty** - Automated code quality hooks for all programming languages
 - **uv, ruff, mypy, basedpyright** - Python linter, formatter, and type checker (optional)
-- **Newman** - API end-to-end testing with Postman collections
+- **Global Tools** - Python tools, qlty, Claude Code, dotenvx installed globally
 
 ### 🏗️ One-Command Installation
 
 - **Dev Container Support** - Isolated development environment with pre-configured tools and extensions
 - **Automated Setup Script** - Installs and configures everything in one command
-- **Global Tools** - Python tools, qlty, Claude Code, Cipher, Newman installed globally
 - **Shell Integration** - Auto-configures bash and zsh with `ccp` alias
 - **IDE Compatible** - Works with VS Code, Cursor, Windsurf or Antigravity
 
@@ -145,7 +144,6 @@ Contributions welcome: custom skills, MCP integrations, workflow improvements, b
 - **[sirmalloc/ccstatusline](https://github.com/sirmalloc/ccstatusline)** - CC Status line integration
 - **[exa-labs/exa-mcp-server](https://github.com/exa-labs/exa-mcp-server)** - AI-powered web search and code context
 - **[chris-schra/mcp-funnel](https://github.com/chris-schra/mcp-funnel)** - MCP Tool filtering
-- **[postmanlabs/newman](https://github.com/postmanlabs/newman)** - End-to-End API testing
 - **[astral-sh/uv](https://github.com/astral-sh/uv)** - Fast Python package manager
 - **[astral-sh/ruff](https://github.com/astral-sh/ruff)** - Fast Python linter and formatter
 - **[DetachHead/basedpyright](https://github.com/DetachHead/basedpyright)** - Enhanced Python type checker

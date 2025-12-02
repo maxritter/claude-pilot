@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -12,29 +13,39 @@ from installer.steps.base import BaseStep
 if TYPE_CHECKING:
     from installer.context import InstallContext
 
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
+
+def _run_bash_with_retry(command: str, cwd: Path | None = None) -> bool:
+    """Run a bash command with retry logic for transient failures."""
+    for attempt in range(MAX_RETRIES):
+        try:
+            subprocess.run(
+                ["bash", "-c", command],
+                check=True,
+                capture_output=True,
+                cwd=cwd,
+            )
+            return True
+        except subprocess.CalledProcessError:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+            continue
+    return False
+
 
 def install_nodejs() -> bool:
     """Install Node.js via NVM if not present."""
     if command_exists("node"):
         return True
 
-    try:
-        nvm_dir = Path.home() / ".nvm"
-        if not nvm_dir.exists():
-            subprocess.run(
-                ["bash", "-c", "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash"],
-                check=True,
-                capture_output=True,
-            )
+    nvm_dir = Path.home() / ".nvm"
+    if not nvm_dir.exists():
+        if not _run_bash_with_retry("curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash"):
+            return False
 
-        subprocess.run(
-            ["bash", "-c", "source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22"],
-            check=True,
-            capture_output=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return _run_bash_with_retry("source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22")
 
 
 def install_uv() -> bool:
@@ -42,15 +53,7 @@ def install_uv() -> bool:
     if command_exists("uv"):
         return True
 
-    try:
-        subprocess.run(
-            ["bash", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"],
-            check=True,
-            capture_output=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return _run_bash_with_retry("curl -LsSf https://astral.sh/uv/install.sh | sh")
 
 
 def install_python_tools() -> bool:
@@ -72,90 +75,26 @@ def install_python_tools() -> bool:
 
 def install_claude_code() -> bool:
     """Install Claude Code CLI via official installer."""
-    try:
-        subprocess.run(
-            ["bash", "-c", "curl -fsSL https://claude.ai/install.sh | bash"],
-            check=True,
-            capture_output=True,
-        )
+    if command_exists("claude"):
         return True
-    except subprocess.CalledProcessError:
-        return False
+
+    return _run_bash_with_retry("curl -fsSL https://claude.ai/install.sh | bash")
 
 
 def install_qlty(project_dir: Path) -> bool:
     """Install qlty code quality tool."""
-    try:
-        subprocess.run(
-            ["bash", "-c", "curl https://qlty.sh | bash"],
-            check=True,
-            capture_output=True,
-            cwd=project_dir,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
-def is_npm_package_installed(package: str) -> bool:
-    """Check if an npm package is globally installed."""
-    try:
-        result = subprocess.run(
-            ["npm", "list", "-g", package, "--depth=0"],
-            capture_output=True,
-            text=True,
-        )
-        return result.returncode == 0 and package in result.stdout
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
-
-
-def install_cipher() -> bool:
-    """Install Cipher memory tool."""
-    if is_npm_package_installed("@byterover/cipher"):
+    if command_exists("qlty"):
         return True
 
-    try:
-        subprocess.run(
-            ["npm", "install", "-g", "@byterover/cipher"],
-            check=True,
-            capture_output=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
-def install_newman() -> bool:
-    """Install Newman (Postman CLI)."""
-    if command_exists("newman") or is_npm_package_installed("newman"):
-        return True
-
-    try:
-        subprocess.run(
-            ["npm", "install", "-g", "newman"],
-            check=True,
-            capture_output=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return _run_bash_with_retry("curl https://qlty.sh | bash", cwd=project_dir)
 
 
 def install_dotenvx() -> bool:
-    """Install dotenvx (environment variable management)."""
-    if command_exists("dotenvx") or is_npm_package_installed("@dotenvx/dotenvx"):
+    """Install dotenvx (environment variable management) via native shell installer."""
+    if command_exists("dotenvx"):
         return True
 
-    try:
-        subprocess.run(
-            ["npm", "install", "-g", "@dotenvx/dotenvx"],
-            check=True,
-            capture_output=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return _run_bash_with_retry("curl -sfS https://dotenvx.sh | sh")
 
 
 def _install_with_spinner(ui: Any, name: str, install_fn: Any, *args: Any) -> bool:
@@ -201,12 +140,6 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "qlty", install_qlty, ctx.project_dir):
             installed.append("qlty")
-
-        if _install_with_spinner(ui, "Cipher", install_cipher):
-            installed.append("cipher")
-
-        if _install_with_spinner(ui, "Newman", install_newman):
-            installed.append("newman")
 
         if _install_with_spinner(ui, "dotenvx", install_dotenvx):
             installed.append("dotenvx")

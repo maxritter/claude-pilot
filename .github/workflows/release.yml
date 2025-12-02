@@ -52,7 +52,7 @@ jobs:
       - name: Build binary
         run: |
           # Build in Docker with Ubuntu 20.04 for GLIBC 2.31 compatibility
-          # Install Python 3.13 from deadsnakes PPA
+          # Install Python 3.12 from deadsnakes PPA
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
@@ -62,12 +62,12 @@ jobs:
               apt-get install -y software-properties-common && \
               add-apt-repository -y ppa:deadsnakes/ppa && \
               apt-get update && \
-              apt-get install -y python3.13 python3.13-venv && \
-              python3.13 -m ensurepip --upgrade && \
-              python3.13 -m pip install --upgrade pip && \
-              python3.13 -m pip install pyinstaller rich && \
-              python3.13 -m pip install httpx typer platformdirs && \
-              cd installer && python3.13 build.py
+              apt-get install -y python3.12 python3.12-venv && \
+              python3.12 -m ensurepip --upgrade && \
+              python3.12 -m pip install --upgrade pip && \
+              python3.12 -m pip install pyinstaller rich && \
+              python3.12 -m pip install httpx typer platformdirs && \
+              cd installer && python3.12 build.py
             "
 
       - name: Upload artifact
@@ -150,7 +150,7 @@ jobs:
       - name: Build binary
         run: |
           # Build in Docker with Ubuntu 20.04 for GLIBC 2.31 compatibility
-          # Install Python 3.13 from deadsnakes PPA
+          # Install Python 3.12 from deadsnakes PPA
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace/premium \
@@ -160,11 +160,11 @@ jobs:
               apt-get install -y software-properties-common && \
               add-apt-repository -y ppa:deadsnakes/ppa && \
               apt-get update && \
-              apt-get install -y python3.13 python3.13-venv && \
-              python3.13 -m ensurepip --upgrade && \
-              python3.13 -m pip install --upgrade pip && \
-              python3.13 -m pip install pyinstaller && \
-              python3.13 build.py
+              apt-get install -y python3.12 python3.12-venv && \
+              python3.12 -m ensurepip --upgrade && \
+              python3.12 -m pip install --upgrade pip && \
+              python3.12 -m pip install pyinstaller && \
+              python3.12 build.py
             "
 
       - name: Upload artifact

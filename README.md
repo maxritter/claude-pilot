@@ -4,6 +4,9 @@
 
 ### 🛠️ Professional Development Environment for Claude Code (CC)
 
+[![Run in Smithery](https://smithery.ai/badge/skills/maxritter)](https://smithery.ai/skills?ns=maxritter&utm_source=github&utm_medium=badge)
+
+
 Start shipping systematically with Spec-Driven Development, Skills, TDD, Semantic Search, Persistent Memory, Context Management, Quality Hooks, Modular Rules System, and much more 🚀
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

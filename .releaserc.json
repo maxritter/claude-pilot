@@ -24,7 +24,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/^__version__ = \".*\"/__version__ = \"${nextRelease.version}\"/' installer/__init__.py && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' README.md && sed -i 's/^FALLBACK_VERSION=\"[^\"]*\"/FALLBACK_VERSION=\"${nextRelease.version}\"/' install.sh && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' .devcontainer/devcontainer.json"
+        "prepareCmd": "sed -i 's/^__version__ = \".*\"/__version__ = \"${nextRelease.version}\"/' installer/__init__.py && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' README.md && sed -i 's/^VERSION=\"[^\"]*\"/VERSION=\"${nextRelease.version}\"/' install.sh && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' .devcontainer/devcontainer.json"
       }
     ],
     [

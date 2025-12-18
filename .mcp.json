@@ -2,22 +2,33 @@
   "mcpServers": {
     "claude-context": {
       "command": "npx",
-      "args": ["-y", "@zilliz/claude-context-mcp@latest"],
+      "args": [
+        "-y",
+        "@zilliz/claude-context-mcp@latest"
+      ],
       "env": {
         "CUSTOM_IGNORE_PATTERNS": "**/node_modules/**,**/cdk.out/**,**/__pycache__/**,**/.venv/**,**/venv/**,**/.uv/**,**/.git/**,**/dist/**,**/build/**,**/.mypy_cache/**,**/.pytest_cache/**,**/.ruff_cache/**,**/coverage/**,**/.coverage/**,**/*.egg-info/**,**/.next/**,**/.tox/**,**/.cache/**,**/*.pyc,**/*.pyo,**/.terraform/**,**/vendor/**,**/target/**,**/.idea/**,**/test-reports/**,**/*.lock,**/yarn.lock,**/uv.lock,**/package-lock.json,**/.DS_Store,**/Thumbs.db,**/*.log,**/htmlcov/**,**/.hypothesis/**,**/.ipynb_checkpoints/**,**/wheels/**,**/*.egg,**/.eggs/**,**/downloads/**,**/sdist/**,**/*.whl"
       }
     },
     "tavily": {
       "command": "npx",
-      "args": ["-y", "tavily-mcp@latest"]
+      "args": [
+        "-y",
+        "tavily-mcp@latest"
+      ]
     },
     "Ref": {
       "command": "npx",
-      "args": ["ref-tools-mcp@latest"]
+      "args": [
+        "ref-tools-mcp@latest"
+      ]
     },
     "mcp-funnel": {
       "command": "npx",
-      "args": ["-y", "mcp-funnel@0.0.6"]
+      "args": [
+        "-y",
+        "mcp-funnel@0.0.6"
+      ]
     }
   }
 }

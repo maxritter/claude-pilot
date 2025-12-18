@@ -5,28 +5,10 @@
 
 set -e
 
-# Fallback version (updated by semantic-release)
-FALLBACK_VERSION="3.2.3"
+# Version updated by semantic-release
+VERSION="3.2.3"
 
 REPO="maxritter/claude-codepro"
-
-# Fetch latest version from GitHub API, fall back to hardcoded version
-get_latest_version() {
-    local latest
-    if command -v curl > /dev/null 2>&1; then
-        latest=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    elif command -v wget > /dev/null 2>&1; then
-        latest=$(wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    fi
-
-    if [ -n "$latest" ] && [ "$latest" != "null" ]; then
-        echo "$latest"
-    else
-        echo "$FALLBACK_VERSION"
-    fi
-}
-
-VERSION=$(get_latest_version)
 REPO_RAW="https://raw.githubusercontent.com/${REPO}/v${VERSION}"
 BINARY_PREFIX="ccp-installer"
 

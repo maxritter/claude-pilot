@@ -27,15 +27,16 @@
 3. Search for relevant patterns
 4. Review results to understand existing approaches
 
-### Tavily - Web Search, Extract & Map (PREFERRED for web)
+### Tavily - Web Search & Site Mapping ONLY
 
-**IMPORTANT:** Use Tavily for all web searches, content extraction, and site mapping. High-quality, AI-optimized results.
+**IMPORTANT:** Use Tavily ONLY for web searches and site mapping. **NEVER use Tavily to fetch/extract content from specific URLs.**
 
 | Tool | Args | Use Case |
 |------|------|----------|
 | `mcp__tavily__tavily-search` | `query`, `max_results?`, `search_depth?`, `topic?` | General web search |
-| `mcp__tavily__tavily-extract` | `urls` | Extract content from URLs |
 | `mcp__tavily__tavily-map` | `url`, `max_depth?`, `limit?` | Map website structure |
+
+**⚠️ DO NOT USE:** `tavily-extract` or `tavily-crawl` for fetching URL content. Use Ref or WebFetch instead.
 
 **Search options:**
 - `search_depth`: `basic` (default) or `advanced`
@@ -49,18 +50,19 @@
 mcp__tavily__tavily-search(query="Python async best practices 2025", max_results=5)
 mcp__tavily__tavily-search(query="AWS CDK updates", topic="news", time_range="month")
 
-# Extract content from URLs
-mcp__tavily__tavily-extract(urls=["https://example.com/article"])
-
-# Map website structure
+# Map website structure (discover URLs, don't fetch content)
 mcp__tavily__tavily-map(url="https://docs.example.com", max_depth=2, limit=20)
 ```
 
 **When to use Tavily:**
 - General web searches
-- Current events, blog posts, articles
-- Extracting content from specific URLs
-- Mapping website structures
+- News and current events searches
+- Discovering site structure (mapping)
+
+**When NOT to use Tavily:**
+- Fetching content from a specific URL → Use `mcp__Ref__ref_read_url` or `WebFetch`
+- Reading documentation pages → Use `mcp__Ref__ref_read_url`
+- Extracting article content → Use `WebFetch`
 
 ---
 

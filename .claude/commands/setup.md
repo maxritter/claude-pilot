@@ -156,39 +156,16 @@ MCP Funnel acts as a proxy that dynamically loads tools from multiple MCP server
    mcp__claude-context__get_indexing_status(path="/absolute/path/to/project")
    ```
 
-3. **If not indexed or index is stale, start indexing WITH EXCLUSIONS:**
+3. **If not indexed or index is stale, start indexing:**
    ```python
    mcp__claude-context__index_codebase(
        path="/absolute/path/to/project",
        splitter="ast",
-       force=False,
-       ignorePatterns=[
-           "node_modules/**",
-           "__pycache__/**",
-           ".venv/**",
-           "venv/**",
-           ".uv/**",
-           ".git/**",
-           "dist/**",
-           "build/**",
-           "cdk.out/**",
-           ".mypy_cache/**",
-           ".pytest_cache/**",
-           ".ruff_cache/**",
-           "coverage/**",
-           ".coverage/**",
-           "*.egg-info/**",
-           ".next/**",
-           ".tox/**",
-           ".cache/**",
-           "*.pyc",
-           "*.pyo",
-           ".terraform/**",
-           "vendor/**",
-           "target/**"
-       ]
+       force=False
    )
    ```
+
+   Note: Ignore patterns are configured directly in the MCP server, no need to pass them here.
 
 4. **Monitor indexing progress (check every 10 seconds until complete):**
    ```python

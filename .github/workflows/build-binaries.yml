@@ -1,0 +1,57 @@
+---
+name: Build Binaries
+
+"on":
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    name: Build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            artifact: ccp-installer-linux-x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            artifact: ccp-installer-linux-arm64
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 1
+
+      - name: Verify version
+        run: |
+          echo "Building for release: ${{ github.event.release.tag_name }}"
+          grep "__version__" installer/__init__.py
+
+      - name: Build binary
+        run: |
+          # Use Python 3.12 with Debian Bullseye (GLIBC 2.31)
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3.12-slim-bullseye \
+            bash -c "
+              apt-get update && apt-get install -y binutils && \
+              pip install pyinstaller rich httpx typer platformdirs && \
+              cd installer && python build.py && \
+              chmod +x dist/${{ matrix.artifact }}
+            "
+
+      - name: Upload binary to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            installer/dist/${{ matrix.artifact }} --clobber

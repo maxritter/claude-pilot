@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   Container
 } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 interface InsideItem {
   icon: React.ElementType;
@@ -80,23 +81,33 @@ const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }
 );
 
 const WhatsInside = () => {
+  const [headerRef, headerInView] = useInView<HTMLDivElement>();
+  const [gridRef, gridInView] = useInView<HTMLDivElement>();
+
   return (
     <section id="features" className="py-20 lg:py-28 px-4 sm:px-6 bg-card/30 relative">
       <div className="max-w-6xl mx-auto">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-        <SectionHeader
-          title="What's Inside"
-          subtitle="Everything you need for professional AI-assisted development"
-        />
+        <div
+          ref={headerRef}
+          className={`animate-on-scroll ${headerInView ? "in-view" : ""}`}
+        >
+          <SectionHeader
+            title="What's Inside"
+            subtitle="Everything you need for professional AI-assisted development"
+          />
+        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {insideItems.map((item, index) => {
+        <div
+          ref={gridRef}
+          className={`grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children ${gridInView ? "in-view" : ""}`}
+        >
+          {insideItems.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
                 className="glass rounded-2xl p-6 hover:border-primary/50 transition-all duration-300"
-                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">

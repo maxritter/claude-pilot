@@ -1,11 +1,18 @@
 import { Clock, Zap, AlertTriangle, CheckCircle2, Brain, FileCode2, ShieldCheck, Search, Plug2 } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 const ComparisonSection = () => {
+  const [headerRef, headerInView] = useInView<HTMLDivElement>();
+  const [cardsRef, cardsInView] = useInView<HTMLDivElement>();
+
   return (
     <section className="py-20 lg:py-28 px-4 sm:px-6 relative">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <div
+          ref={headerRef}
+          className={`text-center mb-12 animate-on-scroll ${headerInView ? "in-view" : ""}`}
+        >
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
             The Difference
           </h2>
@@ -14,7 +21,10 @@ const ComparisonSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
+        <div
+          ref={cardsRef}
+          className={`grid md:grid-cols-2 gap-6 sm:gap-8 stagger-children ${cardsInView ? "in-view" : ""}`}
+        >
           {/* Without Claude CodePro */}
           <div className="glass rounded-2xl p-5 sm:p-6 relative border-red-500/20 hover:border-red-500/30 transition-colors">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-red-500/20 text-red-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">

@@ -83,10 +83,10 @@ const HeroSection = () => {
         </div>
 
         {/* Install command box */}
-        <div className="glass rounded-xl p-4 max-w-2xl mx-auto animate-fade-in animation-delay-500 glow-primary">
+        <div className="glass rounded-xl p-3 sm:p-4 w-full max-w-2xl mx-auto animate-fade-in animation-delay-500 glow-primary overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
-          <div className="flex items-center justify-between gap-4">
-            <code className="text-xs sm:text-sm text-muted-foreground font-mono truncate flex-1 text-left">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <code className="text-[10px] sm:text-sm text-muted-foreground font-mono truncate flex-1 text-left min-w-0">
               <span className="text-primary">$</span> {installCommand}
             </code>
             <Button

@@ -1,4 +1,5 @@
 import { Settings, FileText, Code2, CheckCircle2 } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 interface Step {
   number: number;
@@ -53,14 +54,25 @@ const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }
 );
 
 const WorkflowSteps = () => {
+  const [headerRef, headerInView] = useInView<HTMLDivElement>();
+  const [stepsRef, stepsInView] = useInView<HTMLDivElement>();
+
   return (
     <section id="workflow" className="py-20 lg:py-28 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          title="Spec-Driven Development"
-          subtitle="A structured workflow that ensures quality at every step"
-        />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative">
+        <div
+          ref={headerRef}
+          className={`animate-on-scroll ${headerInView ? "in-view" : ""}`}
+        >
+          <SectionHeader
+            title="Spec-Driven Development"
+            subtitle="A structured workflow that ensures quality at every step"
+          />
+        </div>
+        <div
+          ref={stepsRef}
+          className={`grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative stagger-children ${stepsInView ? "in-view" : ""}`}
+        >
           {/* Connecting line (desktop only) */}
           <div className="hidden lg:block absolute top-12 left-[60px] right-[60px] h-0.5 bg-gradient-to-r from-primary via-primary/50 to-primary opacity-30" />
 

@@ -135,4 +135,63 @@ html {
   .animation-delay-300 { animation-delay: 0.3s; }
   .animation-delay-400 { animation-delay: 0.4s; }
   .animation-delay-500 { animation-delay: 0.5s; }
+
+  /* Scroll-triggered animations */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .animate-on-scroll.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .animate-on-scroll-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .animate-on-scroll-left.in-view {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .animate-on-scroll-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .animate-on-scroll-right.in-view {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .animate-on-scroll-scale {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .animate-on-scroll-scale.in-view {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Staggered children animation */
+  .stagger-children > * {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  }
+
+  .stagger-children.in-view > *:nth-child(1) { transition-delay: 0ms; opacity: 1; transform: translateY(0); }
+  .stagger-children.in-view > *:nth-child(2) { transition-delay: 100ms; opacity: 1; transform: translateY(0); }
+  .stagger-children.in-view > *:nth-child(3) { transition-delay: 200ms; opacity: 1; transform: translateY(0); }
+  .stagger-children.in-view > *:nth-child(4) { transition-delay: 300ms; opacity: 1; transform: translateY(0); }
+  .stagger-children.in-view > *:nth-child(5) { transition-delay: 400ms; opacity: 1; transform: translateY(0); }
+  .stagger-children.in-view > *:nth-child(6) { transition-delay: 500ms; opacity: 1; transform: translateY(0); }
 }

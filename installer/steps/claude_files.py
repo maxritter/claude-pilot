@@ -108,7 +108,7 @@ class ClaudeFilesStep(BaseStep):
                 continue
 
             # Track settings file for later - don't add to categories yet
-            if SETTINGS_FILE in file_path:
+            if Path(file_path).name == SETTINGS_FILE:
                 settings_path = file_path
                 continue
 

@@ -4,7 +4,7 @@
 
 ### 🛠️ Professional Development Environment for Claude Code (CC)
 
-Start shipping systematically with Spec-Driven Development, Skills, TDD, Semantic Search, Persistent Memory, Context Management, Quality Hooks, Modular Rules System, and much more 🚀
+Start shipping systematically with Spec-Driven Development, Skills, TDD, LSP, Semantic Search, Persistent Memory, Context Management, Quality Hooks, Modular Rules System, and much more 🚀
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Opus 4.5](https://img.shields.io/badge/Opus_4.5-Compatible-purple.svg)
@@ -57,8 +57,6 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.2.11/in
 
 ### 💡 Modular Rules System
 
-Built on [Claude Code's modular rules](https://code.claude.com/docs/en/memory#modular-rules-with-claude/rules/) - rules are loaded automatically as project memory.
-
 - **Auto Loading** - Claude Code automatically loads all `.claude/rules/*.md` files as project memory
 - **Standard Rules** - Best-Practices for TDD, Context Management, etc. in `.claude/rules/standard/`
 - **Custom Rules** - Project-specific rules in `.claude/rules/custom/` (never touched by updates)
@@ -84,6 +82,7 @@ Built on [Claude Code's modular rules](https://code.claude.com/docs/en/memory#mo
 ### 🏗️ One-Command Installation
 
 - **Global Tools** - Python tools, qlty, Claude Code, dotenvx installed globally
+- **LSP Servers** - basedpyright (Python) and vtsls (TypeScript/JS) for code intelligence
 - **Dev Container Required** - Isolated Linux environment with pre-configured tools and extensions
 - **Automated Setup Script** - Installs and configures everything in one command
 - **Shell Integration** - Auto-configures bash and zsh with `ccp` alias
@@ -147,4 +146,5 @@ paths: src/**/*.py
 - **[astral-sh/uv](https://github.com/astral-sh/uv)** - Fast Python package manager
 - **[astral-sh/ruff](https://github.com/astral-sh/ruff)** - Fast Python linter and formatter
 - **[DetachHead/basedpyright](https://github.com/DetachHead/basedpyright)** - Enhanced Python type checker
+- **[yioneko/vtsls](https://github.com/yioneko/vtsls)** - TypeScript/JavaScript language server
 - **[dotenvx/dotenvx](https://github.com/dotenvx/dotenvx)** - Automatic .env loading for Claude Code

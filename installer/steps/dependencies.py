@@ -150,6 +150,14 @@ def install_bun() -> bool:
     return _run_bash_with_retry("curl -fsSL https://bun.sh/install | bash")
 
 
+def install_vtsls() -> bool:
+    """Install VTSLS TypeScript language server globally via npm."""
+    if command_exists("vtsls"):
+        return True
+
+    return _run_bash_with_retry("source ~/.nvm/nvm.sh && npm install -g @vtsls/language-server typescript")
+
+
 def install_claude_mem() -> bool:
     """Install claude-mem plugin for persistent memory across sessions."""
     plugins_dir = Path.home() / ".claude" / "plugins"
@@ -292,6 +300,9 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "Node.js", install_nodejs):
             installed.append("nodejs")
+
+        if _install_with_spinner(ui, "VTSLS (TypeScript LSP)", install_vtsls):
+            installed.append("vtsls")
 
         if ctx.install_python:
             if _install_with_spinner(ui, "uv", install_uv):

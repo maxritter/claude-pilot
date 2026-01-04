@@ -63,7 +63,11 @@
   },
   "model": "opus",
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["claude-context", "tavily", "Ref"],
+  "enabledMcpjsonServers": [
+    "claude-context",
+    "tavily",
+    "Ref"
+  ],
   "hooks": {
     "PreToolUse": [
       {

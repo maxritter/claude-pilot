@@ -12,10 +12,7 @@ from installer.steps.base import BaseStep
 if TYPE_CHECKING:
     from installer.context import InstallContext
 
-# Settings file name in the repository (contains all hooks)
 SETTINGS_FILE = "settings.local.json"
-
-# Python-specific hook that gets removed when install_python=False
 PYTHON_CHECKER_HOOK = "python3 .claude/hooks/file_checker_python.py"
 
 
@@ -33,14 +30,10 @@ def process_settings(settings_content: str, install_python: bool) -> str:
 
     if not install_python:
         try:
-            # Remove Python checker hook from PostToolUse
             for hook_group in config["hooks"]["PostToolUse"]:
-                hook_group["hooks"] = [
-                    h for h in hook_group["hooks"]
-                    if h.get("command") != PYTHON_CHECKER_HOOK
-                ]
+                hook_group["hooks"] = [h for h in hook_group["hooks"] if h.get("command") != PYTHON_CHECKER_HOOK]
         except (KeyError, TypeError, AttributeError):
-            pass  # Structure doesn't match expected, skip modification
+            pass
 
     return json.dumps(config, indent=2) + "\n"
 
@@ -94,7 +87,6 @@ class ClaudeFilesStep(BaseStep):
             "other": [],
         }
 
-        # Track settings file for special handling
         settings_path: str | None = None
 
         for file_path in claude_files:
@@ -107,7 +99,6 @@ class ClaudeFilesStep(BaseStep):
             if file_path.endswith(".pyc"):
                 continue
 
-            # Track settings file for later - don't add to categories yet
             if Path(file_path).name == SETTINGS_FILE:
                 settings_path = file_path
                 continue
@@ -160,15 +151,12 @@ class ClaudeFilesStep(BaseStep):
                     else:
                         failed_files.append(file_path)
 
-        # Install settings file, processing it to remove Python hooks if needed
         settings_dest = ctx.project_dir / ".claude" / "settings.local.json"
 
         if settings_path:
             if ui:
                 with ui.spinner("Installing settings..."):
-                    success = self._install_settings(
-                        settings_path, settings_dest, config, ctx.install_python
-                    )
+                    success = self._install_settings(settings_path, settings_dest, config, ctx.install_python)
                     if success:
                         file_count += 1
                         installed_files.append(str(settings_dest))
@@ -177,9 +165,7 @@ class ClaudeFilesStep(BaseStep):
                         failed_files.append(settings_path)
                         ui.warning("Failed to install settings.local.json")
             else:
-                success = self._install_settings(
-                    settings_path, settings_dest, config, ctx.install_python
-                )
+                success = self._install_settings(settings_path, settings_dest, config, ctx.install_python)
                 if success:
                     file_count += 1
                     installed_files.append(str(settings_dest))

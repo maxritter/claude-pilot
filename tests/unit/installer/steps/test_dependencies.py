@@ -41,10 +41,12 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies.install_claude_mem")
     @patch("installer.steps.dependencies.install_bun")
     @patch("installer.steps.dependencies.install_claude_code")
+    @patch("installer.steps.dependencies.install_vtsls")
     @patch("installer.steps.dependencies.install_nodejs")
     def test_dependencies_run_installs_core(
         self,
         mock_nodejs,
+        mock_vtsls,
         mock_claude,
         mock_bun,
         mock_claude_mem,
@@ -60,6 +62,7 @@ class TestDependenciesStep:
 
         # Setup mocks
         mock_nodejs.return_value = True
+        mock_vtsls.return_value = True
         mock_claude.return_value = True
         mock_bun.return_value = True
         mock_claude_mem.return_value = True
@@ -79,6 +82,7 @@ class TestDependenciesStep:
 
             # Core dependencies should be installed
             mock_nodejs.assert_called_once()
+            mock_vtsls.assert_called_once()
             mock_claude.assert_called_once()
 
     @patch("installer.steps.dependencies.install_dotenvx")
@@ -90,10 +94,12 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_python_tools")
     @patch("installer.steps.dependencies.install_uv")
+    @patch("installer.steps.dependencies.install_vtsls")
     @patch("installer.steps.dependencies.install_nodejs")
     def test_dependencies_installs_python_when_enabled(
         self,
         mock_nodejs,
+        mock_vtsls,
         mock_uv,
         mock_python_tools,
         mock_claude,
@@ -111,6 +117,7 @@ class TestDependenciesStep:
 
         # Setup mocks
         mock_nodejs.return_value = True
+        mock_vtsls.return_value = True
         mock_uv.return_value = True
         mock_python_tools.return_value = True
         mock_claude.return_value = True
@@ -197,5 +204,44 @@ class TestDotenvxInstall:
         mock_cmd_exists.return_value = True
 
         result = install_dotenvx()
+
+        assert result is True
+
+
+class TestVtslsInstall:
+    """Test VTSLS TypeScript language server installation."""
+
+    def test_install_vtsls_exists(self):
+        """install_vtsls function exists."""
+        from installer.steps.dependencies import install_vtsls
+
+        assert callable(install_vtsls)
+
+    @patch("installer.steps.dependencies.command_exists")
+    @patch("subprocess.run")
+    def test_install_vtsls_calls_npm_install(self, mock_run, mock_cmd_exists):
+        """install_vtsls calls npm install with correct packages."""
+        from installer.steps.dependencies import install_vtsls
+
+        mock_cmd_exists.return_value = False
+        mock_run.return_value = MagicMock(returncode=0)
+
+        result = install_vtsls()
+
+        mock_run.assert_called()
+        call_args = mock_run.call_args[0][0]
+        assert "bash" in call_args
+        # The npm install command should include vtsls and typescript
+        assert "@vtsls/language-server" in call_args[2]
+        assert "typescript" in call_args[2]
+
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_vtsls_skips_if_exists(self, mock_cmd_exists):
+        """install_vtsls skips if already installed."""
+        from installer.steps.dependencies import install_vtsls
+
+        mock_cmd_exists.return_value = True
+
+        result = install_vtsls()
 
         assert result is True

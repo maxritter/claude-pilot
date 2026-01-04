@@ -16,6 +16,24 @@ if TYPE_CHECKING:
 REQUIRED_MCP_SERVERS = {"claude-context", "tavily", "Ref"}
 
 
+def process_lsp_config(lsp_content: str, install_python: bool) -> str:
+    """Process LSP JSON, optionally removing Python language server.
+
+    Args:
+        lsp_content: Raw JSON content of the LSP config file
+        install_python: Whether Python support is being installed
+
+    Returns:
+        Processed JSON string with Python entry removed if install_python=False
+    """
+    config: dict[str, Any] = json.loads(lsp_content)
+
+    if not install_python:
+        config.pop("python", None)
+
+    return json.dumps(config, indent=2) + "\n"
+
+
 def merge_mcp_config(config_file: Path, new_config: dict[str, Any]) -> int:
     """Merge required MCP servers into existing config, preserving user servers.
 
@@ -100,6 +118,46 @@ class ConfigFilesStep(BaseStep):
                 if download_file(".mcp.json", temp_mcp, config):
                     new_config = json.loads(temp_mcp.read_text())
                     merge_mcp_config(mcp_file, new_config)
+
+        lsp_file = ctx.project_dir / ".lsp.json"
+        if ui:
+            with ui.spinner("Installing LSP configuration..."):
+                success = self._install_lsp_config(lsp_file, config, ctx.install_python)
+                if success:
+                    ui.success("Installed .lsp.json for language servers")
+                else:
+                    ui.warning("Failed to install .lsp.json")
+        else:
+            self._install_lsp_config(lsp_file, config, ctx.install_python)
+
+    def _install_lsp_config(
+        self,
+        dest_path: Path,
+        config: DownloadConfig,
+        install_python: bool,
+    ) -> bool:
+        """Download and process LSP config, removing Python if not needed.
+
+        Args:
+            dest_path: Local destination path for .lsp.json
+            config: Download configuration
+            install_python: Whether Python support is being installed
+
+        Returns:
+            True if successful, False otherwise
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_file = Path(tmpdir) / ".lsp.json"
+            if not download_file(".lsp.json", temp_file, config):
+                return False
+
+            try:
+                lsp_content = temp_file.read_text()
+                processed_content = process_lsp_config(lsp_content, install_python)
+                dest_path.write_text(processed_content)
+                return True
+            except (json.JSONDecodeError, OSError, IOError):
+                return False
 
     def rollback(self, ctx: InstallContext) -> None:
         """Remove generated config files."""

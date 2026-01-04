@@ -77,6 +77,10 @@
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest"
     },
+    /* https://github.com/meaningful-ooo/devcontainer-features/tree/main/src/homebrew */
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {},
+    /* https://github.com/devcontainers/features/tree/main/src/go */
+    "ghcr.io/devcontainers/features/go:1": {},
     /* https://github.com/michidk/devcontainers-features/tree/main/src/bun */
     "ghcr.io/michidk/devcontainers-features/bun:1": {},
     /* https://github.com/braun-daniel/devcontainer-features/blob/main/src/spaceship */

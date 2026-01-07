@@ -181,7 +181,14 @@ Questions:
 | Tool | When to Use | Example |
 |------|-------------|---------|
 | **Context7** | Library/framework docs | Use `resolve-library-id` then `query-docs` to look up API usage |
-| **WebSearch** | External research | Use WebSearch tool for researching patterns and best practices |
+| **Firecrawl** | Web scraping/content | Use `firecrawl_scrape` for single pages, `firecrawl_search` for research |
+
+**Firecrawl MCP Tools (preferred for web content):**
+- `firecrawl_scrape` - Single page content extraction (documentation, articles, code)
+- `firecrawl_search` - Web search with scraped results (research, finding solutions)
+- `firecrawl_map` - Discover all URLs on a website (site structure analysis)
+- `firecrawl_crawl` - Crawl entire website (comprehensive extraction)
+- `firecrawl_extract` - Structured data extraction with schema
 
 **Before exploring, verify Vexor is available:**
 ```bash
@@ -198,14 +205,14 @@ First search will trigger automatic indexing. Use `vexor search "query" --mode c
 
 **⚠️ CRITICAL: NO SUB-AGENTS DURING PLANNING**
 - **DO NOT use the Task tool with any subagent_type** during planning
-- Perform ALL exploration yourself using direct tool calls (Read, Grep, Glob, Context7, WebSearch)
+- Perform ALL exploration yourself using direct tool calls (Read, Grep, Glob, Context7, Firecrawl)
 - Sub-agents lose context and make planning inconsistent
 - You must maintain full context throughout the planning process
 
 **For each area:**
 - Use `vexor search "query" --mode code` for semantic searches like "authentication middleware" or "database connection handling"
 - Use Context7 (`resolve-library-id` then `query-docs`) when you need library/framework API details
-- Use WebSearch for researching patterns, best practices, or unfamiliar technologies
+- Use Firecrawl (`firecrawl_search`, `firecrawl_scrape`) for web research, fetching documentation, or extracting code examples
 - Use `Read`, `Grep`, `Glob` tools directly for file exploration
 - Document hypotheses (not conclusions)
 - Note full file paths for relevant code

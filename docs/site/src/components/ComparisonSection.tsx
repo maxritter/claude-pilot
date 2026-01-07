@@ -120,7 +120,7 @@ const ComparisonSection = () => {
                 </div>
                 <div className="text-green-400/80 flex items-center gap-2 text-xs">
                   <Plug2 className="h-3 w-3 flex-shrink-0" />
-                  <span>Plugins: Context7, Claude Mem, LSP</span>
+                  <span>Plugins: Context7, Firecrawl, Claude Mem, LSP</span>
                 </div>
                 <div className="border-t border-border/50 pt-2.5">
                   <span className="text-primary">/plan</span>

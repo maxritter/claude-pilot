@@ -42,7 +42,7 @@ const insideItems: InsideItem[] = [
       "Claude Mem - Cross-session persistent memory",
       "Vexor - Local semantic code search",
       "Context7 - Library documentation lookup",
-      "LSP Servers - Python (Pyright) & TypeScript",
+      "Firecrawl - Web search and scraping capabilities"
     ],
   },
   {

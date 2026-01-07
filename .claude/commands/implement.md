@@ -50,7 +50,12 @@ Update counts:
 | Tool | When to Use | Example |
 |------|-------------|---------|
 | **Context7** | Library API lookup | Use `resolve-library-id` then `query-docs` - "pytest fixtures" |
-| **WebSearch** | Research solutions | Use WebSearch tool - Debug errors, find examples |
+| **Firecrawl** | Web content/research | Use `firecrawl_search` for solutions, `firecrawl_scrape` for docs |
+
+**Firecrawl MCP Tools (preferred for web content):**
+- `firecrawl_search` - Search web for solutions, debug errors, find examples
+- `firecrawl_scrape` - Fetch documentation pages, code examples, API references
+- `firecrawl_extract` - Extract structured data from web pages
 
 **Before starting, verify Vexor is available for semantic search:**
 ```bash
@@ -60,7 +65,7 @@ vexor --version
 **During implementation:**
 - Use `vexor search "query" --mode code` to find similar implementations and patterns
 - Use Context7 (`resolve-library-id` then `query-docs`) when unsure about library/framework APIs
-- Use WebSearch to research error messages or find solutions
+- Use Firecrawl (`firecrawl_search`, `firecrawl_scrape`) to research error messages, find solutions, or fetch documentation
 
 ## ⚠️ CRITICAL: Migration/Refactoring Tasks
 

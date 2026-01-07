@@ -143,6 +143,7 @@ Display a summary like:
 │                                                             │
 │ Plugins Available:                                          │
 │   ✓ Context7 - Library documentation lookup                │
+│   ✓ Firecrawl - Web scraping, search, and content extraction│
 │   ✓ Claude Mem - Persistent memory                         │
 │   ✓ LSP Servers - Python (Pyright) & TypeScript            │
 ├─────────────────────────────────────────────────────────────┤

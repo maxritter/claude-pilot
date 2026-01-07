@@ -68,8 +68,8 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.5.2/ins
 - **Claude Mem** - Cross-session persistent memory system that automatically ingest context
 - **Vexor** - Local vector store based semantic code search for token-efficient retrieval
 - **Context7** - AI-powered code context retrieval installed as a plugin with wide support
+- **Firecrawl** - Various tools for searching and scraping the web and direct code fetching
 - **LSP Servers** - Python and TypeScript CC Language Servers for extended code intelligence
-- **MCP Lazy Loading** - Intelligently reduces context usage by lazy loading MCP servers via MCP CLI
 
 ### 🛠️ Intelligent Hook Automation
 
@@ -137,6 +137,7 @@ paths: src/**/*.py
 - **[Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc)** - CC Customizations and tweaks for LSP
 - **[scarletkc/vexor](https://github.com/scarletkc/vexor)** - CC Semantic code search
 - **[upstash/context7](https://github.com/upstash/context7)** - Library code context retrieval
+- **[firecrawl/firecrawl](https://github.com/firecrawl/firecrawl)** - Web search and scraping tool
 - **[astral-sh/uv](https://github.com/astral-sh/uv)** - Fast Python package manager
 - **[astral-sh/ruff](https://github.com/astral-sh/ruff)** - Fast Python linter and formatter
 - **[qltysh/qlty](https://github.com/qltysh/qlty)** - Code quality automation

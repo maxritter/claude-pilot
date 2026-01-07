@@ -59,7 +59,7 @@ const Index = () => {
         "name": "What plugins are included?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Claude CodePro includes Claude Mem (persistent memory), Vexor (semantic search), Context7 (library docs), and LSP servers (Python/TypeScript) - all pre-configured."
+          "text": "Claude CodePro includes Claude Mem (persistent memory), Vexor (semantic search), Context7 (library docs), Firecrawl (web search) and LSP servers (Python/TypeScript)."
         }
       }
     ]

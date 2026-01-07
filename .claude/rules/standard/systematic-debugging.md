@@ -2,6 +2,14 @@
 
 **Rule:** No fixes without root cause investigation. Complete phases sequentially.
 
+### Tools for Debugging Research
+
+| Tool | When to Use |
+|------|-------------|
+| **Context7** | Library/framework API lookup (`resolve-library-id` then `query-docs`) |
+| **Firecrawl** | Search error messages, find solutions (`firecrawl_search`), fetch docs (`firecrawl_scrape`) |
+| **Vexor** | Find similar patterns in codebase (`vexor search "error handling"`) |
+
 ### Phase 1: Root Cause Investigation
 
 Complete ALL before proposing fixes:

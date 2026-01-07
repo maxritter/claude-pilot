@@ -145,6 +145,27 @@ class EnvironmentStep(BaseStep):
 
         add_env_key("OPENAI_API_KEY", openai_api_key, env_file)
 
+        firecrawl_api_key = ""
+
+        if not key_is_set("FIRECRAWL_API_KEY", env_file):
+            if ui:
+                ui.print()
+                ui.rule("Firecrawl API Key - Web Scraping & Search")
+                ui.print()
+                ui.print("  [bold]Used for:[/bold] Web scraping, search, and content extraction")
+                ui.print("  [bold]Why:[/bold] Powers intelligent web research and documentation fetching")
+                ui.print(
+                    "  [bold]Create at:[/bold] [cyan]https://www.firecrawl.dev/app/api-keys[/cyan] (free tier available)"
+                )
+                ui.print()
+
+                firecrawl_api_key = ui.input("FIRECRAWL_API_KEY", default="")
+        else:
+            if ui:
+                ui.success("FIRECRAWL_API_KEY already set, skipping")
+
+        add_env_key("FIRECRAWL_API_KEY", firecrawl_api_key, env_file)
+
         if ui:
             if append_mode:
                 ui.success("Updated .env file with Claude CodePro configuration")

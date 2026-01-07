@@ -8,6 +8,10 @@ model: opus
 > Perform ALL verification yourself using direct tool calls (Read, Grep, Glob, Bash, MCP tools).
 > Sub-agents lose context and make verification inconsistent.
 
+**Available MCP Tools:**
+- **Context7** - Library documentation lookup (`resolve-library-id`, `query-docs`)
+- **Firecrawl** - Web search and scraping (`firecrawl_search`, `firecrawl_scrape`) for researching issues
+
 ## The Process
 
 Tests → Program execution → **Rules compliance audit** → Call chain analysis → Coverage → Quality checks → Code review → E2E → Final verification

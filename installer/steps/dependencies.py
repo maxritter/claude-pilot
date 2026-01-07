@@ -147,6 +147,39 @@ def _configure_claude_defaults() -> bool:
     )
 
 
+def _configure_firecrawl_mcp() -> bool:
+    """Add firecrawl MCP server to ~/.claude.json if not already present.
+
+    Only adds the firecrawl server - does not alter other MCP servers.
+    """
+    import json
+
+    config_path = Path.home() / ".claude.json"
+
+    firecrawl_config = {
+        "command": "npx",
+        "args": ["-y", "firecrawl-mcp"],
+        "env": {"FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"},
+    }
+
+    try:
+        if config_path.exists():
+            config = json.loads(config_path.read_text())
+        else:
+            config = {}
+
+        if "mcpServers" not in config:
+            config["mcpServers"] = {}
+
+        if "firecrawl" not in config["mcpServers"]:
+            config["mcpServers"]["firecrawl"] = firecrawl_config
+            config_path.write_text(json.dumps(config, indent=2) + "\n")
+
+        return True
+    except Exception:
+        return False
+
+
 def install_claude_code() -> bool:
     """Install/upgrade Claude Code CLI via npm and configure defaults."""
     _remove_native_claude_binaries()
@@ -155,6 +188,7 @@ def install_claude_code() -> bool:
         return False
 
     _configure_claude_defaults()
+    _configure_firecrawl_mcp()
     return True
 
 

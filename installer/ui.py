@@ -142,6 +142,19 @@ class Console:
         self._console.print(panel)
         self._console.print()
 
+        license_text = Text()
+        license_text.append("  📜 ", style="yellow")
+        license_text.append("Dual License: ", style="bold white")
+        license_text.append("Free for individuals, freelancers & open source (AGPL-3.0)\n", style="green")
+        license_text.append("     ", style="white")
+        license_text.append("Companies with proprietary software require a ", style="dim white")
+        license_text.append("commercial license", style="bold yellow")
+        license_text.append(".\n", style="dim white")
+        license_text.append("     Contact: ", style="dim white")
+        license_text.append("mail@maxritter.net", style="cyan")
+        self._console.print(license_text)
+        self._console.print()
+
     def set_total_steps(self, total: int) -> None:
         """Set total number of installation steps."""
         self._total_steps = total

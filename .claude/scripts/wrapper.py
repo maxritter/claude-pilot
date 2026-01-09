@@ -41,6 +41,10 @@ def print_banner() -> None:
     print()
     print("  ♾️  Endless Mode works in both - unlimited context automatically")
     print()
+    print("  ─────────────────────────────────────────────────────────────────")
+    print("  📜 Free for individuals, freelancers & open source (AGPL-3.0)")
+    print("     Companies with proprietary software: mail@maxritter.net")
+    print()
 
 
 def setup_logging() -> logging.Logger:
@@ -334,7 +338,7 @@ class ClaudeWrapper:
         clear_terminal()
         print_banner()
         print("  Loading Claude Code...\n")
-        time.sleep(1.5)
+        time.sleep(5.0)
         clear_terminal()
 
         self._running = True

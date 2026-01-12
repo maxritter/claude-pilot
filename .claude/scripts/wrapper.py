@@ -314,12 +314,14 @@ class ClaudeWrapper:
         self.logger.warning(f"Crash {self._consecutive_crashes}/{self._max_consecutive_crashes}")
 
         if self._consecutive_crashes >= self._max_consecutive_crashes:
-            print(f"\n  Session crashed too many times. Check logs: /tmp/claude-wrapper-logs/")
+            print(f"\n  ✗  Session crashed too many times")
+            print(f"     Check logs: /tmp/claude-wrapper-logs/\n")
             self.logger.error(f"Max consecutive crashes reached ({self._max_consecutive_crashes}), giving up")
             return False
 
         crash_delay = self.SESSION_RESTART_DELAY_SECONDS * self._consecutive_crashes
-        print(f"\n  Session crashed ({explanation}). Restarting in {crash_delay:.0f}s...")
+        print(f"\n  ⚠  Session crashed: {explanation}")
+        print(f"  ⏳ Restarting in {crash_delay:.0f}s...\n")
         self.logger.info(f"Waiting {crash_delay}s before crash recovery restart")
         time.sleep(crash_delay)
 
@@ -337,8 +339,35 @@ class ClaudeWrapper:
 
         clear_terminal()
         print_banner()
-        print("  Loading Claude Code...\n")
-        time.sleep(5.0)
+        print("  ⏳ Checking for updates...\n")
+        try:
+            result = subprocess.run(
+                ["claude", "update"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.returncode == 0:
+                self.logger.info("Claude Code updated successfully")
+                if result.stdout.strip():
+                    print(f"  ✓  {result.stdout.strip()}\n")
+                else:
+                    print("  ✓  Claude Code is up to date\n")
+            else:
+                self.logger.warning(f"Claude update returned {result.returncode}: {result.stderr}")
+                print("  ✓  Update check complete\n")
+        except subprocess.TimeoutExpired:
+            self.logger.warning("Claude update timed out after 60s")
+            print("  ⚠  Update timed out, continuing...\n")
+        except FileNotFoundError:
+            self.logger.error("Claude command not found")
+            print("  ✗  Claude command not found\n")
+        except Exception as e:
+            self.logger.error(f"Failed to update Claude: {e}")
+            print(f"  ⚠  Update check failed: {e}\n")
+
+        print("  ⏳ Loading Claude Code...\n")
+        time.sleep(3.0)
         clear_terminal()
 
         self._running = True
@@ -384,7 +413,7 @@ class ClaudeWrapper:
                 if self._restart_pending:
                     self._consecutive_crashes = 0
                     self.logger.info("Intentional restart, resetting crash counter")
-                    print("\n  Restarting session...")
+                    print("\n  ⏳ Restarting session...\n")
                     time.sleep(self.SESSION_RESTART_DELAY_SECONDS)
                     time.sleep(self.PRE_SESSION_INIT_SECONDS)
                     clear_terminal()

@@ -223,9 +223,9 @@ def install(
     saved_config = load_config(project_dir)
 
     license_info = _get_license_info(project_dir, local, effective_local_repo_dir)
-    license_acknowledged = license_info is not None
+    license_acknowledged = license_info is not None and license_info.get("tier") in ("free", "trial", "commercial")
 
-    if not skip_prompts and license_acknowledged:
+    if not skip_prompts and license_acknowledged and license_info:
         console.print()
         console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
         console.print("  [bold]📜 Current License[/bold]")

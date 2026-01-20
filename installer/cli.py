@@ -420,12 +420,11 @@ def install(
         console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
         console.print()
         console.print("  [dim]Subscribe: https://license.claude-code.pro[/dim]")
-        console.print("  [dim]License terms: https://claude-code.pro/#licensing[/dim]")
         console.print()
         console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
         console.print()
 
-        with console.spinner("Checking license status..."):
+        with console.spinner("Checking trial eligibility..."):
             trial_used = _check_trial_used(project_dir, local, effective_local_repo_dir)
         if trial_used is None:
             trial_used = False

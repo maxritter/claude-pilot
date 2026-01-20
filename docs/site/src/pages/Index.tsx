@@ -4,7 +4,7 @@ import ComparisonSection from "@/components/ComparisonSection";
 import WorkflowSteps from "@/components/WorkflowSteps";
 import WhatsInside from "@/components/WhatsInside";
 import InstallSection from "@/components/InstallSection";
-import LicensingSection from "@/components/LicensingSection";
+import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
@@ -78,7 +78,7 @@ const Index = () => {
         <WhatsInside />
         <ComparisonSection />
         <WorkflowSteps />
-        <LicensingSection />
+        <PricingSection />
         <Footer />
       </main>
     </>

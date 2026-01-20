@@ -15,7 +15,7 @@ const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }
   </div>
 );
 
-const LicensingSection = () => {
+const PricingSection = () => {
   return (
     <section id="pricing" className="py-12 lg:py-16 px-4 sm:px-6" aria-labelledby="pricing-heading">
       <div className="max-w-6xl mx-auto">
@@ -137,4 +137,4 @@ const LicensingSection = () => {
   );
 };
 
-export default LicensingSection;
+export default PricingSection;

@@ -584,8 +584,17 @@ def _is_agent_browser_ready() -> bool:
         return False
 
     for chromium_dir in cache_dir.glob("chromium-*"):
-        chrome_binary = chromium_dir / "chrome-linux" / "chrome"
-        if chrome_binary.exists():
+        if (chromium_dir / "chrome-linux" / "chrome").exists():
+            return True
+        if (chromium_dir / "chrome-mac" / "Chromium.app").exists():
+            return True
+        if (chromium_dir / "chrome-linux" / "headless_shell").exists():
+            return True
+        if (chromium_dir / "chrome-headless-shell-linux").exists():
+            return True
+
+    for headless_dir in cache_dir.glob("chromium-headless-shell-*"):
+        if any(headless_dir.iterdir()):
             return True
 
     return False

@@ -44,18 +44,10 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => smoothScrollTo('licensing')}
+                  onClick={() => smoothScrollTo('pricing')}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Licensing
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => smoothScrollTo('faq')}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  FAQ
+                  Pricing
                 </button>
               </li>
             </ul>

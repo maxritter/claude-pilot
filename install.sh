@@ -2,10 +2,78 @@
 
 set -e
 
-VERSION="5.1.12"
+DEFAULT_VERSION="5.1.12"
+VERSION="$DEFAULT_VERSION"
 
 REPO="maxritter/claude-codepro"
-REPO_RAW="https://raw.githubusercontent.com/${REPO}/v${VERSION}"
+
+INSTALL_DEV=false
+INSTALL_VERSION=""
+INSTALLER_ARGS=""
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+	--dev)
+		INSTALL_DEV=true
+		shift
+		;;
+	--version)
+		INSTALL_VERSION="$2"
+		shift 2
+		;;
+	--version=*)
+		INSTALL_VERSION="${1#*=}"
+		shift
+		;;
+	*)
+		if [ -z "$INSTALLER_ARGS" ]; then
+			INSTALLER_ARGS="$1"
+		else
+			INSTALLER_ARGS="$INSTALLER_ARGS $1"
+		fi
+		shift
+		;;
+	esac
+done
+
+get_latest_prerelease() {
+	local api_url="https://api.github.com/repos/${REPO}/releases"
+	local releases=""
+
+	if command -v curl >/dev/null 2>&1; then
+		releases=$(curl -fsSL "$api_url" 2>/dev/null) || true
+	elif command -v wget >/dev/null 2>&1; then
+		releases=$(wget -qO- "$api_url" 2>/dev/null) || true
+	fi
+
+	if [ -z "$releases" ]; then
+		return 1
+	fi
+
+	echo "$releases" | grep -o '"tag_name": *"dev-[^"]*"' | head -1 | sed 's/.*"dev-/dev-/; s/"//'
+}
+
+if [ "$INSTALL_DEV" = true ]; then
+	echo "  [..] Fetching latest dev pre-release..."
+	VERSION=$(get_latest_prerelease)
+	if [ -z "$VERSION" ]; then
+		echo "  [!!] No dev pre-release found. Create a PR from dev to main first."
+		exit 1
+	fi
+	echo "  [OK] Found dev version: $VERSION"
+elif [ -n "$INSTALL_VERSION" ]; then
+	VERSION="$INSTALL_VERSION"
+	echo "  Using specified version: $VERSION"
+fi
+
+case "$VERSION" in
+dev-*)
+	REPO_RAW="https://raw.githubusercontent.com/${REPO}/${VERSION}"
+	;;
+*)
+	REPO_RAW="https://raw.githubusercontent.com/${REPO}/v${VERSION}"
+	;;
+esac
 
 is_in_container() {
 	[ -f "/.dockerenv" ] || [ -f "/run/.containerenv" ]
@@ -285,7 +353,8 @@ fi
 
 download_installer
 
-run_installer "$@"
+# shellcheck disable=SC2086 -- intentional word splitting for multiple args
+run_installer $INSTALLER_ARGS
 
 saved_mode=$(get_saved_install_mode)
 if [ "$saved_mode" = "local" ] || is_in_container; then

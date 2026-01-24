@@ -1,0 +1,282 @@
+---
+name: Dev Pre-release
+
+"on":
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  # All jobs run in parallel for maximum speed
+  python-tests:
+    name: Python Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install . pytest pytest-cov pytest-asyncio
+
+      - name: Run unit tests with coverage
+        run: |
+          python3 -m pytest installer/tests/unit/ ccp/tests/unit/ -v \
+            --cov=installer --cov=ccp \
+            --cov-report=term --cov-report=xml
+
+  build-ccp-x86:
+    name: Build CCP Linux x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Build binary
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3.12-slim-bullseye \
+            bash -c "
+              apt-get update && apt-get install -y binutils build-essential && \
+              pip install . && \
+              python -m ccp.build --release && \
+              ls -la ccp/dist/
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-linux-x86_64
+          path: |
+            ccp/dist/ccp-linux-x86_64.so
+            ccp/dist/ccp
+          retention-days: 1
+
+  build-ccp-arm64:
+    name: Build CCP Linux arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Build binary
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3.12-slim-bullseye \
+            bash -c "
+              apt-get update && apt-get install -y binutils build-essential && \
+              pip install . && \
+              python -m ccp.build --release && \
+              ls -la ccp/dist/
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-linux-arm64
+          path: ccp/dist/ccp-linux-arm64.so
+          retention-days: 1
+
+  build-ccp-darwin-x86:
+    name: Build CCP Darwin x86_64
+    runs-on: macos-15-intel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: brew install git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-pyinstaller
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Build binary
+        run: |
+          pip install .
+          python -m ccp.build --release
+          ls -la ccp/dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-darwin-x86_64
+          path: ccp/dist/ccp-darwin-x86_64.so
+          retention-days: 1
+
+  build-ccp-darwin-arm64:
+    name: Build CCP Darwin arm64
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: brew install git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-pyinstaller
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Build binary
+        run: |
+          pip install .
+          python -m ccp.build --release
+          ls -la ccp/dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-darwin-arm64
+          path: ccp/dist/ccp-darwin-arm64.so
+          retention-days: 1
+
+  publish-prerelease:
+    name: Publish Pre-release
+    runs-on: ubuntu-latest
+    needs:
+      - python-tests
+      - build-ccp-x86
+      - build-ccp-arm64
+      - build-ccp-darwin-x86
+      - build-ccp-darwin-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="dev-$(echo ${{ github.sha }} | cut -c1-7)-$(date +%Y%m%d)"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Generated version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -ls
+
+      - name: Create pre-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          PR_NUM="${{ github.event.pull_request.number }}"
+
+          if [ -n "$PR_NUM" ]; then
+            NOTES="Pre-release build from PR #${PR_NUM}
+
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.head_ref }}
+
+          This is a development pre-release for testing. Not for production use."
+          else
+            NOTES="Pre-release build (manual trigger)
+
+          **Commit:** ${{ github.sha }}
+
+          This is a development pre-release for testing. Not for production use."
+          fi
+
+          gh release create "$VERSION" \
+            --title "Dev Pre-release $VERSION" \
+            --notes "$NOTES" \
+            --prerelease \
+            artifacts/ccp-linux-x86_64/ccp-linux-x86_64.so \
+            artifacts/ccp-linux-arm64/ccp-linux-arm64.so \
+            artifacts/ccp-darwin-x86_64/ccp-darwin-x86_64.so \
+            artifacts/ccp-darwin-arm64/ccp-darwin-arm64.so \
+            artifacts/ccp-linux-x86_64/ccp
+
+          echo "Pre-release $VERSION created successfully"
+
+      - name: Cleanup old pre-releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Cleaning up old dev pre-releases (keeping 5 most recent)..."
+
+          gh api repos/${{ github.repository }}/releases \
+            --jq '.[] | select(.prerelease and (.tag_name | startswith("dev-"))) | .tag_name' \
+            | tail -n +6 \
+            | while read -r tag; do
+                if [ -n "$tag" ]; then
+                  echo "Deleting old pre-release: $tag"
+                  gh release delete "$tag" --yes --cleanup-tag || true
+                fi
+              done
+
+          echo "Cleanup complete"

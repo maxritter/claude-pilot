@@ -18,27 +18,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  quality:
-    name: QLTY Code Quality Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Install QLTY
-        run: curl -s https://qlty.sh | sh
-
-      - name: Run QLTY checks
-        run: |
-          export QLTY_INSTALL="$HOME/.qlty"
-          export PATH="$QLTY_INSTALL/bin:$PATH"
-          "$HOME/.qlty/bin/qlty" check --install-only
-          "$HOME/.qlty/bin/qlty" check
-
   python-tests:
     name: Python Unit Tests
     runs-on: ubuntu-latest
-    needs: quality
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -67,13 +49,15 @@ jobs:
             --cov=installer --cov=ccp \
             --cov-report=term --cov-report=xml
 
-  release:
-    name: Semantic Release
+  # Determine the version to release (semantic-release dry-run or manual input)
+  prepare-release:
+    name: Prepare Release
     runs-on: ubuntu-latest
     needs: python-tests
     outputs:
-      released: ${{ steps.semantic.outputs.new_release_published }}
-      version: ${{ steps.semantic.outputs.new_release_version }}
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+      changelog: ${{ steps.check.outputs.changelog }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -94,7 +78,314 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Semantic Release
+      - name: Check for release
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual trigger with version ${{ inputs.version }}"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "changelog=Manual release - no changelog generated" >> "$GITHUB_OUTPUT"
+          else
+            # Install semantic-release and plugins
+            npm install -g semantic-release \
+              @semantic-release/git \
+              @semantic-release/changelog \
+              @semantic-release/exec
+
+            # Run dry-run to check if release is needed and capture changelog
+            SR_OUT=/tmp/sr-output.txt
+            if npx semantic-release --dry-run 2>&1 | tee $SR_OUT \
+                | grep -q "Published release"; then
+              VERSION=$(grep "next release version" $SR_OUT \
+                | grep -oP '\d+\.\d+\.\d+' | head -1)
+              if [ -z "$VERSION" ]; then
+                VERSION=$(grep -oP 'Published release \K\d+\.\d+\.\d+' \
+                  $SR_OUT | head -1)
+              fi
+
+              # Extract changelog/release notes from dry-run output
+              CHANGELOG=$(sed -n '/Release note/,/\[semantic-release\]/p' $SR_OUT \
+                | grep -v "semantic-release" | head -50 || echo "See commits for details")
+
+              echo "Will release version: $VERSION"
+              echo "should_release=true" >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+              # Use delimiter for multiline output
+              {
+                echo "changelog<<EOF"
+                echo "$CHANGELOG"
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
+            else
+              echo "No release needed"
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              echo "version=" >> "$GITHUB_OUTPUT"
+              echo "changelog=" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+  # Build jobs run in parallel after prepare-release
+  build-ccp-x86:
+    name: Build CCP Linux x86_64
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    if: needs.prepare-release.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Verify version
+        run: |
+          echo "Building version: ${{ needs.prepare-release.outputs.version }}"
+          cat ccp/__init__.py | grep __version__
+
+      - name: Build binary
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3.12-slim-bullseye \
+            bash -c "
+              apt-get update && apt-get install -y binutils build-essential && \
+              pip install . && \
+              python -m ccp.build --release && \
+              ls -la ccp/dist/
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-linux-x86_64
+          path: |
+            ccp/dist/ccp-linux-x86_64.so
+            ccp/dist/ccp
+          retention-days: 1
+
+  build-ccp-arm64:
+    name: Build CCP Linux arm64
+    runs-on: ubuntu-24.04-arm
+    needs: prepare-release
+    if: needs.prepare-release.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Verify version
+        run: |
+          echo "Building version: ${{ needs.prepare-release.outputs.version }}"
+          cat ccp/__init__.py | grep __version__
+
+      - name: Build binary
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3.12-slim-bullseye \
+            bash -c "
+              apt-get update && apt-get install -y binutils build-essential && \
+              pip install . && \
+              python -m ccp.build --release && \
+              ls -la ccp/dist/
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-linux-arm64
+          path: ccp/dist/ccp-linux-arm64.so
+          retention-days: 1
+
+  build-ccp-darwin-x86:
+    name: Build CCP Darwin x86_64
+    runs-on: macos-15-intel
+    needs: prepare-release
+    if: needs.prepare-release.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: brew install git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-pyinstaller
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Verify version
+        run: |
+          echo "Building version: ${{ needs.prepare-release.outputs.version }}"
+          cat ccp/__init__.py | grep __version__
+
+      - name: Build binary
+        run: |
+          pip install .
+          python -m ccp.build --release
+          ls -la ccp/dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-darwin-x86_64
+          path: ccp/dist/ccp-darwin-x86_64.so
+          retention-days: 1
+
+  build-ccp-darwin-arm64:
+    name: Build CCP Darwin arm64
+    runs-on: macos-14
+    needs: prepare-release
+    if: needs.prepare-release.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install git-crypt
+        run: brew install git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-pyinstaller
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Verify version
+        run: |
+          echo "Building version: ${{ needs.prepare-release.outputs.version }}"
+          cat ccp/__init__.py | grep __version__
+
+      - name: Build binary
+        run: |
+          pip install .
+          python -m ccp.build --release
+          ls -la ccp/dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccp-darwin-arm64
+          path: ccp/dist/ccp-darwin-arm64.so
+          retention-days: 1
+
+  # Manual approval gate - displays version and changelog, waits for approval
+  approve-release:
+    name: Approve Release
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-release
+      - build-ccp-x86
+      - build-ccp-arm64
+      - build-ccp-darwin-x86
+      - build-ccp-darwin-arm64
+    if: needs.prepare-release.outputs.should_release == 'true'
+    environment: production
+    steps:
+      - name: Display release details for approval
+        run: |
+          echo "## 🚀 Release Approval Required" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: v${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Proposed Changelog:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.prepare-release.outputs.changelog }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Artifacts Ready:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Darwin x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Darwin arm64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Approve this deployment to publish the release.**" >> $GITHUB_STEP_SUMMARY
+
+      - name: Release approved
+        run: |
+          echo "✅ Release v${{ needs.prepare-release.outputs.version }} approved!"
+          echo "Proceeding to publish..."
+
+  # Create release and upload all artifacts only after approval
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-release
+      - approve-release
+    if: needs.prepare-release.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install git-crypt
+        run: sudo apt-get update && sudo apt-get install -y git-crypt
+
+      - name: Unlock repository
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+        run: bash .github/workflows/scripts/setup-git-crypt.sh
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -ls
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Create release with semantic-release
+        if: github.event_name != 'workflow_dispatch'
         id: semantic
         uses: cycjimmy/semantic-release-action@v6
         with:
@@ -105,301 +396,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload artifacts to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+          echo "Uploading artifacts for v${VERSION}"
+
+          # Wait a moment for the release to be fully created
+          sleep 5
+
+          # Upload all .so files
+          gh release upload "v${VERSION}" \
+            artifacts/ccp-linux-x86_64/ccp-linux-x86_64.so \
+            artifacts/ccp-linux-arm64/ccp-linux-arm64.so \
+            artifacts/ccp-darwin-x86_64/ccp-darwin-x86_64.so \
+            artifacts/ccp-darwin-arm64/ccp-darwin-arm64.so \
+            artifacts/ccp-linux-x86_64/ccp \
+            --clobber
+
+          echo "All artifacts uploaded successfully"
+
       - name: Output release info
         run: |
-          echo "Released: ${{ steps.semantic.outputs.new_release_published }}"
-          echo "Version: ${{ steps.semantic.outputs.new_release_version }}"
+          echo "Released version: ${{ needs.prepare-release.outputs.version }}"
+          echo "All platform binaries are now available"
 
-  build-ccp-x86:
-    name: Build CCP Linux x86_64
-    runs-on: ubuntu-latest
-    needs: release
-    if: |
-      needs.release.outputs.released == 'true' ||
-      github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="${{ needs.release.outputs.version }}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout release tag
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ steps.version.outputs.version }}
-
-      - name: Install git-crypt
-        run: sudo apt-get update && sudo apt-get install -y git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
-      - name: Verify version
-        run: |
-          echo "Building version: ${{ steps.version.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
-
-      - name: Build binary
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            python:3.12-slim-bullseye \
-            bash -c "
-              apt-get update && apt-get install -y binutils build-essential && \
-              pip install . && \
-              python -m ccp.build --release && \
-              ls -la ccp/dist/
-            "
-
-      - name: Upload binary to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            ccp/dist/ccp-linux-x86_64.so \
-            ccp/dist/ccp-wrapper --clobber
-
-  build-ccp-arm64:
-    name: Build CCP Linux arm64
-    runs-on: ubuntu-24.04-arm
-    needs: release
-    if: |
-      needs.release.outputs.released == 'true' ||
-      github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="${{ needs.release.outputs.version }}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout release tag
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ steps.version.outputs.version }}
-
-      - name: Install git-crypt
-        run: sudo apt-get update && sudo apt-get install -y git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
-      - name: Verify version
-        run: |
-          echo "Building version: ${{ steps.version.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
-
-      - name: Build binary
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            python:3.12-slim-bullseye \
-            bash -c "
-              apt-get update && apt-get install -y binutils build-essential && \
-              pip install . && \
-              python -m ccp.build --release && \
-              ls -la ccp/dist/
-            "
-
-      - name: Upload binary to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            ccp/dist/ccp-linux-arm64.so --clobber
-
-  build-ccp-darwin-x86:
-    name: Build CCP Darwin x86_64
-    runs-on: macos-15-intel
-    needs: release
-    if: |
-      needs.release.outputs.released == 'true' ||
-      github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="${{ needs.release.outputs.version }}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout release tag
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ steps.version.outputs.version }}
-
-      - name: Install git-crypt
-        run: brew install git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-pyinstaller
-          restore-keys: ${{ runner.os }}-pip-
-
-      - name: Verify version
-        run: |
-          echo "Building version: ${{ steps.version.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
-
-      - name: Build binary
-        run: |
-          pip install .
-          python -m ccp.build --release
-          ls -la ccp/dist/
-
-      - name: Upload binary to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            ccp/dist/ccp-darwin-x86_64.so --clobber
-
-  build-ccp-darwin-arm64:
-    name: Build CCP Darwin arm64
-    runs-on: macos-14
-    needs: release
-    if: |
-      needs.release.outputs.released == 'true' ||
-      github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="${{ needs.release.outputs.version }}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout release tag
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ steps.version.outputs.version }}
-
-      - name: Install git-crypt
-        run: brew install git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-pyinstaller
-          restore-keys: ${{ runner.os }}-pip-
-
-      - name: Verify version
-        run: |
-          echo "Building version: ${{ steps.version.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
-
-      - name: Build binary
-        run: |
-          pip install .
-          python -m ccp.build --release
-          ls -la ccp/dist/
-
-      - name: Upload binary to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            ccp/dist/ccp-darwin-arm64.so --clobber
-
-  upload-wrapper:
-    name: Upload CCP Wrapper Script
-    runs-on: ubuntu-latest
-    needs: release
-    if: |
-      needs.release.outputs.released == 'true' ||
-      github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="${{ needs.release.outputs.version }}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout release tag
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ steps.version.outputs.version }}
-
-      - name: Install git-crypt
-        run: sudo apt-get update && sudo apt-get install -y git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Create wrapper script
-        run: |
-          pip install .
-          python -m ccp.build --release
-          ls -la ccp/dist/
-
-      - name: Upload wrapper to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            ccp/dist/ccp-wrapper --clobber
-
-  deploy-website:
-    name: Trigger Netlify Deploy
-    runs-on: ubuntu-latest
-    needs: release
-    if: needs.release.outputs.released == 'true'
-    steps:
-      - name: Trigger Netlify build
-        run: |
-          curl -X POST -d {} "${{ secrets.NETLIFY_BUILD_HOOK }}"

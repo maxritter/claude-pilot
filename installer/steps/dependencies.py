@@ -38,7 +38,7 @@ def _is_plugin_installed(plugin_name: str, marketplace: str | None = None) -> bo
 
     Args:
         plugin_name: The plugin name (e.g., "claude-mem", "context7")
-        marketplace: Optional marketplace name (e.g., "thedotmack", "claude-plugins-official")
+        marketplace: Optional marketplace name (e.g., "customable", "claude-plugins-official")
 
     Returns:
         True if the plugin is installed, False otherwise.
@@ -69,7 +69,7 @@ def _is_marketplace_installed(marketplace_name: str) -> bool:
     """Check if a Claude marketplace is already installed.
 
     Args:
-        marketplace_name: The marketplace name (e.g., "claude-plugins-official", "thedotmack")
+        marketplace_name: The marketplace name (e.g., "claude-plugins-official", "customable")
 
     Returns:
         True if the marketplace is installed, False otherwise.
@@ -401,7 +401,7 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
 def _ensure_maxritter_marketplace() -> bool:
     """Ensure claude-mem marketplace points to maxritter repo.
 
-    Checks known_marketplaces.json for thedotmack entry. If it exists
+    Checks known_marketplaces.json for customable entry. If it exists
     with maxritter URL, returns True. If it exists with wrong URL, removes it.
     """
     import json
@@ -411,16 +411,16 @@ def _ensure_maxritter_marketplace() -> bool:
     if marketplaces_path.exists():
         try:
             data = json.loads(marketplaces_path.read_text())
-            thedotmack = data.get("thedotmack", {})
-            source = thedotmack.get("source", {})
+            customable = data.get("customable", {})
+            source = customable.get("source", {})
             url = source.get("url", "")
 
-            if thedotmack and "maxritter" in url:
+            if customable and "maxritter" in url:
                 return True
 
-            if thedotmack and "maxritter" not in url:
+            if customable and "maxritter" not in url:
                 subprocess.run(
-                    ["bash", "-c", "claude plugin marketplace rm thedotmack"],
+                    ["bash", "-c", "claude plugin marketplace rm customable"],
                     capture_output=True,
                 )
         except (json.JSONDecodeError, KeyError):
@@ -443,18 +443,18 @@ def install_claude_mem() -> bool:
 
     If already installed, updates marketplace and plugin to latest version.
     """
-    marketplace_existed = _is_marketplace_installed("thedotmack")
+    marketplace_existed = _is_marketplace_installed("customable")
 
     if not _ensure_maxritter_marketplace():
         return False
 
     if marketplace_existed:
         subprocess.run(
-            ["bash", "-c", "claude plugin marketplace update thedotmack"],
+            ["bash", "-c", "claude plugin marketplace update customable"],
             capture_output=True,
         )
 
-    if _is_plugin_installed("claude-mem", "thedotmack"):
+    if _is_plugin_installed("claude-mem", "customable"):
         subprocess.run(
             ["bash", "-c", "claude plugin update claude-mem"],
             capture_output=True,
@@ -471,7 +471,7 @@ def _is_claude_mem_deps_installed() -> bool:
     """Check if claude-mem bun dependencies are already installed."""
     import json
 
-    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "customable"
     node_modules = plugin_dir / "node_modules"
     marker_file = plugin_dir / ".install-version"
 
@@ -503,7 +503,7 @@ def preinstall_claude_mem_deps(ui: Any = None) -> bool:
     import datetime
     import json
 
-    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "customable"
 
     if not plugin_dir.exists():
         return False

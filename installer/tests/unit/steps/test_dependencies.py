@@ -366,7 +366,7 @@ class TestClaudeMemDepsPreinstall:
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 # Create plugin dir but no node_modules
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
 
                 result = _is_claude_mem_deps_installed()
@@ -380,7 +380,7 @@ class TestClaudeMemDepsPreinstall:
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 # Create plugin dir with node_modules but no marker
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "node_modules").mkdir()
 
@@ -396,7 +396,7 @@ class TestClaudeMemDepsPreinstall:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "node_modules").mkdir()
 
@@ -416,7 +416,7 @@ class TestClaudeMemDepsPreinstall:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "node_modules").mkdir()
 
@@ -446,7 +446,7 @@ class TestClaudeMemDepsPreinstall:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "node_modules").mkdir()
                 (plugin_dir / "package.json").write_text(json.dumps({"version": "1.0.0"}))
@@ -465,7 +465,7 @@ class TestClaudeMemDepsPreinstall:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "package.json").write_text('{"version": "1.0.0"}')
 
@@ -492,7 +492,7 @@ class TestClaudeMemDepsPreinstall:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable"
                 plugin_dir.mkdir(parents=True)
                 (plugin_dir / "package.json").write_text(json.dumps({"version": "1.0.9"}))
 

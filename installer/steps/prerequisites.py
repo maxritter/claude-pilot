@@ -74,6 +74,21 @@ def _add_bun_tap() -> bool:
         return False
 
 
+def _ensure_homebrew_in_path() -> None:
+    """Ensure Homebrew bin directory is in PATH for current process."""
+    brew_paths = [
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+        "/home/linuxbrew/.linuxbrew/bin",
+    ]
+    current_path = os.environ.get("PATH", "")
+    for brew_path in brew_paths:
+        if os.path.exists(os.path.join(brew_path, "brew")):
+            if brew_path not in current_path:
+                os.environ["PATH"] = f"{brew_path}:{current_path}"
+            break
+
+
 def _install_homebrew_package(package: str) -> bool:
     """Install a single Homebrew package."""
     try:
@@ -82,6 +97,8 @@ def _install_homebrew_package(package: str) -> bool:
             capture_output=True,
             check=False,
         )
+        if result.returncode == 0:
+            _ensure_homebrew_in_path()
         return result.returncode == 0
     except (subprocess.SubprocessError, OSError):
         return False

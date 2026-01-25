@@ -242,6 +242,43 @@ class TestPrerequisitesHelpers:
         assert "install" in call_args
         assert "git" in call_args
 
+    @patch("os.path.exists")
+    def test_ensure_homebrew_in_path_adds_brew_path(self, mock_exists):
+        """_ensure_homebrew_in_path adds Homebrew bin to PATH when missing."""
+        import os
+
+        from installer.steps.prerequisites import _ensure_homebrew_in_path
+
+        mock_exists.side_effect = lambda p: p == "/opt/homebrew/bin/brew"
+        original_path = os.environ.get("PATH", "")
+
+        # Temporarily set PATH without homebrew
+        os.environ["PATH"] = "/usr/bin:/bin"
+        try:
+            _ensure_homebrew_in_path()
+            assert "/opt/homebrew/bin" in os.environ["PATH"]
+        finally:
+            os.environ["PATH"] = original_path
+
+    @patch("os.path.exists")
+    def test_ensure_homebrew_in_path_skips_if_already_present(self, mock_exists):
+        """_ensure_homebrew_in_path does nothing if brew path already in PATH."""
+        import os
+
+        from installer.steps.prerequisites import _ensure_homebrew_in_path
+
+        mock_exists.side_effect = lambda p: p == "/opt/homebrew/bin/brew"
+        original_path = os.environ.get("PATH", "")
+
+        # Set PATH with homebrew already present
+        os.environ["PATH"] = "/opt/homebrew/bin:/usr/bin:/bin"
+        try:
+            _ensure_homebrew_in_path()
+            # Should not duplicate
+            assert os.environ["PATH"].count("/opt/homebrew/bin") == 1
+        finally:
+            os.environ["PATH"] = original_path
+
 
 class TestIsHomebrewAvailable:
     """Test is_homebrew_available function."""

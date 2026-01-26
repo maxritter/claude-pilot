@@ -25,7 +25,7 @@ A shortcut to state-of-the-art Claude Code development, continuously improved.
 ## ⚡ TL;DR
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.2.4/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.3.0/install.sh | bash
 ```
 
 Then run `ccp` and `/sync` once to sync rules and skills. Use `/spec` or the quick mode for full quality.
@@ -72,7 +72,7 @@ Install directly on your system. Requires Homebrew (macOS/Linux/WSL2).
 Run the following command in your **project folder root**:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.2.4/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.3.0/install.sh | bash
 ```
 
 You'll be asked to choose between **Dev Container** or **Local Installation**.

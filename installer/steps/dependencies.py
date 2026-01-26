@@ -33,60 +33,6 @@ def _run_bash_with_retry(command: str, cwd: Path | None = None) -> bool:
     return False
 
 
-def _is_plugin_installed(plugin_name: str, marketplace: str | None = None) -> bool:
-    """Check if a Claude plugin is already installed.
-
-    Args:
-        plugin_name: The plugin name (e.g., "claude-mem", "context7")
-        marketplace: Optional marketplace name (e.g., "customable", "claude-plugins-official")
-
-    Returns:
-        True if the plugin is installed, False otherwise.
-    """
-    import json
-
-    installed_path = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
-    if not installed_path.exists():
-        return False
-
-    try:
-        data = json.loads(installed_path.read_text())
-        plugins = data.get("plugins", {})
-
-        if marketplace:
-            key = f"{plugin_name}@{marketplace}"
-            return key in plugins and len(plugins[key]) > 0
-
-        for key in plugins:
-            if key.startswith(f"{plugin_name}@") and len(plugins[key]) > 0:
-                return True
-        return False
-    except (json.JSONDecodeError, OSError):
-        return False
-
-
-def _is_marketplace_installed(marketplace_name: str) -> bool:
-    """Check if a Claude marketplace is already installed.
-
-    Args:
-        marketplace_name: The marketplace name (e.g., "claude-plugins-official", "customable")
-
-    Returns:
-        True if the marketplace is installed, False otherwise.
-    """
-    import json
-
-    marketplaces_path = Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
-    if not marketplaces_path.exists():
-        return False
-
-    try:
-        data = json.loads(marketplaces_path.read_text())
-        return marketplace_name in data
-    except (json.JSONDecodeError, OSError):
-        return False
-
-
 def _get_nvm_source_cmd() -> str:
     """Get the command to source NVM for nvm-specific commands.
 
@@ -246,54 +192,68 @@ def _migrate_legacy_plugins(ui: Any = None) -> None:
     - LSP plugins (basedpyright, typescript-lsp, gopls) from claude-code-lsps
     - thedotmack marketplace
     - customable marketplace
+
+    Directly modifies installed_plugins.json since 'claude plugin rm' is unreliable.
     """
+    import json
     import shutil
 
     removed_plugins: list[str] = []
     removed_marketplaces: list[str] = []
 
-    if _is_plugin_installed("context7", "claude-plugins-official"):
-        subprocess.run(
-            ["bash", "-c", "claude plugin rm context7"],
-            capture_output=True,
-        )
-        removed_plugins.append("context7")
+    plugins_to_remove = [
+        ("context7", "claude-plugins-official"),
+        ("claude-mem", "thedotmack"),
+        ("claude-mem", "customable"),
+        ("basedpyright", "claude-code-lsps"),
+        ("typescript-lsp", "claude-code-lsps"),
+        ("vtsls", "claude-code-lsps"),
+        ("gopls", "claude-code-lsps"),
+        ("pyright-lsp", "claude-plugins-official"),
+        ("typescript-lsp", "claude-plugins-official"),
+        ("gopls-lsp", "claude-plugins-official"),
+    ]
 
-    if _is_plugin_installed("claude-mem", "thedotmack"):
-        subprocess.run(
-            ["bash", "-c", "claude plugin rm claude-mem"],
-            capture_output=True,
-        )
-        removed_plugins.append("claude-mem@thedotmack")
+    installed_path = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
+    if installed_path.exists():
+        try:
+            data = json.loads(installed_path.read_text())
+            plugins = data.get("plugins", {})
+            modified = False
 
-    if _is_plugin_installed("claude-mem", "customable"):
-        subprocess.run(
-            ["bash", "-c", "claude plugin rm claude-mem"],
-            capture_output=True,
-        )
-        removed_plugins.append("claude-mem@customable")
+            for plugin_name, marketplace in plugins_to_remove:
+                key = f"{plugin_name}@{marketplace}"
+                if key in plugins:
+                    del plugins[key]
+                    removed_plugins.append(key)
+                    modified = True
 
-    for lsp_plugin in ["basedpyright", "typescript-lsp", "vtsls", "gopls"]:
-        if _is_plugin_installed(lsp_plugin, "claude-code-lsps"):
-            subprocess.run(
-                ["bash", "-c", f"claude plugin rm {lsp_plugin}"],
-                capture_output=True,
-            )
-            removed_plugins.append(f"{lsp_plugin}@claude-code-lsps")
+            if modified:
+                installed_path.write_text(json.dumps(data, indent=2))
+        except (json.JSONDecodeError, OSError):
+            pass
 
-    if _is_marketplace_installed("thedotmack"):
-        subprocess.run(
-            ["bash", "-c", "claude plugin marketplace rm thedotmack"],
-            capture_output=True,
-        )
-        removed_marketplaces.append("thedotmack")
+    cache_dir = Path.home() / ".claude" / "plugins" / "cache"
+    marketplaces_to_clean = ["thedotmack", "customable", "claude-code-lsps"]
+    for marketplace in marketplaces_to_clean:
+        marketplace_cache = cache_dir / marketplace
+        if marketplace_cache.exists():
+            shutil.rmtree(marketplace_cache, ignore_errors=True)
 
-    if _is_marketplace_installed("customable"):
-        subprocess.run(
-            ["bash", "-c", "claude plugin marketplace rm customable"],
-            capture_output=True,
-        )
-        removed_marketplaces.append("customable")
+    marketplaces_path = Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
+    if marketplaces_path.exists():
+        try:
+            data = json.loads(marketplaces_path.read_text())
+            modified = False
+            for marketplace in ["thedotmack", "customable"]:
+                if marketplace in data:
+                    del data[marketplace]
+                    removed_marketplaces.append(marketplace)
+                    modified = True
+            if modified:
+                marketplaces_path.write_text(json.dumps(data, indent=2))
+        except (json.JSONDecodeError, OSError):
+            pass
 
     marketplaces_dir = Path.home() / ".claude" / "plugins" / "marketplaces"
     for marketplace in ["thedotmack", "customable"]:
@@ -302,10 +262,8 @@ def _migrate_legacy_plugins(ui: Any = None) -> None:
             shutil.rmtree(marketplace_dir, ignore_errors=True)
 
     if ui and (removed_plugins or removed_marketplaces):
-        if removed_plugins:
-            ui.success(f"Migrated legacy plugins: {', '.join(removed_plugins)}")
-        if removed_marketplaces:
-            ui.success(f"Removed legacy marketplaces: {', '.join(removed_marketplaces)}")
+        total = len(removed_plugins) + len(removed_marketplaces)
+        ui.success(f"Cleaned up {total} legacy plugins")
 
 
 def _configure_claude_mem_defaults() -> bool:

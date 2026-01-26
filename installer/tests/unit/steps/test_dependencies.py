@@ -298,93 +298,84 @@ class TestMigrateLegacyPlugins:
 
         assert callable(_migrate_legacy_plugins)
 
-    @patch("installer.steps.dependencies._is_marketplace_installed")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    @patch("subprocess.run")
-    def test_migrate_removes_context7_from_official(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
-        """_migrate_legacy_plugins removes context7 from official marketplace."""
+    def test_migrate_removes_plugins_from_json(self):
+        """_migrate_legacy_plugins removes plugin entries from installed_plugins.json."""
+        import json
+
         from installer.steps.dependencies import _migrate_legacy_plugins
-
-        def plugin_installed(name, marketplace=None):
-            return name == "context7" and marketplace == "claude-plugins-official"
-
-        mock_plugin_installed.side_effect = plugin_installed
-        mock_marketplace_installed.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
+                # Create installed_plugins.json with legacy plugins
+                plugins_dir = Path(tmpdir) / ".claude" / "plugins"
+                plugins_dir.mkdir(parents=True)
+                installed_json = plugins_dir / "installed_plugins.json"
+                installed_json.write_text(
+                    json.dumps(
+                        {
+                            "version": 2,
+                            "plugins": {
+                                "context7@claude-plugins-official": [{"version": "1.0.0"}],
+                                "claude-mem@thedotmack": [{"version": "1.0.0"}],
+                                "basedpyright@claude-code-lsps": [{"version": "1.0.0"}],
+                                "vercel@claude-plugins-official": [{"version": "1.0.0"}],
+                            },
+                        }
+                    )
+                )
+
                 _migrate_legacy_plugins(ui=None)
 
-                # Should have called to remove context7
-                mock_run.assert_called()
-                calls = [str(c) for c in mock_run.call_args_list]
-                assert any("claude plugin rm context7" in c for c in calls)
+                # Check that legacy plugins were removed but vercel kept
+                data = json.loads(installed_json.read_text())
+                assert "context7@claude-plugins-official" not in data["plugins"]
+                assert "claude-mem@thedotmack" not in data["plugins"]
+                assert "basedpyright@claude-code-lsps" not in data["plugins"]
+                assert "vercel@claude-plugins-official" in data["plugins"]
 
-    @patch("installer.steps.dependencies._is_marketplace_installed")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    @patch("subprocess.run")
-    def test_migrate_removes_claude_mem_from_thedotmack(
-        self, mock_run, mock_plugin_installed, mock_marketplace_installed
-    ):
-        """_migrate_legacy_plugins removes claude-mem from thedotmack marketplace."""
+    def test_migrate_removes_cache_directories(self):
+        """_migrate_legacy_plugins removes cache directories for legacy marketplaces."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
-        def plugin_installed(name, marketplace=None):
-            return name == "claude-mem" and marketplace == "thedotmack"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                # Create cache directories
+                cache_dir = Path(tmpdir) / ".claude" / "plugins" / "cache"
+                for marketplace in ["thedotmack", "customable", "claude-code-lsps"]:
+                    (cache_dir / marketplace).mkdir(parents=True)
 
-        mock_plugin_installed.side_effect = plugin_installed
-        mock_marketplace_installed.return_value = True
-        mock_run.return_value = MagicMock(returncode=0)
+                _migrate_legacy_plugins(ui=None)
+
+                # Check that cache directories were removed
+                assert not (cache_dir / "thedotmack").exists()
+                assert not (cache_dir / "customable").exists()
+                assert not (cache_dir / "claude-code-lsps").exists()
+
+    def test_migrate_removes_marketplace_directories(self):
+        """_migrate_legacy_plugins removes marketplace directories."""
+        from installer.steps.dependencies import _migrate_legacy_plugins
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 # Create marketplace directories
-                for mp in ["thedotmack", "customable"]:
-                    mp_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / mp
-                    mp_dir.mkdir(parents=True)
+                marketplaces_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces"
+                for marketplace in ["thedotmack", "customable"]:
+                    (marketplaces_dir / marketplace).mkdir(parents=True)
 
                 _migrate_legacy_plugins(ui=None)
 
-                # Should have removed directories
-                assert not (Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack").exists()
-                assert not (Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "customable").exists()
+                # Check that directories were removed
+                assert not (marketplaces_dir / "thedotmack").exists()
+                assert not (marketplaces_dir / "customable").exists()
 
-    @patch("installer.steps.dependencies._is_marketplace_installed")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    @patch("subprocess.run")
-    def test_migrate_removes_customable_marketplace(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
-        """_migrate_legacy_plugins removes customable marketplace."""
-        from installer.steps.dependencies import _migrate_legacy_plugins
-
-        mock_plugin_installed.return_value = False
-        mock_marketplace_installed.return_value = True
-        mock_run.return_value = MagicMock(returncode=0)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with patch.object(Path, "home", return_value=Path(tmpdir)):
-                _migrate_legacy_plugins(ui=None)
-
-                # Should have called to remove marketplaces
-                calls = [str(c) for c in mock_run.call_args_list]
-                assert any("marketplace rm thedotmack" in c for c in calls)
-                assert any("marketplace rm customable" in c for c in calls)
-
-    @patch("installer.steps.dependencies._is_marketplace_installed")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    @patch("subprocess.run")
-    def test_migrate_skips_when_nothing_to_migrate(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
+    def test_migrate_skips_when_nothing_to_migrate(self):
         """_migrate_legacy_plugins does nothing when nothing to migrate."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
-        mock_plugin_installed.return_value = False
-        mock_marketplace_installed.return_value = False
-
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
+                # No files to migrate - should not raise
                 _migrate_legacy_plugins(ui=None)
-
-                mock_run.assert_not_called()
 
 
 class TestSetupClaudeMem:

@@ -51,13 +51,6 @@
       "mcp__plugin_plugin_context7__*",
       "mcp__plugin_plugin_web-search__*",
       "mcp__plugin_plugin_web-fetch__*",
-      "Skill(ccp)",
-      "Skill(vexor-cli)",
-      "Skill(plan)",
-      "Skill(implement)",
-      "Skill(verify)",
-      "Skill(setup)",
-      "Skill(spec)",
       "Skill(skill-creator)",
       "LSP"
     ],

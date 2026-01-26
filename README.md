@@ -98,7 +98,7 @@ You'll be asked to choose between **Dev Container** or **Local Installation**.
 ### 📚 Modular Rules, Commands & Skills
 
 - **Rules** - Best practices for TDD, debugging, context management, and more
-- **Commands** - Slash commands like `/spec`, `/sync`, `/plan`, `/implement`, `/verify`
+- **Commands** - `/spec` for Spec-Driven Development and `/sync` updating rules
 - **Skills** - Coding standards for Python, TypeScript, Go, testing, and components
 - **Customizable** - Add your own rules, commands, and skills that survive updates
 
@@ -192,7 +192,7 @@ Claude CodePro extends Claude Code with a modular system of rules, commands, and
 
 **Managed by CCP** (updated on install):
 
-- `.claude/commands/` - `spec`, `sync`, `plan`, `implement`, `verify`
+- `.claude/commands/` - `spec` and `sync` commands are managed by CCP
 - `.claude/rules/standard/` - Best practices and workflows
 - `.claude/plugin/skills/` - Coding standards for languages and frameworks
 

@@ -41,7 +41,7 @@ const insideItems: InsideItem[] = [
     title: "Rules, Commands & Skills",
     items: [
       "Rules: Best practices for TDD and workflows",
-      "Commands: /spec, /sync, /plan, /implement, /verify",
+      "Commands: /spec for SDD and /sync updating rules",
       "Skills: Coding standards for languages & frameworks",
       "Customizable: Add your own, they survive updates",
     ],

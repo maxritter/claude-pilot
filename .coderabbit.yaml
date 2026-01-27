@@ -1,0 +1,7 @@
+# CodeRabbit configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+reviews:
+  path_filters:
+    # Exclude git-crypted directory from reviews
+    - "!ccp/**"

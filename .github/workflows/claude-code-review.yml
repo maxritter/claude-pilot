@@ -3,6 +3,8 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
+    paths-ignore:
+      - 'ccp/**'  # git-crypted - exclude from review
   workflow_dispatch:
     inputs:
       pr_number:

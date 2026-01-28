@@ -2,7 +2,7 @@
 
 set -e
 
-DEFAULT_VERSION="5.4.7"
+DEFAULT_VERSION="5.4.8"
 VERSION="$DEFAULT_VERSION"
 
 REPO="maxritter/claude-codepro"

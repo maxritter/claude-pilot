@@ -10,12 +10,14 @@ from pathlib import Path
 
 THRESHOLD_WARN = 80
 THRESHOLD_STOP = 90
+LEARN_THRESHOLDS = [40, 60, 80]
 
 CACHE_FILE = Path("/tmp/.claude_context_cache.json")
 CACHE_TTL = 30
 
 RED = "\033[0;31m"
 YELLOW = "\033[0;33m"
+CYAN = "\033[0;36m"
 NC = "\033[0m"
 
 
@@ -81,24 +83,68 @@ def get_actual_token_count(session_file: Path) -> int | None:
     return input_tokens + cache_creation + cache_read
 
 
-def get_cached_context(session_id: str) -> tuple[int, bool]:
-    """Get cached context value if fresh enough and for current session."""
+def get_cached_context(session_id: str) -> tuple[int, bool, list[int], bool]:
+    """Get cached context value if fresh enough and for current session.
+
+    Returns: (tokens, is_cached, shown_learn_thresholds, shown_80_warn)
+    """
     if CACHE_FILE.exists():
         try:
             with CACHE_FILE.open() as f:
                 cache = json.load(f)
                 if cache.get("session_id") == session_id and time.time() - cache.get("timestamp", 0) < CACHE_TTL:
-                    return cache.get("tokens", 0), True
+                    return cache.get("tokens", 0), True, cache.get("shown_learn", []), cache.get("shown_80_warn", False)
         except (json.JSONDecodeError, OSError):
             pass
-    return 0, False
+    return 0, False, [], False
 
 
-def save_cache(tokens: int, session_id: str) -> None:
+def get_session_flags(session_id: str) -> tuple[list[int], bool]:
+    """Get shown flags for this session (learn thresholds, 80% warning)."""
+    if CACHE_FILE.exists():
+        try:
+            with CACHE_FILE.open() as f:
+                cache = json.load(f)
+                if cache.get("session_id") == session_id:
+                    return cache.get("shown_learn", []), cache.get("shown_80_warn", False)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return [], False
+
+
+def save_cache(
+    tokens: int, session_id: str, shown_learn: list[int] | None = None, shown_80_warn: bool | None = None
+) -> None:
     """Save context calculation to cache with session ID."""
+    existing_shown: list[int] = []
+    existing_80_warn = False
+    if CACHE_FILE.exists():
+        try:
+            with CACHE_FILE.open() as f:
+                cache = json.load(f)
+                if cache.get("session_id") == session_id:
+                    existing_shown = cache.get("shown_learn", [])
+                    existing_80_warn = cache.get("shown_80_warn", False)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if shown_learn:
+        existing_shown = list(set(existing_shown + shown_learn))
+    if shown_80_warn:
+        existing_80_warn = True
+
     try:
         with CACHE_FILE.open("w") as f:
-            json.dump({"tokens": tokens, "timestamp": time.time(), "session_id": session_id}, f)
+            json.dump(
+                {
+                    "tokens": tokens,
+                    "timestamp": time.time(),
+                    "session_id": session_id,
+                    "shown_learn": existing_shown,
+                    "shown_80_warn": existing_80_warn,
+                },
+                f,
+            )
     except OSError:
         pass
 
@@ -109,7 +155,7 @@ def run_context_monitor() -> int:
     if not session_id:
         return 0
 
-    cached_tokens, is_cached = get_cached_context(session_id)
+    cached_tokens, is_cached, shown_learn, shown_80_warn = get_cached_context(session_id)
     if is_cached:
         total_tokens = cached_tokens
     else:
@@ -122,11 +168,31 @@ def run_context_monitor() -> int:
             return 0
 
         total_tokens = actual_tokens
-        save_cache(total_tokens, session_id)
+        shown_learn, shown_80_warn = get_session_flags(session_id)
 
     percentage = (total_tokens / 200000) * 100
 
+    new_learn_shown: list[int] = []
+    for threshold in LEARN_THRESHOLDS:
+        if percentage >= threshold and threshold not in shown_learn:
+            print("", file=sys.stderr)
+            print(
+                f"{CYAN}💡 Context {percentage:.0f}% - Online Learning reminder:{NC}",
+                file=sys.stderr,
+            )
+            print(
+                f"{CYAN}   Did you discover a non-obvious solution or repeatable workflow?{NC}",
+                file=sys.stderr,
+            )
+            print(
+                f"{CYAN}   If yes, invoke Skill(learn) to extract it for future sessions.{NC}",
+                file=sys.stderr,
+            )
+            new_learn_shown.append(threshold)
+            break
+
     if percentage >= THRESHOLD_STOP:
+        save_cache(total_tokens, session_id, new_learn_shown if new_learn_shown else None)
         print("", file=sys.stderr)
         print(f"{RED}⚠️  CONTEXT {percentage:.0f}% - HANDOFF NOW (not optional){NC}", file=sys.stderr)
         print(f"{RED}STOP current work. Your NEXT actions must be:{NC}", file=sys.stderr)
@@ -145,13 +211,18 @@ def run_context_monitor() -> int:
         )
         return 2
 
-    if percentage >= THRESHOLD_WARN:
+    if percentage >= THRESHOLD_WARN and not shown_80_warn:
+        save_cache(total_tokens, session_id, new_learn_shown if new_learn_shown else None, shown_80_warn=True)
         print("", file=sys.stderr)
+        print(f"{YELLOW}⚠️  CONTEXT {percentage:.0f}% - PREPARE FOR HANDOFF{NC}", file=sys.stderr)
         print(
-            f"{YELLOW}Context: {percentage:.0f}% - Finish current task with full quality, then hand off. Never rush - next session can continue!{NC}",
+            f"{YELLOW}Finish current task with full quality, then hand off. Never rush - next session continues seamlessly!{NC}",
             file=sys.stderr,
         )
         return 2
+
+    if new_learn_shown:
+        save_cache(total_tokens, session_id, new_learn_shown)
 
     return 0
 

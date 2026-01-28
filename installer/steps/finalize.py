@@ -85,8 +85,9 @@ class FinalizeStep(BaseStep):
         steps.append(
             (
                 "Custom MCP Servers (Optional)",
-                "Add your MCP servers to mcp_servers.json, then run /sync\n"
-                "     to generate rules. Use mcp-cli to interact with them.",
+                "Add lightweight servers to .mcp.json (instructions load into context)\n"
+                "     Add heavy servers to mcp_servers.json (zero context cost via mcp-cli)\n"
+                "     Then run /sync to generate documentation.",
             )
         )
 

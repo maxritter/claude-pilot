@@ -212,23 +212,101 @@ Custom skills in `.claude/skills/` (non-standard names) are preserved during upd
 
 ### Phase 6: Sync MCP Rules
 
-**Update MCP server documentation if configured.**
+**Update MCP server documentation for user-configured servers.**
 
-1. **Check mcp_servers.json:**
+MCP servers can be configured in two locations:
+
+| Config File | How It Works | Best For |
+|-------------|--------------|----------|
+| **`.mcp.json`** | Lazy-loaded; instructions enter context when triggered | Lightweight servers (few tools) |
+| **`mcp_servers.json`** | Called via mcp-cli; instructions **never** enter context | Heavy servers (many tools) |
+
+**Key difference:** With `.mcp.json`, tool definitions load into context when used. With `mcp_servers.json`, only the CLI output enters context - zero token cost for instructions.
+
+**CCP Core Servers (skip these - already documented in standard rules):**
+- `context7` - Library documentation
+- `mem-search` - Persistent memory
+- `web-search` - Web search via open-websearch
+- `web-fetch` - Web page fetching via fetcher-mcp
+
+#### Step 6.1: Discover All MCP Servers
+
+1. **Check `.mcp.json` (Claude Code native config):**
+   ```bash
+   cat .mcp.json 2>/dev/null | head -50
+   ```
+
+2. **Check `mcp_servers.json` (mcp-cli config):**
    ```bash
    cat mcp_servers.json 2>/dev/null | head -50
    ```
 
-2. **If MCP servers configured:**
-   - List servers with `mcp-cli`
-   - Compare against existing `mcp-servers.md`
-   - Add new servers, update changed ones
-   - Remove documentation for removed servers
+3. **List available servers via mcp-cli:**
+   ```bash
+   mcp-cli 2>/dev/null
+   ```
 
-3. **If mcp-servers.md exists but servers changed:**
-   - Use AskUserQuestion: "MCP servers have changed. Update documentation?"
+4. **Build inventory of user servers:**
+   - Parse both config files
+   - Exclude CCP core servers: `context7`, `mem-search`, `web-search`, `web-fetch`
+   - Note which config file each server comes from
 
-4. **Skip if no mcp_servers.json or user declines**
+#### Step 6.2: Document User MCP Servers
+
+For each user-configured server (not CCP core):
+
+1. **Get server tools and descriptions:**
+   ```bash
+   mcp-cli <server-name> -d
+   ```
+
+2. **Compare against existing `mcp-servers.md`:**
+   - Check if server is already documented
+   - Check if tools have changed
+   - Check if server was removed
+
+3. **If changes detected, use AskUserQuestion:**
+   ```
+   Question: "Found MCP server changes. Update documentation?"
+   Header: "MCP Sync"
+   Options:
+   - "Update all" - Document all user MCP servers
+   - "Review each" - Walk through changes one by one
+   - "Skip" - Keep existing documentation
+   ```
+
+#### Step 6.3: Write MCP Documentation
+
+If user approves, create/update `.claude/rules/custom/mcp-servers.md`:
+
+```markdown
+## User MCP Servers
+
+Custom MCP servers configured for this project.
+
+### [server-name]
+
+**Source:** `.mcp.json` or `mcp_servers.json`
+**Purpose:** [Brief description]
+
+**Available Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `tool-name` | What it does |
+
+**Example Usage:**
+```bash
+mcp-cli server-name/tool-name '{"param": "value"}'
+```
+```
+
+#### Step 6.4: Skip Conditions
+
+Skip MCP documentation if:
+- No `.mcp.json` AND no `mcp_servers.json` exists
+- Only CCP core servers are configured (no user servers)
+- User declines documentation update
 
 ### Phase 7: Sync Existing Skills
 

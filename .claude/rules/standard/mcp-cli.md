@@ -2,7 +2,34 @@
 
 Access custom MCP servers through the command line. MCP enables interaction with external systems like GitHub, filesystems, databases, and APIs.
 
-**Note:** This is for custom MCP servers configured in `mcp_servers.json`. Claude Code's built-in MCP servers (context7, claude-mem, ide) are accessed directly via their tool names in the conversation.
+### MCP Server Sources
+
+| Source | Location | How It Works |
+|--------|----------|--------------|
+| CCP Core | `.claude/ccp/.mcp.json` | Built-in servers (context7, mem-search, web-search, web-fetch) |
+| Claude Code | `.mcp.json` (project root) | Lazy-loaded; **instructions enter context** when triggered |
+| mcp-cli | `mcp_servers.json` (project root) | Called via CLI; **instructions never enter context** |
+
+### Which Config File to Use?
+
+| Server Type | Config File | Why |
+|-------------|-------------|-----|
+| **Lightweight** (few tools, short instructions) | `.mcp.json` | Direct Claude Code integration, tool calls in conversation |
+| **Heavy** (many tools, long instructions) | `mcp_servers.json` | Zero context cost - only CLI output enters context |
+
+**Key difference:**
+- `.mcp.json` → When server is triggered, all tool definitions load into context (costs tokens)
+- `mcp_servers.json` → Called via `mcp-cli` command, tool definitions **never** enter context
+
+**Rule of thumb:** If a server has >10 tools or verbose descriptions, put it in `mcp_servers.json` to keep context clean.
+
+**CCP Core Servers** (already documented in standard rules - don't re-document):
+- `context7` - Library docs (see `context7-docs.md`)
+- `mem-search` - Persistent memory (see `memory.md`)
+- `web-search` - Web search (see `web-search.md`)
+- `web-fetch` - Page fetching (see `web-search.md`)
+
+**User Servers** from `.mcp.json` or `mcp_servers.json` should be documented via `/sync`.
 
 ### Configuration
 
@@ -101,11 +128,11 @@ mcp-cli filesystem/search_files '{"path": "src/", "pattern": "*.ts"}' --json | j
 
 | Situation | Use |
 |-----------|-----|
-| Built-in MCP servers (context7, claude-mem, ide) | Direct tool calls in conversation |
-| Custom servers in `mcp_servers.json` | `mcp-cli` commands |
+| CCP core servers (context7, mem-search, web-search, web-fetch) | Direct tool calls via ToolSearch |
+| User servers in `.mcp.json` or `mcp_servers.json` | `mcp-cli` commands |
 | Discovering available tools | `mcp-cli` or `mcp-cli <server> -d` |
 | Complex JSON arguments with quotes | Use stdin: `mcp-cli server/tool -` |
 
 ### Sync
 
-Run `/sync` after adding servers to `mcp_servers.json` to generate custom rules with tool documentation.
+Run `/sync` after adding servers to `.mcp.json` or `mcp_servers.json` to generate custom rules with tool documentation. CCP core servers are already documented in standard rules.

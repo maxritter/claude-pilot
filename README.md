@@ -211,6 +211,17 @@ Claude CodePro extends Claude Code with a modular system of rules, commands, and
 | **Commands** | On demand via `/command`          | Specific workflows or multi-step tasks  |
 | **Skills**   | Dynamically when relevant         | Specialized knowledge, coding standards |
 
+### 🔌 Custom MCP Servers
+
+Add your own MCP servers in two locations:
+
+| Config File | How It Works | Best For |
+|-------------|--------------|----------|
+| `.mcp.json` | Instructions load into context when triggered | Lightweight servers (few tools) |
+| `mcp_servers.json` | Called via mcp-cli; instructions never enter context | Heavy servers (many tools) |
+
+Run `/sync` after adding servers to generate documentation.
+
 ---
 
 ## 🤝 Contributing

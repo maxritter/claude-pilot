@@ -67,6 +67,23 @@ def _get_tty_input() -> TextIO:
         return sys.stdin
 
 
+def _get_trial_time_str(days: int | None, expires_at: str | None) -> str:
+    """Get human-readable time remaining for trial."""
+    if days is not None and days > 0:
+        return f"{days}d"
+    if days == 0 and expires_at:
+        from datetime import datetime, timezone
+
+        try:
+            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            remaining = expires_dt - datetime.now(timezone.utc)
+            hours = int(remaining.total_seconds() // 3600)
+            return f"{hours}h" if hours > 0 else "<1h"
+        except (ValueError, AttributeError):
+            pass
+    return "<1d" if days == 0 else "trial"
+
+
 class Console:
     """Console wrapper for Rich with simple input prompts."""
 
@@ -177,8 +194,10 @@ class Console:
                 license_text.append("TRIAL50OFF", style="bold green")
                 license_text.append(" for 50% off first month", style="dim white")
             else:
+                expires_at = license_info.get("expires_at") if license_info else None
+                time_str = _get_trial_time_str(days, expires_at)
                 license_text.append("  ⏳ ", style="yellow")
-                license_text.append(f"Trial ({days} days remaining)", style="bold yellow")
+                license_text.append(f"Trial ({time_str} remaining)", style="bold yellow")
                 license_text.append(" — Subscribe: ", style="dim white")
                 license_text.append("https://license.claude-code.pro", style="cyan")
             self._console.print(license_text)

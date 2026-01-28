@@ -221,6 +221,12 @@ def run_context_monitor() -> int:
         )
         return 2
 
+    if percentage >= THRESHOLD_WARN and shown_80_warn:
+        if new_learn_shown:
+            save_cache(total_tokens, session_id, new_learn_shown)
+        print(f"{YELLOW}Context: {percentage:.0f}%{NC}", file=sys.stderr)
+        return 0
+
     if new_learn_shown:
         save_cache(total_tokens, session_id, new_learn_shown)
 

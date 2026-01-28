@@ -98,10 +98,38 @@ After execution, confirm:
 - [ ] No import/module errors
 - [ ] No runtime exceptions
 - [ ] Expected output in logs/stdout
+- [ ] **Output is CORRECT** (see Output Correctness below)
 - [ ] Side effects correct (files created, DB updated, API called)
 - [ ] Configuration loaded properly
 - [ ] Dependencies resolved
 - [ ] Performance reasonable
+
+### ⛔ Output Correctness - CRITICAL
+
+**Running without errors ≠ Correct output.** You MUST verify the output is actually right.
+
+**Process:**
+1. Fetch source/expected data independently (API call, file read, DB query)
+2. Compare against what your code produced
+3. Numbers and content MUST match
+
+**Example of what I got wrong:**
+```
+❌ Lambda logged: "failureReasonsCount: 1"
+❌ I accepted this as correct
+❌ Actual API response had 18 failure reasons (JSON-encoded in array)
+❌ BUG: Lambda wasn't parsing the data correctly
+```
+
+**What I should have done:**
+```
+✅ Lambda logged: "failureReasonsCount: 1"
+✅ Fetched actual API: aws bedrock-agent get-ingestion-job...
+✅ API showed 18 failure reasons
+✅ MISMATCH DETECTED → Found the bug
+```
+
+**Rule:** If your code processes external data, ALWAYS fetch that data independently and compare.
 
 ### Evidence Required
 

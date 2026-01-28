@@ -28,6 +28,21 @@ Before ANY claim of success, completion, or correctness:
 | "Bug fixed"             | Test reproducing bug passes | Code changed                |
 | "Regression test works" | Red-green cycle verified    | Test passes once            |
 | "Requirements met"      | Line-by-line checklist      | Tests passing               |
+| "Output is correct"     | Compare against source data | Logs look reasonable        |
+
+### ⛔ Output Correctness - Don't Trust Logs Alone
+
+**If code processes external data, verify output against the source:**
+
+```bash
+# Fetch source data independently
+aws <service> get-<resource> --output json
+
+# Compare with what your code logged/produced
+# If code says "processed 1 item" but source has "18 items" = BUG
+```
+
+**The failure that prompted this:** Lambda logged `failureReasonsCount: 1`, I accepted it. Actual API had 18 reasons. Data parsing bug went undetected.
 
 ### ⛔ Fix ALL Errors - No Exceptions
 

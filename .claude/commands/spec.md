@@ -659,8 +659,18 @@ Run the actual program and verify real output.
 - [ ] Build/compile succeeds without warnings
 - [ ] Program starts without errors
 - [ ] **Inspect logs** - Check for errors, warnings, stack traces
-- [ ] Verify expected output matches actual output
+- [ ] **Verify output correctness** - Fetch source data independently, compare against program output
 - [ ] Test with real/sample data, not just mocks
+
+**⛔ Output Correctness - MANDATORY:**
+If code processes external data, ALWAYS verify by fetching source data and comparing:
+```bash
+# Fetch actual source data
+aws <service> get-<resource> --output json
+
+# Compare counts/content with what your code logged
+# If mismatch → BUG (don't trust logs alone)
+```
 
 **If bugs are found:**
 

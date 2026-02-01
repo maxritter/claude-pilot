@@ -117,6 +117,10 @@ class FinalizeStep(BaseStep):
                     "Quick Mode",
                     "Just chat → For bug fixes and small changes without a spec",
                 ),
+                (
+                    "Team Vault (Optional)",
+                    "/sync → Share rules, commands, and skills via a private Git repository",
+                ),
             ]
         )
 

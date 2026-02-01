@@ -72,11 +72,17 @@ Tasks 3 and 4 won't show as ready until Task 2 completes.
 
 ## ⛔ ABSOLUTE BANS
 
-### No Sub-Agents
-**NEVER use the Task tool to spawn sub-agents.**
+### No Sub-Agents (Except Verification)
+**NEVER use the Task tool to spawn sub-agents during planning or implementation.**
 - Use `Read`, `Grep`, `Glob`, `Bash` directly for exploration
-- Sub-agents lose context and make mistakes
-- Note: Task management tools (TaskCreate, TaskList, etc.) are ALLOWED and preferred
+- Sub-agents lose context and make mistakes during implementation
+
+**Exception: Verification phase in /spec workflow.**
+- Multi-pass verification uses parallel sub-agents for unbiased code review
+- Each verifier runs with fresh context to avoid anchoring bias
+- This is the ONLY allowed use of sub-agents
+
+Note: Task management tools (TaskCreate, TaskList, etc.) are ALWAYS allowed.
 
 ### No Background Tasks
 **NEVER use `run_in_background=true`.**

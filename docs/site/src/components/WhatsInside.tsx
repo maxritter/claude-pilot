@@ -43,7 +43,7 @@ const insideItems: InsideItem[] = [
       "Rules: Best practices for TDD and workflows",
       "Commands: /spec and /sync workflows",
       "Online Learning: Auto-extracts reusable patterns",
-      "Customizable: Add your own, they survive updates",
+      "Team Vault: Share via private Git repository",
     ],
   },
   {

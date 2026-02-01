@@ -55,6 +55,7 @@
       "Skill(spec)",
       "Skill(sync)",
       "Skill(learn)",
+      "Task(spec-verifier:*)",
       "LSP"
     ],
     "deny": []

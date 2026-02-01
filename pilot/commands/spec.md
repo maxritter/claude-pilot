@@ -17,7 +17,8 @@ model: opus
 
 ## ⛔ CRITICAL RULES
 
-1. **NO sub-agents** - Never use `Task` tool to spawn sub-agents (loses context). Use Read, Grep, Glob, Bash directly.
+1. **NO sub-agents during planning/implementation** - Never use `Task` tool to spawn sub-agents during Phase 1 or Phase 2 (loses context). Use Read, Grep, Glob, Bash directly.
+   - **Exception:** Phase 3 (Verification) uses parallel sub-agents for multi-pass code review
    - Note: Task MANAGEMENT tools (TaskCreate, TaskList, TaskUpdate, TaskGet) ARE allowed for tracking progress
 2. **NO stopping between phases** - Flow continuously from planning → implementation → verification
 3. **NO built-in plan mode** - Never use EnterPlanMode or ExitPlanMode tools
@@ -861,19 +862,82 @@ Verify test coverage meets requirements.
 
 Run automated quality tools and fix any issues found.
 
-### Step 8: Code Review Simulation
+### Step 8: Multi-Pass Code Review (MANDATORY)
 
-**Perform self-review using code review checklist:**
+**⚠️ Fresh contexts catch more issues. This step spawns 3 parallel reviewers.**
 
-- [ ] **Logic Correctness:** Edge cases handled, algorithms correct
-- [ ] **Architecture & Design:** SOLID principles, no unnecessary coupling
-- [ ] **Performance:** No N+1 queries, efficient algorithms, no memory leaks
-- [ ] **Security:** No SQL injection, XSS, proper auth/authz
-- [ ] **Readability:** Clear naming, complex logic documented
-- [ ] **Error Handling:** Graceful error handling, adequate logging
-- [ ] **Convention Compliance:** Follows project standards
+A single code review pass catches ~60-70% of issues. Multiple independent passes with fresh contexts significantly increase coverage because:
+- Each fresh context samples different reasoning paths
+- Context anchoring causes blind spots - fresh reviewers don't have them
+- Issues found by 2+ passes have higher confidence
 
-**If issues found:** Document and fix immediately
+#### 8a: Identify Changed Files
+
+Get list of files changed in this implementation:
+```bash
+git diff --name-only HEAD~N  # N = number of commits in implementation
+```
+
+#### 8b: Launch Parallel Verification Passes
+
+Spawn 3 `spec-verifier` agents in parallel using the Task tool:
+
+```
+Task(
+  subagent_type="pilot:spec-verifier",
+  prompt="Review these files: [file list]. Plan summary: [brief description of what was implemented]"
+)
+```
+
+**CRITICAL:** Launch all 3 in a single message with 3 Task tool calls (parallel execution).
+
+Each verifier:
+- Runs with fresh context (no anchoring bias)
+- Doesn't know what other passes found
+- Returns structured JSON findings
+
+#### 8c: Aggregate Findings
+
+After all passes complete:
+
+1. **Collect** all JSON findings from 3 passes
+2. **Deduplicate** on (file, title) - same issue = one entry
+3. **Score confidence**: (passes finding issue) / 3 × 100%
+4. **Group** by severity, sort by confidence within groups
+
+#### 8d: Report Findings
+
+Present aggregated findings:
+
+```
+## Multi-Pass Verification Complete
+
+**Passes:** 3 | **Unique Issues:** X
+
+### Must Fix (N issues)
+
+| Issue | File | Line | Confidence |
+|-------|------|------|------------|
+| ...   | ...  | ...  | ...%       |
+
+### Should Fix (N issues)
+...
+
+### Suggestions (N issues)
+...
+```
+
+#### 8e: Handle Must-Fix Issues
+
+**If must_fix issues found:**
+1. Fix each issue immediately
+2. Add a note: "Fixed: [issue title]"
+3. After all fixes, re-run verification (spawn 3 new passes)
+4. Repeat until no must_fix issues remain (max 3 iterations)
+
+**If only should_fix/suggestions:**
+- Document them in the verification report
+- Continue to Step 9
 
 ### Step 9: E2E Verification (MANDATORY for apps with UI/API)
 
@@ -1031,7 +1095,7 @@ If `send-clear` fails:
 
 # CRITICAL RULES SUMMARY
 
-1. **NO sub-agents** - Never use `Task` tool to spawn sub-agents. Task MANAGEMENT tools (TaskCreate/List/Update/Get) are fine.
+1. **NO sub-agents during planning/implementation** - Never use `Task` tool to spawn sub-agents in Phase 1 or 2. Phase 3 (Verification) uses parallel sub-agents for multi-pass code review. Task MANAGEMENT tools are fine.
 2. **ONLY stopping point is plan approval** - Never stop/wait between phases, during context handoff, or for user acknowledgment. Execute session continuation automatically.
 3. **Batch questions together** - Don't interrupt user flow
 4. **Run explorations sequentially** - One at a time, never in parallel

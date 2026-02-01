@@ -192,6 +192,20 @@ Create your own in your project's `.claude/` folder:
 | **Commands** | On demand via `/command`          | Specific workflows or multi-step tasks  |
 | **Skills**   | Dynamically when relevant         | Specialized knowledge for specific tasks |
 
+### 👥 Team Vault
+
+Share rules, commands, and skills across your team via a private Git repository:
+
+```bash
+pilot
+> /sync  # Configure team vault and sync assets
+```
+
+- **Private** - Use any Git repo (GitHub, GitLab, Bitbucket - public or private)
+- **Pull** - Install shared assets from your team's vault
+- **Push** - Share your custom rules and skills with teammates
+- **Version** - Assets are versioned automatically (v1, v2, v3...)
+
 ### 🔌 Custom MCP Servers
 
 Add your own MCP servers in two locations:

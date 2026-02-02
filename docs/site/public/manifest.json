@@ -8,12 +8,12 @@
   "theme_color": "#6366f1",
   "icons": [
     {
-      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/qmjt5RyHpNP9GFnerZmcYYkrVd13/uploads/1761495399643-favicon.jpg",
+      "src": "/favicon.jpg",
       "sizes": "192x192",
       "type": "image/jpeg"
     },
     {
-      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/qmjt5RyHpNP9GFnerZmcYYkrVd13/uploads/1761495399643-favicon.jpg",
+      "src": "/favicon.jpg",
       "sizes": "512x512",
       "type": "image/jpeg"
     }

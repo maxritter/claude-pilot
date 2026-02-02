@@ -83,7 +83,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Claude 
 If the current version has issues, you can install a specific stable version (see [releases](https://github.com/maxritter/claude-pilot/releases)):
 
 ```bash
-VERSION=6.0.3 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
+VERSION=6.0.4 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
 ```
 
 ---

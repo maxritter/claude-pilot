@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.0.4] - 2026-02-02
+
+### Bug Fixes
+
+- Reduce GitHub API calls and simplify installer cleanup
+
 ## [6.0.3] - 2026-02-02
 
 ### Bug Fixes

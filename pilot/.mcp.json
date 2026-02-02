@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "mem-search": {
+      "type": "stdio",
+      "command": "sh",
+      "args": ["-c", "bun run ~/.claude/pilot/scripts/mcp-server.cjs"]
+    },
+    "web-search": {
+      "command": "npx",
+      "args": ["-y", "open-websearch@latest"],
+      "env": {
+        "MODE": "stdio",
+        "DEFAULT_SEARCH_ENGINE": "duckduckgo",
+        "ALLOWED_SEARCH_ENGINES": "duckduckgo,bing,exa"
+      }
+    },
+    "web-fetch": {
+      "command": "npx",
+      "args": ["-y", "fetcher-mcp"]
+    }
+  }
+}

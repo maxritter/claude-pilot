@@ -22,7 +22,7 @@ from rich.rule import Rule
 from rich.text import Text
 from rich.theme import Theme
 
-CCP_THEME = Theme(
+PILOT_THEME = Theme(
     {
         "info": "cyan",
         "success": "green",
@@ -88,7 +88,7 @@ class Console:
     """Console wrapper for Rich with simple input prompts."""
 
     def __init__(self, non_interactive: bool = False, quiet: bool = False):
-        self._console = RichConsole(theme=CCP_THEME)
+        self._console = RichConsole(theme=PILOT_THEME)
         self._non_interactive = non_interactive
         self._quiet = quiet
         self._current_step = 0
@@ -118,7 +118,7 @@ class Console:
         return self._quiet
 
     def banner(self, license_info: dict[str, Any] | None = None) -> None:
-        """Print the Claude CodePro banner with feature highlights.
+        """Print the Claude Pilot banner with feature highlights.
 
         Args:
             license_info: Current license info dict (tier, email, etc.) or None if not yet checked.
@@ -127,19 +127,18 @@ class Console:
             return
 
         logo = """
-[bold cyan]   _____ _                 _          _____          _      _____
-  / ____| |               | |        / ____|        | |    |  __ \\
- | |    | | __ _ _   _  __| | ___   | |     ___   __| | ___| |__) | __ ___
- | |    | |/ _` | | | |/ _` |/ _ \\  | |    / _ \\ / _` |/ _ \\  ___/ '__/ _ \\
- | |____| | (_| | |_| | (_| |  __/  | |___| (_) | (_| |  __/ |   | | | (_) |
-  \\_____|_|\\__,_|\\__,_|\\__,_|\\___|   \\_____\\___/ \\__,_|\\___|_|   |_|  \\___/[/bold cyan]
+[bold cyan]   _____ _                 _          _____ _ _       _
+  / ____| |               | |        |  __ (_) |     | |
+ | |    | | __ _ _   _  __| | ___    | |__) | | | ___| |_
+ | |    | |/ _` | | | |/ _` |/ _ \\   |  ___/| | |/ _ \\ __|
+ | |____| | (_| | |_| | (_| |  __/   | |    | | | (_) | |_
+  \\_____|_|\\__,_|\\__,_|\\__,_|\\___|   |_|    |_|_|\\___/ \\__|[/bold cyan]
 """
         self._console.print(logo)
 
         tagline = Text()
-        tagline.append("  ✨ ", style="yellow")
-        tagline.append("Production-Grade Development Environment for Claude Code", style="bold white")
-        tagline.append(" ✨", style="yellow")
+        tagline.append("  ✈ ", style="cyan")
+        tagline.append("Claude Code, Done Right", style="bold white")
         self._console.print(tagline)
         self._console.print()
 
@@ -189,7 +188,7 @@ class Console:
                 license_text.append("  ⚠ ", style="red")
                 license_text.append("Trial Expired", style="bold red")
                 license_text.append(" — Subscribe: ", style="dim white")
-                license_text.append("https://license.claude-code.pro\n", style="cyan")
+                license_text.append("https://license.claude-pilot.com\n", style="cyan")
                 license_text.append("     Use code ", style="dim white")
                 license_text.append("TRIAL50OFF", style="bold green")
                 license_text.append(" for 50% off first month", style="dim white")
@@ -199,7 +198,7 @@ class Console:
                 license_text.append("  ⏳ ", style="yellow")
                 license_text.append(f"Trial ({time_str} remaining)", style="bold yellow")
                 license_text.append(" — Subscribe: ", style="dim white")
-                license_text.append("https://license.claude-code.pro", style="cyan")
+                license_text.append("https://license.claude-pilot.com", style="cyan")
             self._console.print(license_text)
             self._console.print()
 

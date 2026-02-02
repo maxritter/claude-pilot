@@ -46,12 +46,12 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          python3 -m pytest installer/tests/unit/ ccp/tests/unit/ -v \
-            --cov=installer --cov=ccp \
+          python3 -m pytest installer/tests/unit/ launcher/tests/unit/ -v \
+            --cov=installer --cov=launcher \
             --cov-report=term --cov-report=xml
 
-  build-ccp-arm64:
-    name: Build CCP Linux arm64
+  build-pilot-arm64:
+    name: Build Pilot Linux arm64
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
@@ -83,21 +83,21 @@ jobs:
             bash -c "
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
-              python -m ccp.build --release --version ${{ steps.version.outputs.VERSION }} && \
-              ls -la ccp/dist/
+              python -m launcher.build --release --version ${{ steps.version.outputs.VERSION }} && \
+              ls -la launcher/dist/
             "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-linux-arm64
+          name: pilot-linux-arm64
           path: |
-            ccp/dist/ccp-linux-arm64.so
-            ccp/dist/ccp
+            launcher/dist/pilot-linux-arm64.so
+            launcher/dist/pilot
           retention-days: 1
 
-  build-ccp-darwin-arm64:
-    name: Build CCP Darwin arm64
+  build-pilot-darwin-arm64:
+    name: Build Pilot Darwin arm64
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -135,14 +135,14 @@ jobs:
       - name: Build binary
         run: |
           pip install .
-          python -m ccp.build --release --version ${{ steps.version.outputs.VERSION }}
-          ls -la ccp/dist/
+          python -m launcher.build --release --version ${{ steps.version.outputs.VERSION }}
+          ls -la launcher/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-darwin-arm64
-          path: ccp/dist/ccp-darwin-arm64.so
+          name: pilot-darwin-arm64
+          path: launcher/dist/pilot-darwin-arm64.so
           retention-days: 1
 
   publish-prerelease:
@@ -150,8 +150,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - python-tests
-      - build-ccp-arm64
-      - build-ccp-darwin-arm64
+      - build-pilot-arm64
+      - build-pilot-darwin-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -206,9 +206,9 @@ jobs:
             --title "Dev Pre-release $VERSION" \
             --notes "$NOTES" \
             --prerelease \
-            artifacts/ccp-linux-arm64/ccp-linux-arm64.so \
-            artifacts/ccp-linux-arm64/ccp \
-            artifacts/ccp-darwin-arm64/ccp-darwin-arm64.so
+            artifacts/pilot-linux-arm64/pilot-linux-arm64.so \
+            artifacts/pilot-linux-arm64/pilot \
+            artifacts/pilot-darwin-arm64/pilot-darwin-arm64.so
 
           echo "Pre-release $VERSION created successfully"
 

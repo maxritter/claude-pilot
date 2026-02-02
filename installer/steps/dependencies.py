@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import time
 from pathlib import Path
@@ -111,7 +112,6 @@ def _patch_claude_config(config_updates: dict) -> bool:
 
     Creates the file if it doesn't exist. Merges updates with existing config.
     """
-    import json
 
     config_path = Path.home() / ".claude.json"
 
@@ -133,7 +133,6 @@ def _patch_claude_settings(settings_updates: dict) -> bool:
 
     Creates the file if it doesn't exist. Merges updates with existing settings.
     """
-    import json
 
     settings_dir = Path.home() / ".claude"
     settings_dir.mkdir(parents=True, exist_ok=True)
@@ -179,7 +178,6 @@ def _configure_claude_defaults() -> bool:
 
 def _get_forced_claude_version(project_dir: Path) -> str | None:
     """Check settings.local.json for FORCE_CLAUDE_VERSION in env section."""
-    import json
 
     settings_path = project_dir / ".claude" / "settings.local.json"
     if settings_path.exists():
@@ -215,7 +213,7 @@ def install_claude_code(project_dir: Path, ui: Any = None) -> tuple[bool, str]:
 
 
 def _migrate_legacy_plugins(ui: Any = None) -> None:
-    """Remove legacy plugins and marketplaces installed by previous CCP versions.
+    """Remove legacy plugins and marketplaces installed by previous Pilot versions.
 
     MCP servers are now defined in plugin/.mcp.json, so we clean up:
     - Context7 from official marketplace
@@ -227,7 +225,6 @@ def _migrate_legacy_plugins(ui: Any = None) -> None:
 
     Uses 'claude plugin uninstall' CLI for proper cleanup.
     """
-    import json
     import shutil
     import subprocess
 
@@ -293,7 +290,6 @@ def _migrate_legacy_plugins(ui: Any = None) -> None:
 
 def _configure_vexor_defaults() -> bool:
     """Configure Vexor with recommended defaults for semantic search (OpenAI)."""
-    import json
 
     config_dir = Path.home() / ".vexor"
     config_path = config_dir / "config.json"
@@ -327,7 +323,6 @@ def _configure_vexor_defaults() -> bool:
 
 def _configure_vexor_local() -> bool:
     """Configure Vexor for local embeddings (no API key needed)."""
-    import json
 
     config_dir = Path.home() / ".vexor"
     config_path = config_dir / "config.json"
@@ -362,6 +357,7 @@ def _configure_vexor_local() -> bool:
 def _is_vexor_local_model_installed() -> bool:
     """Check if the local embedding model is already downloaded."""
     cache_dirs = [
+        Path.home() / ".vexor" / "models",
         Path.home() / ".cache" / "huggingface" / "hub",
         Path.home() / ".cache" / "torch" / "sentence_transformers",
     ]
@@ -428,6 +424,15 @@ def install_mcp_cli() -> bool:
         return False
 
     return _run_bash_with_retry("bun install -g https://github.com/philschmid/mcp-cli")
+
+
+def install_sx() -> bool:
+    """Install sx (sleuth.io skills exchange) for team skill sharing."""
+    if command_exists("sx"):
+        _run_bash_with_retry("sx update")
+        return True
+
+    return _run_bash_with_retry("curl -fsSL https://raw.githubusercontent.com/sleuth-io/sx/main/install.sh | bash")
 
 
 def _is_vtsls_installed() -> bool:
@@ -525,13 +530,13 @@ def _install_with_spinner(ui: Any, name: str, install_fn: Any, *args: Any) -> bo
         return install_fn(*args) if args else install_fn()
 
 
-def _install_plugin_dependencies(project_dir: Path, ui: Any = None) -> bool:
+def _install_plugin_dependencies(_project_dir: Path, ui: Any = None) -> bool:
     """Install plugin dependencies by running bun/npm install in the plugin folder.
 
     This installs all Node.js dependencies defined in plugin/package.json,
     which includes runtime dependencies for MCP servers and hooks.
     """
-    plugin_dir = project_dir / ".claude" / "ccp"
+    plugin_dir = Path.home() / ".claude" / "pilot"
 
     if not plugin_dir.exists():
         if ui:
@@ -553,15 +558,58 @@ def _install_plugin_dependencies(project_dir: Path, ui: Any = None) -> bool:
     return success
 
 
+def _patch_claude_mem_config() -> bool:
+    """Patch claude-mem settings with required configuration.
+
+    Creates ~/.claude-mem/settings.json if it doesn't exist.
+    Always patches the required fields to ensure correct configuration.
+    """
+    settings_dir = Path.home() / ".claude-mem"
+    settings_path = settings_dir / "settings.json"
+
+    required_settings = {
+        "CLAUDE_MEM_MODEL": "haiku",
+        "CLAUDE_MEM_CONTEXT_OBSERVATIONS": "50",
+        "CLAUDE_MEM_CONTEXT_FULL_COUNT": "10",
+        "CLAUDE_MEM_CONTEXT_FULL_FIELD": "facts",
+        "CLAUDE_MEM_CONTEXT_SESSION_COUNT": "10",
+        "CLAUDE_MEM_CHROMA_ENABLED": False,
+        "CLAUDE_MEM_VECTOR_DB": "none",
+    }
+
+    try:
+        settings_dir.mkdir(parents=True, exist_ok=True)
+
+        if settings_path.exists():
+            settings = json.loads(settings_path.read_text())
+        else:
+            settings = {}
+
+        settings.update(required_settings)
+        settings_path.write_text(json.dumps(settings, indent=2) + "\n")
+        return True
+    except Exception:
+        return False
+
+
 def _setup_claude_mem(ui: Any) -> bool:
-    """Migrate legacy plugins for claude-mem.
+    """Migrate legacy plugins and configure claude-mem settings.
 
     Claude-mem MCP server is now defined in plugin/.mcp.json.
-    This function removes any legacy plugin installations.
+    This function removes any legacy plugin installations and patches
+    the claude-mem config with required settings.
     """
     _migrate_legacy_plugins(ui)
     if ui:
         ui.success("claude-mem legacy plugins cleaned")
+
+    if _patch_claude_mem_config():
+        if ui:
+            ui.success("claude-mem config patched")
+    else:
+        if ui:
+            ui.warning("Could not patch claude-mem config")
+
     return True
 
 
@@ -573,7 +621,7 @@ def _install_claude_code_with_ui(ui: Any, project_dir: Path) -> bool:
         if success:
             if version != "latest":
                 ui.success(f"Claude Code installed (pinned to v{version})")
-                ui.info(f"Version {version} is the last stable release tested with CCP")
+                ui.info(f"Version {version} is the last stable release tested with Pilot")
                 ui.info("To change: edit FORCE_CLAUDE_VERSION in .claude/settings.local.json")
             else:
                 ui.success("Claude Code installed (latest)")
@@ -622,7 +670,6 @@ def _install_vexor_with_ui(ui: Any) -> bool:
 
 def _clean_mcp_servers_from_claude_config(ui: Any) -> None:
     """Remove mcpServers section from ~/.claude.json (now in plugin/.mcp.json)."""
-    import json
 
     claude_config_path = Path.home() / ".claude.json"
 
@@ -689,6 +736,9 @@ class DependenciesStep(BaseStep):
 
         if _install_vexor_with_ui(ui):
             installed.append("vexor")
+
+        if _install_with_spinner(ui, "sx (skills exchange)", install_sx):
+            installed.append("sx")
 
         _clean_mcp_servers_from_claude_config(ui)
 

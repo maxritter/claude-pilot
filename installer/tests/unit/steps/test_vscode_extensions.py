@@ -54,9 +54,7 @@ class TestVSCodeExtensionsStep:
     @patch("installer.steps.vscode_extensions._get_ide_cli")
     @patch("installer.steps.vscode_extensions._get_installed_extensions")
     @patch("installer.steps.vscode_extensions._install_extension")
-    def test_required_extension_failure_in_failed_list(
-        self, mock_install, mock_installed, mock_cli
-    ):
+    def test_required_extension_failure_in_failed_list(self, mock_install, mock_installed, mock_cli):
         """Required extension failure adds to failed list."""
         mock_cli.return_value = "code"
         mock_installed.return_value = set()

@@ -11,19 +11,19 @@ from installer.context import InstallContext
 from installer.steps.base import BaseStep
 
 
-def _get_ccp_version() -> str:
-    """Get version from CCP binary, fallback to installer version."""
-    ccp_path = Path.cwd() / ".claude" / "bin" / "ccp"
-    if ccp_path.exists():
+def _get_pilot_version() -> str:
+    """Get version from Pilot binary, fallback to installer version."""
+    pilot_path = Path.home() / ".pilot" / "bin" / "pilot"
+    if pilot_path.exists():
         try:
             result = subprocess.run(
-                [str(ccp_path), "--version"],
+                [str(pilot_path), "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
             )
             if result.returncode == 0:
-                match = re.search(r"CodePro v(.+)$", result.stdout.strip())
+                match = re.search(r"Pilot v(.+)$", result.stdout.strip())
                 if match:
                     return match.group(1)
         except Exception:
@@ -52,7 +52,7 @@ class FinalizeStep(BaseStep):
             return
 
         if ui.quiet:
-            ui.print(f"  [green]✓[/green] Update complete (v{_get_ccp_version()})")
+            ui.print(f"  [green]✓[/green] Update complete (v{_get_pilot_version()})")
             return
 
         steps: list[tuple[str, str]] = []
@@ -77,7 +77,7 @@ class FinalizeStep(BaseStep):
 
         steps.extend(
             [
-                ("Start Claude CodePro", "Run: ccp"),
+                ("Start Claude Pilot", "Run: claude (in your project folder)"),
                 ("Connect IDE", "Run: /ide → Enables real-time diagnostics"),
             ]
         )
@@ -117,6 +117,10 @@ class FinalizeStep(BaseStep):
                     "Quick Mode",
                     "Just chat → For bug fixes and small changes without a spec",
                 ),
+                (
+                    "Team Vault (Optional)",
+                    "/sync → Share rules, commands, and skills via a private Git repository",
+                ),
             ]
         )
 
@@ -125,7 +129,7 @@ class FinalizeStep(BaseStep):
         if not ui.quiet:
             ui.rule()
             ui.print()
-            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/claude-codepro")
+            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/claude-pilot")
             ui.print()
-            ui.print(f"  [dim]Installed version: {_get_ccp_version()}[/dim]")
+            ui.print(f"  [dim]Installed version: {_get_pilot_version()}[/dim]")
             ui.print()

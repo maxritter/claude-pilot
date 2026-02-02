@@ -11,6 +11,10 @@ name: Release
         description: "Version to build binaries for (e.g., 3.3.0)"
         required: true
         type: string
+      changelog:
+        description: "Custom changelog content (optional - overrides generated changelog)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -88,8 +92,8 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          python3 -m pytest installer/tests/unit/ ccp/tests/unit/ -v \
-            --cov=installer --cov=ccp \
+          python3 -m pytest installer/tests/unit/ launcher/tests/unit/ -v \
+            --cov=installer --cov=launcher \
             --cov-report=term --cov-report=xml
 
   # Determine the version to release (semantic-release dry-run or manual input)
@@ -101,7 +105,8 @@ jobs:
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
       version: ${{ steps.check.outputs.version }}
-      changelog: ${{ steps.check.outputs.changelog }}
+      current_version: ${{ steps.check.outputs.current_version }}
+      changelog: ${{ steps.git-cliff.outputs.content }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -122,24 +127,31 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Get current version
+        id: current
+        run: |
+          CURRENT=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          echo "Current version: $CURRENT"
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
       - name: Check for release
         id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "current_version=${{ steps.current.outputs.version }}" >> "$GITHUB_OUTPUT"
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "Manual trigger with version ${{ inputs.version }}"
             echo "should_release=true" >> "$GITHUB_OUTPUT"
             echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-            echo "changelog=Manual release - no changelog generated" >> "$GITHUB_OUTPUT"
           else
             # Install semantic-release and plugins
             npm install -g semantic-release \
               @semantic-release/git \
-              @semantic-release/changelog \
               @semantic-release/exec
 
-            # Run dry-run to check if release is needed and capture changelog
+            # Run dry-run to check if release is needed
             SR_OUT=/tmp/sr-output.txt
             if npx semantic-release --dry-run 2>&1 | tee $SR_OUT \
                 | grep -q "Published release"; then
@@ -150,31 +162,30 @@ jobs:
                   $SR_OUT | head -1)
               fi
 
-              # Extract changelog/release notes from dry-run output
-              CHANGELOG=$(sed -n '/Release note/,/\[semantic-release\]/p' $SR_OUT \
-                | grep -v "semantic-release" | head -50 || echo "See commits for details")
-
               echo "Will release version: $VERSION"
               echo "should_release=true" >> "$GITHUB_OUTPUT"
               echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-              # Use delimiter for multiline output
-              {
-                echo "changelog<<EOF"
-                echo "$CHANGELOG"
-                echo "EOF"
-              } >> "$GITHUB_OUTPUT"
             else
               echo "No release needed"
               echo "should_release=false" >> "$GITHUB_OUTPUT"
               echo "version=" >> "$GITHUB_OUTPUT"
-              echo "changelog=" >> "$GITHUB_OUTPUT"
             fi
           fi
 
+      - name: Generate changelog with git-cliff
+        if: steps.check.outputs.should_release == 'true'
+        id: git-cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --unreleased --tag v${{ steps.check.outputs.version }}
+        env:
+          OUTPUT: CHANGES.md
+          GITHUB_REPO: ${{ github.repository }}
+
   # Build jobs run in parallel after prepare-release
-  build-ccp-x86:
-    name: Build CCP Linux x86_64
+  build-pilot-x86:
+    name: Build Pilot Linux x86_64
     runs-on: ubuntu-latest
     needs: prepare-release
     if: needs.prepare-release.outputs.should_release == 'true'
@@ -193,7 +204,7 @@ jobs:
       - name: Verify version
         run: |
           echo "Building version: ${{ needs.prepare-release.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
+          cat launcher/__init__.py | grep __version__
 
       - name: Build binary
         run: |
@@ -205,21 +216,21 @@ jobs:
             bash -c "
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
-              python -m ccp.build --release --version \$BUILD_VERSION && \
-              ls -la ccp/dist/
+              python -m launcher.build --release --version \$BUILD_VERSION && \
+              ls -la launcher/dist/
             "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-linux-x86_64
+          name: pilot-linux-x86_64
           path: |
-            ccp/dist/ccp-linux-x86_64.so
-            ccp/dist/ccp
+            launcher/dist/pilot-linux-x86_64.so
+            launcher/dist/pilot
           retention-days: 1
 
-  build-ccp-arm64:
-    name: Build CCP Linux arm64
+  build-pilot-arm64:
+    name: Build Pilot Linux arm64
     runs-on: ubuntu-24.04-arm
     needs: prepare-release
     if: needs.prepare-release.outputs.should_release == 'true'
@@ -238,7 +249,7 @@ jobs:
       - name: Verify version
         run: |
           echo "Building version: ${{ needs.prepare-release.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
+          cat launcher/__init__.py | grep __version__
 
       - name: Build binary
         run: |
@@ -250,19 +261,19 @@ jobs:
             bash -c "
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
-              python -m ccp.build --release --version \$BUILD_VERSION && \
-              ls -la ccp/dist/
+              python -m launcher.build --release --version \$BUILD_VERSION && \
+              ls -la launcher/dist/
             "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-linux-arm64
-          path: ccp/dist/ccp-linux-arm64.so
+          name: pilot-linux-arm64
+          path: launcher/dist/pilot-linux-arm64.so
           retention-days: 1
 
-  build-ccp-darwin-x86:
-    name: Build CCP Darwin x86_64
+  build-pilot-darwin-x86:
+    name: Build Pilot Darwin x86_64
     runs-on: macos-15-intel
     needs: prepare-release
     if: needs.prepare-release.outputs.should_release == 'true'
@@ -293,23 +304,23 @@ jobs:
       - name: Verify version
         run: |
           echo "Building version: ${{ needs.prepare-release.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
+          cat launcher/__init__.py | grep __version__
 
       - name: Build binary
         run: |
           pip install .
-          python -m ccp.build --release --version ${{ needs.prepare-release.outputs.version }}
-          ls -la ccp/dist/
+          python -m launcher.build --release --version ${{ needs.prepare-release.outputs.version }}
+          ls -la launcher/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-darwin-x86_64
-          path: ccp/dist/ccp-darwin-x86_64.so
+          name: pilot-darwin-x86_64
+          path: launcher/dist/pilot-darwin-x86_64.so
           retention-days: 1
 
-  build-ccp-darwin-arm64:
-    name: Build CCP Darwin arm64
+  build-pilot-darwin-arm64:
+    name: Build Pilot Darwin arm64
     runs-on: macos-14
     needs: prepare-release
     if: needs.prepare-release.outputs.should_release == 'true'
@@ -340,19 +351,19 @@ jobs:
       - name: Verify version
         run: |
           echo "Building version: ${{ needs.prepare-release.outputs.version }}"
-          cat ccp/__init__.py | grep __version__
+          cat launcher/__init__.py | grep __version__
 
       - name: Build binary
         run: |
           pip install .
-          python -m ccp.build --release --version ${{ needs.prepare-release.outputs.version }}
-          ls -la ccp/dist/
+          python -m launcher.build --release --version ${{ needs.prepare-release.outputs.version }}
+          ls -la launcher/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ccp-darwin-arm64
-          path: ccp/dist/ccp-darwin-arm64.so
+          name: pilot-darwin-arm64
+          path: launcher/dist/pilot-darwin-arm64.so
           retention-days: 1
 
   # Manual approval gate - displays version and changelog, waits for approval
@@ -362,32 +373,44 @@ jobs:
     needs:
       - prepare-release
       - python-tests
-      - build-ccp-x86
-      - build-ccp-arm64
-      - build-ccp-darwin-x86
-      - build-ccp-darwin-arm64
+      - build-pilot-x86
+      - build-pilot-arm64
+      - build-pilot-darwin-x86
+      - build-pilot-darwin-arm64
     if: needs.prepare-release.outputs.should_release == 'true'
     environment: production
     steps:
       - name: Display release details for approval
+        env:
+          CHANGELOG_CONTENT: ${{ needs.prepare-release.outputs.changelog }}
         run: |
-          echo "## 🚀 Release Approval Required" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Version: v${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Proposed Changelog:" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "${{ needs.prepare-release.outputs.changelog }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Status:" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Python unit tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Linux x86_64 build ready" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Linux arm64 build ready" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Darwin x86_64 build ready" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Darwin arm64 build ready" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Approve this deployment to publish the release.**" >> $GITHUB_STEP_SUMMARY
+          cat >> $GITHUB_STEP_SUMMARY << SUMMARY
+          ## 🚀 Release Approval Required
+
+          ### Version Bump
+          | Current | → | New |
+          |---------|---|-----|
+          | v${{ needs.prepare-release.outputs.current_version }} | → | **v${{ needs.prepare-release.outputs.version }}** |
+
+          ### Build Status
+          - ✅ Python unit tests passed
+          - ✅ Linux x86_64 build ready
+          - ✅ Linux arm64 build ready
+          - ✅ Darwin x86_64 build ready
+          - ✅ Darwin arm64 build ready
+
+          ### Changelog for v${{ needs.prepare-release.outputs.version }}
+
+          SUMMARY
+
+          # Write changelog safely via environment variable
+          printf '%s\n' "$CHANGELOG_CONTENT" >> $GITHUB_STEP_SUMMARY
+
+          cat >> $GITHUB_STEP_SUMMARY << 'SUMMARY'
+
+          ---
+          **Approve this deployment to publish the release.**
+          SUMMARY
 
       - name: Release approved
         run: |
@@ -407,7 +430,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install git-crypt
         run: sudo apt-get update && sudo apt-get install -y git-crypt
@@ -432,6 +455,22 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Generate full CHANGELOG.md with git-cliff
+        if: ${{ github.event.inputs.changelog == '' }}
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --tag v${{ needs.prepare-release.outputs.version }}
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Use custom changelog if provided
+        if: ${{ github.event.inputs.changelog != '' }}
+        run: |
+          echo "${{ github.event.inputs.changelog }}" > CHANGELOG.md
+          echo "Using custom changelog content"
+
       - name: Create release with semantic-release
         if: github.event_name != 'workflow_dispatch'
         id: semantic
@@ -439,10 +478,20 @@ jobs:
         with:
           extra_plugins: |
             @semantic-release/git
-            @semantic-release/changelog
             @semantic-release/exec
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release for manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+          if ! gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "Creating release v${VERSION}..."
+            gh release create "v${VERSION}" --title "v${VERSION}" --notes "Manual release rebuild"
+          fi
 
       - name: Upload artifacts to release
         env:
@@ -456,11 +505,11 @@ jobs:
 
           # Upload all .so files
           gh release upload "v${VERSION}" \
-            artifacts/ccp-linux-x86_64/ccp-linux-x86_64.so \
-            artifacts/ccp-linux-arm64/ccp-linux-arm64.so \
-            artifacts/ccp-darwin-x86_64/ccp-darwin-x86_64.so \
-            artifacts/ccp-darwin-arm64/ccp-darwin-arm64.so \
-            artifacts/ccp-linux-x86_64/ccp \
+            artifacts/pilot-linux-x86_64/pilot-linux-x86_64.so \
+            artifacts/pilot-linux-arm64/pilot-linux-arm64.so \
+            artifacts/pilot-darwin-x86_64/pilot-darwin-x86_64.so \
+            artifacts/pilot-darwin-arm64/pilot-darwin-arm64.so \
+            artifacts/pilot-linux-x86_64/pilot \
             --clobber
 
           echo "All artifacts uploaded successfully"

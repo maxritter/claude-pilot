@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["ccp*", "installer*"]
+include = ["launcher*", "installer*"]
 
 [project]
-name = "claude-codepro"
+name = "claude-pilot"
 version = "1.0.0"
-description = "Claude CodePro"
+description = "Claude Pilot"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
@@ -33,11 +33,11 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-pythonpath = ["installer", "ccp", "."]
+pythonpath = ["installer", "launcher", "."]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-testpaths = ["ccp/tests", "installer/tests"]
+testpaths = ["launcher/tests", "installer/tests"]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
@@ -104,7 +104,7 @@ max-args = 6
 max-statements = 60
 
 [tool.ruff.lint.per-file-ignores]
-"ccp/tests/*" = ["D", "UP", "PLR0913", "PLR0915"]
+"launcher/tests/*" = ["D", "UP", "PLR0913", "PLR0915"]
 "installer/tests/*" = ["D", "UP", "PLR0913", "PLR0915"]
 "installer/steps/*" = ["PLR0913", "PLR0915"]
 
@@ -114,7 +114,7 @@ min_confidence = 80
 paths = ["installer"]
 
 [tool.basedpyright]
-include = ["installer", "ccp"]
+include = ["installer", "launcher"]
 exclude = [
     "**/node_modules",
     "**/__pycache__",

@@ -1,8 +1,8 @@
 # Git-crypt encryption rules
 # Files matching these patterns will be encrypted in the repository
 
-# Encrypt all files in ccp/ directory
-ccp/** filter=git-crypt diff=git-crypt
+# Encrypt all files in launcher/ directory
+launcher/** filter=git-crypt diff=git-crypt
 
 # Ensure .gitattributes itself is NOT encrypted
 .gitattributes !filter !diff

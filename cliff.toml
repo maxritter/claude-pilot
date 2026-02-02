@@ -1,0 +1,71 @@
+# git-cliff configuration for Claude Pilot
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+# Header of the changelog
+header = """
+# Changelog
+
+All notable changes to Claude Pilot will be documented in this file.
+
+"""
+# Body template - Keep a Changelog format
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
+            {{ commit.message | upper_first }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+# Remove leading and trailing whitespace
+trim = true
+# Footer of the changelog
+footer = ""
+
+[git]
+# Parse conventional commits
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+
+# Commit preprocessors
+commit_preprocessors = [
+    # Remove issue numbers from commits
+    { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
+]
+
+# Commit parsers - map commit types to changelog sections
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^docs?", group = "Documentation" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = "^style", group = "Styling" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^chore\\(deps\\)", skip = true },
+    { message = "^chore", group = "Miscellaneous" },
+    { message = "^ci", group = "CI/CD" },
+    { message = "^build", group = "Build" },
+    { body = ".*security", group = "Security" },
+]
+
+# Protect breaking changes
+protect_breaking_commits = false
+
+# Filter out commits by pattern
+filter_commits = false
+
+# Tag pattern for releases
+tag_pattern = "v[0-9].*"
+
+# Sort commits by newest first
+sort_commits = "newest"

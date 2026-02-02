@@ -11,10 +11,10 @@ interface SEOProps {
 }
 
 const SEO = ({
-  title = "Claude CodePro - Production-Grade Development Environment for Claude Code",
-  description = "Ship production-ready code with Claude Code. Enforced TDD, automated quality hooks, spec-driven workflows, and persistent memory. Free for personal use.",
-  keywords = "Claude CodePro, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
-  canonicalUrl = "https://www.claude-code.pro",
+  title = "Claude Pilot - Claude Code, Done Right",
+  description = "Claude is powerful but inconsistent. Pilot adds the structure it needs. Tests enforced, context preserved, quality automated.",
+  keywords = "Claude Pilot, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
+  canonicalUrl = "https://www.claude-pilot.com",
   ogImage = "https://storage.googleapis.com/gpt-engineer-file-uploads/qmjt5RyHpNP9GFnerZmcYYkrVd13/social-images/social-1762415471953-share.png",
   type = "website",
   structuredData
@@ -38,7 +38,7 @@ const SEO = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content="Claude CodePro" />
+      <meta property="og:site_name" content="Claude Pilot" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

@@ -43,7 +43,7 @@ const insideItems: InsideItem[] = [
       "Rules: Best practices for TDD and workflows",
       "Commands: /spec and /sync workflows",
       "Online Learning: Auto-extracts reusable patterns",
-      "Customizable: Add your own, they survive updates",
+      "Team Vault: Share via private Git repository",
     ],
   },
   {
@@ -72,7 +72,7 @@ const insideItems: InsideItem[] = [
     items: [
       "Automated Dev Container setup",
       "Optional Python, TypeScript & Go support",
-      "Shell integration with ccp alias",
+      "Shell integration via claude command",
       "macOS, Linux, Windows (WSL2)",
     ],
   },
@@ -111,7 +111,7 @@ const WhatsInside = () => {
         >
           <SectionHeader
             title="What's Inside"
-            subtitle="Everything you need for professional AI-assisted development"
+            subtitle="The tools that make Claude Code reliable"
           />
         </div>
 

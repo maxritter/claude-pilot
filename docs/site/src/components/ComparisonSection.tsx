@@ -14,10 +14,10 @@ const ComparisonSection = () => {
           className={`text-center mb-12 animate-on-scroll ${headerInView ? "in-view" : ""}`}
         >
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Why Claude CodePro?
+            Before & After
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Same task. Different results. Skip weeks of setup and get production-grade workflows instantly.
+            Same prompt. Different outcome. Structure makes the difference.
           </p>
         </div>
 
@@ -25,9 +25,9 @@ const ComparisonSection = () => {
           ref={cardsRef}
           className={`grid md:grid-cols-2 gap-6 sm:gap-8 stagger-children ${cardsInView ? "in-view" : ""}`}
         >
-          {/* Without Claude CodePro */}
-          <div className="glass rounded-2xl p-5 sm:p-6 relative border-red-500/20 hover:border-red-500/30 transition-colors">
-            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-red-500/20 text-red-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
+          {/* Without Claude Pilot */}
+          <div className="glass rounded-2xl p-5 sm:p-6 relative border-slate-500/20 hover:border-slate-500/30 transition-colors">
+            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-slate-500/20 text-slate-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
               Without Structure
             </div>
 
@@ -36,9 +36,9 @@ const ComparisonSection = () => {
               {/* Terminal header */}
               <div className="bg-background/80 rounded-t-lg px-4 py-2 flex items-center gap-2">
                 <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-slate-500/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-blue-500/60" />
                 </div>
                 <span className="text-xs text-muted-foreground ml-2 font-mono">terminal</span>
               </div>
@@ -53,25 +53,25 @@ const ComparisonSection = () => {
                   <span className="text-primary">claude:</span>
                   <span className="text-muted-foreground ml-2">What framework? What patterns?</span>
                 </div>
-                <div className="text-red-400/80 flex items-center gap-2 text-xs">
+                <div className="text-slate-400/80 flex items-center gap-2 text-xs">
                   <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                   <span>No context from previous sessions</span>
                 </div>
-                <div className="text-red-400/80 flex items-center gap-2 text-xs">
+                <div className="text-slate-400/80 flex items-center gap-2 text-xs">
                   <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                   <span>No codebase knowledge</span>
                 </div>
                 <div className="border-t border-border/50 pt-3">
                   <span className="text-muted-foreground">...writes code without tests...</span>
                 </div>
-                <div className="text-red-400/80 flex items-center gap-2 text-xs">
+                <div className="text-slate-400/80 flex items-center gap-2 text-xs">
                   <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                   <span>No TDD enforcement</span>
                 </div>
                 <div className="border-t border-border/50 pt-3">
                   <span className="text-muted-foreground">...commits with issues...</span>
                 </div>
-                <div className="text-red-400/80 flex items-center gap-2 text-xs">
+                <div className="text-slate-400/80 flex items-center gap-2 text-xs">
                   <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                   <span>No quality checks or formatting</span>
                 </div>
@@ -79,16 +79,16 @@ const ComparisonSection = () => {
             </div>
 
             {/* Result */}
-            <div className="mt-4 flex items-center justify-center gap-2 text-red-400 text-sm">
+            <div className="mt-4 flex items-center justify-center gap-2 text-slate-400 text-sm">
               <Clock className="h-4 w-4" />
               <span>Inconsistent. Untested. Risky.</span>
             </div>
           </div>
 
-          {/* With Claude CodePro */}
-          <div className="glass rounded-2xl p-5 sm:p-6 relative border-green-500/20 hover:border-green-500/30 transition-colors">
-            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-green-500/20 text-green-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
-              With Claude CodePro
+          {/* With Claude Pilot */}
+          <div className="glass rounded-2xl p-5 sm:p-6 relative border-blue-500/20 hover:border-blue-500/30 transition-colors">
+            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-blue-500/20 text-blue-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
+              With Claude Pilot
             </div>
 
             {/* Terminal window */}
@@ -96,11 +96,11 @@ const ComparisonSection = () => {
               {/* Terminal header */}
               <div className="bg-background/80 rounded-t-lg px-4 py-2 flex items-center gap-2">
                 <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-slate-500/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-blue-500/60" />
                 </div>
-                <span className="text-xs text-muted-foreground ml-2 font-mono">ccp</span>
+                <span className="text-xs text-muted-foreground ml-2 font-mono">pilot</span>
               </div>
 
               {/* Terminal content */}
@@ -111,11 +111,11 @@ const ComparisonSection = () => {
                   <span className="text-muted-foreground ml-2">"Add user authentication"</span>
                 </div>
                 {/* Context injection */}
-                <div className="text-green-400/80 flex items-center gap-2 text-xs">
+                <div className="text-blue-400/80 flex items-center gap-2 text-xs">
                   <Brain className="h-3 w-3 flex-shrink-0" />
                   <span>Persistent memory: Context injected</span>
                 </div>
-                <div className="text-green-400/80 flex items-center gap-2 text-xs">
+                <div className="text-blue-400/80 flex items-center gap-2 text-xs">
                   <FileCode2 className="h-3 w-3 flex-shrink-0" />
                   <span>Rules + Skills loaded</span>
                 </div>
@@ -123,7 +123,7 @@ const ComparisonSection = () => {
                   <span className="text-blue-400">→ Planning:</span>
                   <span className="text-muted-foreground ml-1">Exploring codebase...</span>
                 </div>
-                <div className="text-green-400/80 flex items-center gap-2 text-xs">
+                <div className="text-blue-400/80 flex items-center gap-2 text-xs">
                   <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
                   <span>Plan created → Waiting for approval</span>
                 </div>
@@ -131,15 +131,15 @@ const ComparisonSection = () => {
                   <span className="text-blue-400">→ Implementing:</span>
                   <span className="text-muted-foreground ml-1">TDD enforced</span>
                 </div>
-                <div className="text-green-400/80 flex items-center gap-2 text-xs">
+                <div className="text-blue-400/80 flex items-center gap-2 text-xs">
                   <ShieldCheck className="h-3 w-3 flex-shrink-0" />
                   <span>Quality hooks: linted, formatted, typed</span>
                 </div>
                 <div className="border-t border-border/50 pt-2.5 text-xs">
                   <span className="text-blue-400">→ Verifying:</span>
-                  <span className="text-green-400 ml-1">All checks passed ✓</span>
+                  <span className="text-blue-400 ml-1">All checks passed ✓</span>
                 </div>
-                <div className="text-green-400/80 flex items-center gap-2 text-xs">
+                <div className="text-blue-400/80 flex items-center gap-2 text-xs">
                   <Zap className="h-3 w-3 flex-shrink-0" />
                   <span>Complete! Anything else?</span>
                 </div>
@@ -147,7 +147,7 @@ const ComparisonSection = () => {
             </div>
 
             {/* Result */}
-            <div className="mt-4 flex items-center justify-center gap-2 text-green-400 text-sm">
+            <div className="mt-4 flex items-center justify-center gap-2 text-blue-400 text-sm">
               <Zap className="h-4 w-4" />
               <span>Systematic. Tested. Confident.</span>
             </div>
@@ -157,8 +157,8 @@ const ComparisonSection = () => {
         {/* Bottom highlight */}
         <div className="mt-12 text-center">
           <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
-            <span className="text-primary font-medium">Production-grade code you can ship with confidence.</span>
-            {" "}Systematic. Tested. Verified.
+            <span className="text-primary font-medium">Code you can actually ship.</span>
+            {" "}Tested. Verified. Done.
           </p>
         </div>
       </div>

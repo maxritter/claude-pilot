@@ -31,7 +31,6 @@ class TestDependenciesStep:
                 project_dir=Path(tmpdir),
                 ui=Console(non_interactive=True),
             )
-            # Dependencies always need to be checked
             assert step.check(ctx) is False
 
     @patch("installer.steps.dependencies.install_vexor")
@@ -52,9 +51,8 @@ class TestDependenciesStep:
         from installer.steps.dependencies import DependenciesStep
         from installer.ui import Console
 
-        # Setup mocks
         mock_nodejs.return_value = True
-        mock_claude.return_value = (True, "latest")  # Returns (success, version)
+        mock_claude.return_value = (True, "latest")
         mock_setup_claude_mem.return_value = True
         mock_plugin_deps.return_value = True
         mock_vexor.return_value = True
@@ -69,7 +67,6 @@ class TestDependenciesStep:
 
             step.run(ctx)
 
-            # Core dependencies should be installed
             mock_nodejs.assert_called_once()
             mock_claude.assert_called_once()
             mock_plugin_deps.assert_called_once()
@@ -96,11 +93,10 @@ class TestDependenciesStep:
         from installer.steps.dependencies import DependenciesStep
         from installer.ui import Console
 
-        # Setup mocks
         mock_nodejs.return_value = True
         mock_uv.return_value = True
         mock_python_tools.return_value = True
-        mock_claude.return_value = (True, "latest")  # Returns (success, version)
+        mock_claude.return_value = (True, "latest")
         mock_setup_claude_mem.return_value = True
         mock_plugin_deps.return_value = True
         mock_vexor.return_value = True
@@ -115,7 +111,6 @@ class TestDependenciesStep:
 
             step.run(ctx)
 
-            # Python tools should be installed
             mock_uv.assert_called_once()
             mock_python_tools.assert_called_once()
 
@@ -177,9 +172,7 @@ class TestClaudeCodeInstall:
 
         assert success is True
         assert version == "latest"
-        # Verify npm install was called
         mock_run.assert_called()
-        # Check that npm install command was used
         call_args = mock_run.call_args[0][0]
         assert "npm install -g @anthropic-ai/claude-code" in call_args
 
@@ -196,7 +189,6 @@ class TestClaudeCodeInstall:
 
         assert success is True
         assert version == "2.1.19"
-        # Verify npm install with version tag was called
         mock_run.assert_called()
         call_args = mock_run.call_args[0][0]
         assert "npm install -g @anthropic-ai/claude-code@2.1.19" in call_args
@@ -226,16 +218,14 @@ class TestClaudeCodeInstall:
         from installer.ui import Console
 
         ui = Console(non_interactive=True)
-        # Capture printed output by mocking ui.info
         info_calls = []
-        original_info = ui.info
-        ui.info = lambda msg: info_calls.append(msg)
+        _original_info = ui.info  # noqa: F841 - stored for potential restoration
+        ui.info = lambda message: info_calls.append(message)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = _install_claude_code_with_ui(ui, Path(tmpdir))
 
         assert result is True
-        # Check that pinned version info was displayed
         assert any("last stable release" in call for call in info_calls)
         assert any("FORCE_CLAUDE_VERSION" in call for call in info_calls)
 
@@ -284,12 +274,10 @@ class TestClaudeCodeInstall:
                 result = _configure_claude_defaults()
 
                 assert result is True
-                # Check settings.json for settings
                 settings_path = Path(tmpdir) / ".claude" / "settings.json"
                 settings = json.loads(settings_path.read_text())
                 assert settings["respectGitignore"] is False
                 assert settings["attribution"] == {"commit": "", "pr": ""}
-                # Check .claude.json for preferences
                 config_path = Path(tmpdir) / ".claude.json"
                 config = json.loads(config_path.read_text())
                 assert config["theme"] == "dark-ansi"
@@ -315,7 +303,6 @@ class TestMigrateLegacyPlugins:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 _migrate_legacy_plugins(ui=None)
 
-                # Check that uninstall was called for expected plugins
                 expected_plugins = [
                     "context7",
                     "claude-mem",
@@ -342,14 +329,12 @@ class TestMigrateLegacyPlugins:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                # Create cache directories
                 cache_dir = Path(tmpdir) / ".claude" / "plugins" / "cache"
                 for marketplace in ["thedotmack", "customable", "claude-code-lsps"]:
                     (cache_dir / marketplace).mkdir(parents=True)
 
                 _migrate_legacy_plugins(ui=None)
 
-                # Check that cache directories were removed
                 assert not (cache_dir / "thedotmack").exists()
                 assert not (cache_dir / "customable").exists()
                 assert not (cache_dir / "claude-code-lsps").exists()
@@ -363,14 +348,12 @@ class TestMigrateLegacyPlugins:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                # Create marketplace directories
                 marketplaces_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces"
                 for marketplace in ["thedotmack", "customable"]:
                     (marketplaces_dir / marketplace).mkdir(parents=True)
 
                 _migrate_legacy_plugins(ui=None)
 
-                # Check that directories were removed
                 assert not (marketplaces_dir / "thedotmack").exists()
                 assert not (marketplaces_dir / "customable").exists()
 
@@ -379,16 +362,15 @@ class TestMigrateLegacyPlugins:
         """_migrate_legacy_plugins does nothing when nothing to migrate."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
-        mock_run.return_value.returncode = 1  # Simulate plugin not found
+        mock_run.return_value.returncode = 1
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                # No files to migrate - should not raise
                 _migrate_legacy_plugins(ui=None)
 
 
 class TestSetupClaudeMem:
-    """Test claude-mem setup (legacy plugin migration)."""
+    """Test claude-mem setup (legacy plugin migration and config patching)."""
 
     def test_setup_claude_mem_exists(self):
         """_setup_claude_mem function exists."""
@@ -396,15 +378,98 @@ class TestSetupClaudeMem:
 
         assert callable(_setup_claude_mem)
 
+    @patch("installer.steps.dependencies._patch_claude_mem_config")
     @patch("installer.steps.dependencies._migrate_legacy_plugins")
-    def test_setup_claude_mem_calls_migration(self, mock_migrate):
-        """_setup_claude_mem calls legacy plugin migration."""
+    def test_setup_claude_mem_calls_migration_and_patches_config(self, mock_migrate, mock_patch):
+        """_setup_claude_mem calls legacy plugin migration and patches config."""
         from installer.steps.dependencies import _setup_claude_mem
+
+        mock_patch.return_value = True
 
         result = _setup_claude_mem(ui=None)
 
         assert result is True
         mock_migrate.assert_called_once()
+        mock_patch.assert_called_once()
+
+    def test_patch_claude_mem_config_creates_file(self):
+        """_patch_claude_mem_config creates config file if it doesn't exist."""
+        import json
+
+        from installer.steps.dependencies import _patch_claude_mem_config
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                result = _patch_claude_mem_config()
+
+                assert result is True
+                config_path = Path(tmpdir) / ".claude-mem" / "settings.json"
+                assert config_path.exists()
+                config = json.loads(config_path.read_text())
+                assert config["CLAUDE_MEM_MODEL"] == "haiku"
+                assert config["CLAUDE_MEM_CONTEXT_OBSERVATIONS"] == "50"
+                assert config["CLAUDE_MEM_CONTEXT_FULL_COUNT"] == "10"
+                assert config["CLAUDE_MEM_CONTEXT_FULL_FIELD"] == "facts"
+                assert config["CLAUDE_MEM_CONTEXT_SESSION_COUNT"] == "10"
+                assert config["CLAUDE_MEM_CHROMA_ENABLED"] is False
+                assert config["CLAUDE_MEM_VECTOR_DB"] == "none"
+
+    def test_patch_claude_mem_config_merges_existing(self):
+        """_patch_claude_mem_config merges with existing config."""
+        import json
+
+        from installer.steps.dependencies import _patch_claude_mem_config
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / ".claude-mem"
+            config_dir.mkdir(parents=True)
+            config_path = config_dir / "settings.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "CLAUDE_MEM_MODEL": "sonnet",
+                        "CUSTOM_SETTING": "custom_value",
+                    }
+                )
+            )
+
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                result = _patch_claude_mem_config()
+
+                assert result is True
+                config = json.loads(config_path.read_text())
+                assert config["CLAUDE_MEM_MODEL"] == "haiku"
+                assert config["CUSTOM_SETTING"] == "custom_value"
+                assert config["CLAUDE_MEM_VECTOR_DB"] == "none"
+
+    def test_patch_claude_mem_config_overwrites_incorrect_values(self):
+        """_patch_claude_mem_config overwrites incorrect values."""
+        import json
+
+        from installer.steps.dependencies import _patch_claude_mem_config
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / ".claude-mem"
+            config_dir.mkdir(parents=True)
+            config_path = config_dir / "settings.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "CLAUDE_MEM_MODEL": "opus",
+                        "CLAUDE_MEM_CHROMA_ENABLED": True,
+                        "CLAUDE_MEM_VECTOR_DB": "chroma",
+                    }
+                )
+            )
+
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                result = _patch_claude_mem_config()
+
+                assert result is True
+                config = json.loads(config_path.read_text())
+                assert config["CLAUDE_MEM_MODEL"] == "haiku"
+                assert config["CLAUDE_MEM_CHROMA_ENABLED"] is False
+                assert config["CLAUDE_MEM_VECTOR_DB"] == "none"
 
 
 class TestVexorInstall:
@@ -478,28 +543,33 @@ class TestInstallPluginDependencies:
 
         assert callable(_install_plugin_dependencies)
 
-    def test_install_plugin_dependencies_returns_false_if_no_plugin_dir(self):
+    @patch("installer.steps.dependencies.Path")
+    def test_install_plugin_dependencies_returns_false_if_no_plugin_dir(self, mock_path):
         """_install_plugin_dependencies returns False if plugin directory doesn't exist."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
         with tempfile.TemporaryDirectory() as tmpdir:
+            mock_path.home.return_value = Path(tmpdir)
             result = _install_plugin_dependencies(Path(tmpdir), ui=None)
             assert result is False
 
-    def test_install_plugin_dependencies_returns_false_if_no_package_json(self):
+    @patch("installer.steps.dependencies.Path")
+    def test_install_plugin_dependencies_returns_false_if_no_package_json(self, mock_path):
         """_install_plugin_dependencies returns False if no package.json exists."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            plugin_dir = Path(tmpdir) / ".claude" / "ccp"
+            plugin_dir = Path(tmpdir) / ".claude" / "pilot"
             plugin_dir.mkdir(parents=True)
 
+            mock_path.home.return_value = Path(tmpdir)
             result = _install_plugin_dependencies(Path(tmpdir), ui=None)
             assert result is False
 
     @patch("installer.steps.dependencies._run_bash_with_retry")
     @patch("installer.steps.dependencies.command_exists")
-    def test_install_plugin_dependencies_runs_bun_install(self, mock_cmd_exists, mock_run):
+    @patch("installer.steps.dependencies.Path")
+    def test_install_plugin_dependencies_runs_bun_install(self, mock_path, mock_cmd_exists, mock_run):
         """_install_plugin_dependencies runs bun install when bun is available."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
@@ -507,10 +577,11 @@ class TestInstallPluginDependencies:
         mock_run.return_value = True
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            plugin_dir = Path(tmpdir) / ".claude" / "ccp"
+            plugin_dir = Path(tmpdir) / ".claude" / "pilot"
             plugin_dir.mkdir(parents=True)
             (plugin_dir / "package.json").write_text('{"name": "test"}')
 
+            mock_path.home.return_value = Path(tmpdir)
             result = _install_plugin_dependencies(Path(tmpdir), ui=None)
 
             assert result is True
@@ -580,7 +651,6 @@ class TestCleanMcpServersFromClaudeConfig:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
-                # Should not raise - just return early
                 _clean_mcp_servers_from_claude_config(ui=None)
 
     def test_clean_mcp_servers_handles_no_mcp_servers_key(self):
@@ -596,6 +666,5 @@ class TestCleanMcpServersFromClaudeConfig:
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 _clean_mcp_servers_from_claude_config(ui=None)
 
-                # Config should remain unchanged
                 config = json.loads(config_path.read_text())
                 assert config == {"theme": "dark"}

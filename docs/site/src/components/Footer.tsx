@@ -11,7 +11,7 @@ const Footer = () => {
           <div className="flex flex-col gap-3">
             <Logo variant="footer" />
             <p className="text-sm text-muted-foreground max-w-xs">
-              Production-Grade Development Environment for Claude Code
+              Claude Code, Done Right
             </p>
           </div>
 
@@ -63,7 +63,7 @@ const Footer = () => {
                 className="border-primary/50 hover:bg-primary/10 transition-all duration-300 hover:scale-110 hover:border-primary"
                 asChild
               >
-                <a href="https://github.com/maxritter/claude-codepro" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <a href="https://github.com/maxritter/claude-pilot" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                   <Github className="h-5 w-5" />
                 </a>
               </Button>
@@ -95,14 +95,14 @@ const Footer = () => {
           <p className="text-sm text-muted-foreground text-center">
             © {new Date().getFullYear()}{" "}
             <a
-              href="https://claude-code.pro/"
+              href="https://claude-pilot.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              Claude CodePro
+              Claude Pilot
             </a>
-            . Created with 💛 by{" "}
+            . Created by{" "}
             <a
               href="https://maxritter.net/"
               target="_blank"
@@ -111,7 +111,7 @@ const Footer = () => {
             >
               Max Ritter
             </a>
-            {" "}from Munich 🥨
+            .
           </p>
         </div>
       </div>

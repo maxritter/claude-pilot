@@ -22,7 +22,7 @@ class TestInstallationCancelled:
 
     def test_installation_cancelled_is_install_error(self):
         """InstallationCancelled inherits from InstallError."""
-        from installer.errors import InstallationCancelled, InstallError
+        from installer.errors import InstallError, InstallationCancelled
 
         exc = InstallationCancelled("test_step")
         assert isinstance(exc, InstallError)

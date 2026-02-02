@@ -1,68 +1,62 @@
-"""Tests for .claude files installation step."""
+"""Tests for pilot files installation step."""
 
 from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 
 class TestPatchClaudePaths:
     """Test the patch_claude_paths function."""
 
-    def test_patch_claude_paths_replaces_bin_source_repo_path(self):
-        """patch_claude_paths replaces source repo bin path with target project path."""
+    def test_patch_claude_paths_leaves_plugin_path_unchanged(self):
+        """patch_claude_paths does NOT expand ~/.claude/pilot (hooks use ${CLAUDE_PLUGIN_ROOT})."""
         from installer.steps.claude_files import patch_claude_paths
 
-        content = '{"command": "/workspaces/claude-codepro/.claude/bin/ccp statusline"}'
-        result = patch_claude_paths(content, Path("/home/user/myproject"))
+        content = '{"command": "~/.claude/pilot/scripts/worker.cjs"}'
+        result = patch_claude_paths(content)
 
-        assert "/workspaces/claude-codepro/.claude/bin/" not in result
-        assert "/home/user/myproject/.claude/bin/ccp statusline" in result
+        assert content == result
 
-    def test_patch_claude_paths_replaces_relative_bin_path(self):
-        """patch_claude_paths replaces relative .claude/bin/ paths."""
+    def test_patch_claude_paths_expands_tilde_bin_path(self):
+        """patch_claude_paths expands ~/.pilot/bin/ to absolute path."""
+        from pathlib import Path as P
+
         from installer.steps.claude_files import patch_claude_paths
 
-        content = '{"command": ".claude/bin/ccp statusline"}'
-        result = patch_claude_paths(content, Path("/home/user/myproject"))
+        content = '{"command": "~/.pilot/bin/pilot statusline"}'
+        result = patch_claude_paths(content)
 
-        assert '".claude/bin/' not in result
-        assert "/home/user/myproject/.claude/bin/ccp statusline" in result
+        expected_bin = str(P.home() / ".pilot" / "bin") + "/"
+        assert '"~/.pilot/bin/' not in result
+        assert expected_bin in result
 
-    def test_patch_claude_paths_replaces_plugin_source_repo_path(self):
-        """patch_claude_paths replaces source repo plugin path with target project path."""
-        from installer.steps.claude_files import patch_claude_paths
+    def test_patch_claude_paths_only_expands_bin_path(self):
+        """patch_claude_paths only expands ~/.pilot/bin/, not ~/.claude/pilot."""
+        from pathlib import Path as P
 
-        content = '{"CLAUDE_PLUGIN_ROOT": "/workspaces/claude-codepro/.claude/ccp"}'
-        result = patch_claude_paths(content, Path("/home/user/myproject"))
-
-        assert "/workspaces/claude-codepro/.claude/ccp" not in result
-        assert "/home/user/myproject/.claude/ccp" in result
-
-    def test_patch_claude_paths_replaces_relative_plugin_path(self):
-        """patch_claude_paths replaces relative .claude/ccp paths."""
-        from installer.steps.claude_files import patch_claude_paths
-
-        content = '{"CLAUDE_PLUGIN_ROOT": ".claude/ccp"}'
-        result = patch_claude_paths(content, Path("/home/user/myproject"))
-
-        assert '".claude/ccp' not in result
-        assert "/home/user/myproject/.claude/ccp" in result
-
-    def test_patch_claude_paths_handles_bin_and_plugin(self):
-        """patch_claude_paths replaces both bin and plugin paths in same content."""
         from installer.steps.claude_files import patch_claude_paths
 
         content = """{
-            "CLAUDE_PLUGIN_ROOT": "/workspaces/claude-codepro/.claude/ccp",
-            "statusLine": {"command": "/workspaces/claude-codepro/.claude/bin/ccp statusline"}
+            "command": "~/.claude/pilot/scripts/worker.cjs",
+            "statusLine": {"command": "~/.pilot/bin/pilot statusline"}
         }"""
-        result = patch_claude_paths(content, Path("/target"))
+        result = patch_claude_paths(content)
 
-        assert "/target/.claude/ccp" in result
-        assert "/target/.claude/bin/ccp statusline" in result
-        assert "/workspaces/claude-codepro" not in result
+        expected_bin = str(P.home() / ".pilot" / "bin") + "/"
+        assert expected_bin in result
+        assert "~/.claude/pilot" in result
+
+    def test_patch_claude_paths_preserves_non_tilde_paths(self):
+        """patch_claude_paths leaves non-tilde paths unchanged."""
+        from installer.steps.claude_files import patch_claude_paths
+
+        content = '{"path": "/usr/local/bin/something"}'
+        result = patch_claude_paths(content)
+
+        assert result == content
 
 
 class TestProcessSettings:
@@ -72,8 +66,7 @@ class TestProcessSettings:
         """process_settings keeps Python hook when enable_python=True."""
         from installer.steps.claude_files import process_settings
 
-        # Use absolute path like real source file
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -99,9 +92,8 @@ class TestProcessSettings:
         """process_settings removes Python hook when enable_python=False."""
         from installer.steps.claude_files import process_settings
 
-        # Use absolute path like real source file
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
-        ts_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
+        ts_hook = "uv run python ~/.claude/pilot/hooks/file_checker_ts.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -143,8 +135,7 @@ class TestProcessSettings:
         """process_settings preserves all other settings unchanged."""
         from installer.steps.claude_files import process_settings
 
-        # Use absolute path like real source file
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
         settings = {
             "model": "opus",
             "env": {"DISABLE_TELEMETRY": "true"},
@@ -170,22 +161,19 @@ class TestProcessSettings:
         """process_settings handles malformed settings gracefully without crashing."""
         from installer.steps.claude_files import process_settings
 
-        # Various malformed structures - all should not crash
         malformed_cases = [
-            {"hooks": {"PostToolUse": None}},  # null PostToolUse
-            {"hooks": {"PostToolUse": "not a list"}},  # wrong type
-            {"hooks": {"PostToolUse": [{"hooks": None}]}},  # null hooks in group
-            {"hooks": {"PostToolUse": [None, "string"]}},  # non-dict entries
-            {"hooks": None},  # null hooks
-            {"no_hooks": "at all"},  # missing hooks entirely
+            {"hooks": {"PostToolUse": None}},
+            {"hooks": {"PostToolUse": "not a list"}},
+            {"hooks": {"PostToolUse": [{"hooks": None}]}},
+            {"hooks": {"PostToolUse": [None, "string"]}},
+            {"hooks": None},
+            {"no_hooks": "at all"},
         ]
 
         for settings in malformed_cases:
-            # Should not raise an exception
             result = process_settings(
                 json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True
             )
-            # Should return valid JSON
             parsed = json.loads(result)
             assert parsed is not None
 
@@ -193,9 +181,8 @@ class TestProcessSettings:
         """process_settings removes TypeScript hook when enable_typescript=False."""
         from installer.steps.claude_files import process_settings
 
-        # Use absolute path like real source file
-        ts_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
-        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        ts_hook = "uv run python ~/.claude/pilot/hooks/file_checker_ts.py"
+        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -223,10 +210,9 @@ class TestProcessSettings:
         """process_settings removes both Python and TypeScript hooks when both disabled."""
         from installer.steps.claude_files import process_settings
 
-        # Use absolute paths like real source file
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
-        ts_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
-        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
+        ts_hook = "uv run python ~/.claude/pilot/hooks/file_checker_ts.py"
+        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -258,8 +244,8 @@ class TestProcessSettings:
         """process_settings removes Go hook when enable_golang=False."""
         from installer.steps.claude_files import process_settings
 
-        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -287,8 +273,8 @@ class TestProcessSettings:
         """process_settings keeps Go hook when enable_golang=True."""
         from installer.steps.claude_files import process_settings
 
-        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
-        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
+        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -336,24 +322,24 @@ class TestClaudeFilesStep:
                 local_mode=True,
                 local_repo_dir=Path(tmpdir),
             )
-            # No .claude directory
             assert step.check(ctx) is False
 
     def test_claude_files_run_installs_files(self):
-        """ClaudeFilesStep.run installs .claude files."""
+        """ClaudeFilesStep.run installs pilot files."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source .claude directory
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_claude.mkdir(parents=True)
-            (source_claude / "test.md").write_text("test content")
-            (source_claude / "rules").mkdir()
-            (source_claude / "rules" / "standard").mkdir()
-            (source_claude / "rules" / "standard" / "rule.md").write_text("rule content")
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_pilot.mkdir(parents=True)
+            (source_pilot / "test.md").write_text("test content")
+            (source_pilot / "rules").mkdir()
+            (source_pilot / "rules" / "rule.md").write_text("rule content")
 
             dest_dir = Path(tmpdir) / "dest"
             dest_dir.mkdir()
@@ -365,30 +351,28 @@ class TestClaudeFilesStep:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            # Create destination .claude dir first (bootstrap would do this)
-            (dest_dir / ".claude").mkdir()
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            step.run(ctx)
+            assert (home_dir / ".claude" / "rules" / "rule.md").exists()
 
-            # Check files were installed
-            assert (dest_dir / ".claude" / "test.md").exists()
-
-    def test_claude_files_installs_settings_local(self):
-        """ClaudeFilesStep installs settings.local.json."""
+    def test_claude_files_installs_settings(self):
+        """ClaudeFilesStep installs settings.json to ~/.claude/."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with settings file
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_claude.mkdir(parents=True)
-            (source_claude / "settings.local.json").write_text('{"hooks": {}}')
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_pilot.mkdir(parents=True)
+            (source_pilot / "settings.json").write_text('{"hooks": {}}')
 
             dest_dir = Path(tmpdir) / "dest"
             dest_dir.mkdir()
-            (dest_dir / ".claude").mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -397,10 +381,10 @@ class TestClaudeFilesStep:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # settings.local.json should be copied
-            assert (dest_dir / ".claude" / "settings.local.json").exists()
+            assert (home_dir / ".claude" / "settings.json").exists()
 
     def test_claude_files_skips_python_when_disabled(self):
         """ClaudeFilesStep skips Python rules when enable_python=False."""
@@ -410,16 +394,17 @@ class TestClaudeFilesStep:
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with Python rules
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules = source_claude / "rules" / "standard"
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_rules = source_pilot / "rules"
             source_rules.mkdir(parents=True)
             (source_rules / "python-rules.md").write_text("# python rules")
             (source_rules / "other-rules.md").write_text("# other rules")
 
             dest_dir = Path(tmpdir) / "dest"
             dest_dir.mkdir()
-            (dest_dir / ".claude").mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -429,12 +414,12 @@ class TestClaudeFilesStep:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Python rules should NOT be copied
-            assert not (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
-            # Other rules should be copied
-            assert (dest_dir / ".claude" / "rules" / "standard" / "other-rules.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert not (global_rules / "python-rules.md").exists()
+            assert (global_rules / "other-rules.md").exists()
 
     def test_claude_files_skips_typescript_when_disabled(self):
         """ClaudeFilesStep skips TypeScript rules when enable_typescript=False."""
@@ -444,16 +429,17 @@ class TestClaudeFilesStep:
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with TypeScript rules
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules = source_claude / "rules" / "standard"
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_rules = source_pilot / "rules"
             source_rules.mkdir(parents=True)
             (source_rules / "typescript-rules.md").write_text("# typescript rules")
             (source_rules / "python-rules.md").write_text("# python rules")
 
             dest_dir = Path(tmpdir) / "dest"
             dest_dir.mkdir()
-            (dest_dir / ".claude").mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -463,12 +449,12 @@ class TestClaudeFilesStep:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # TypeScript rules should NOT be copied
-            assert not (dest_dir / ".claude" / "rules" / "standard" / "typescript-rules.md").exists()
-            # Python rules should be copied
-            assert (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert not (global_rules / "typescript-rules.md").exists()
+            assert (global_rules / "python-rules.md").exists()
 
     def test_claude_files_skips_golang_when_disabled(self):
         """ClaudeFilesStep skips Go rules when enable_golang=False."""
@@ -478,16 +464,17 @@ class TestClaudeFilesStep:
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with Go rules
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules = source_claude / "rules" / "standard"
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_rules = source_pilot / "rules"
             source_rules.mkdir(parents=True)
             (source_rules / "golang-rules.md").write_text("# golang rules")
             (source_rules / "python-rules.md").write_text("# python rules")
 
             dest_dir = Path(tmpdir) / "dest"
             dest_dir.mkdir()
-            (dest_dir / ".claude").mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -497,40 +484,40 @@ class TestClaudeFilesStep:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Go rules should NOT be copied
-            assert not (dest_dir / ".claude" / "rules" / "standard" / "golang-rules.md").exists()
-            # Python rules should be copied
-            assert (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert not (global_rules / "golang-rules.md").exists()
+            assert (global_rules / "python-rules.md").exists()
 
 
 class TestClaudeFilesCustomRulesPreservation:
-    """Test that custom rules from repo are installed and user files preserved."""
+    """Test that standard rules from repo are installed and project rules preserved."""
 
-    def test_custom_rules_installed_and_user_files_preserved(self):
-        """ClaudeFilesStep installs repo standard rules and preserves user custom files."""
+    def test_standard_rules_installed_and_project_rules_preserved(self):
+        """ClaudeFilesStep installs repo standard rules to ~/.claude and preserves project rules."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with rules (simulating repo)
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules_standard = source_claude / "rules" / "standard"
-            source_rules_standard.mkdir(parents=True)
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
 
-            # Repo has standard rules (including python-rules.md, now in standard/)
-            (source_rules_standard / "python-rules.md").write_text("python rules from repo")
-            (source_rules_standard / "standard-rule.md").write_text("standard rule")
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_rules = source_pilot / "rules"
+            source_rules.mkdir(parents=True)
 
-            # Destination already has user's custom rules (not in repo)
+            (source_rules / "python-rules.md").write_text("python rules from repo")
+            (source_rules / "standard-rule.md").write_text("standard rule")
+
             dest_dir = Path(tmpdir) / "dest"
             dest_claude = dest_dir / ".claude"
-            dest_rules_custom = dest_claude / "rules" / "custom"
-            dest_rules_custom.mkdir(parents=True)
-            (dest_rules_custom / "my-project-rules.md").write_text("USER PROJECT RULES - PRESERVED")
+            dest_rules = dest_claude / "rules"
+            dest_rules.mkdir(parents=True)
+            (dest_rules / "my-project-rules.md").write_text("USER PROJECT RULES - PRESERVED")
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -539,18 +526,16 @@ class TestClaudeFilesCustomRulesPreservation:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # User's custom rule should be PRESERVED (not deleted)
-            assert (dest_rules_custom / "my-project-rules.md").exists()
-            assert (dest_rules_custom / "my-project-rules.md").read_text() == "USER PROJECT RULES - PRESERVED"
+            assert (dest_rules / "my-project-rules.md").exists()
+            assert (dest_rules / "my-project-rules.md").read_text() == "USER PROJECT RULES - PRESERVED"
 
-            # Repo's python rules SHOULD be copied to standard/
-            assert (dest_claude / "rules" / "standard" / "python-rules.md").exists()
-            assert (dest_claude / "rules" / "standard" / "python-rules.md").read_text() == "python rules from repo"
-
-            # Standard rules SHOULD be copied
-            assert (dest_claude / "rules" / "standard" / "standard-rule.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert (global_rules / "python-rules.md").exists()
+            assert (global_rules / "python-rules.md").read_text() == "python rules from repo"
+            assert (global_rules / "standard-rule.md").exists()
 
     def test_pycache_files_not_copied(self):
         """ClaudeFilesStep skips __pycache__ directories and .pyc files."""
@@ -560,16 +545,18 @@ class TestClaudeFilesCustomRulesPreservation:
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with __pycache__ in rules directory
-            source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules = source_claude / "rules" / "standard"
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            source_pilot = Path(tmpdir) / "source" / "pilot"
+            source_rules = source_pilot / "rules"
             source_pycache = source_rules / "__pycache__"
             source_pycache.mkdir(parents=True)
             (source_rules / "test-rule.md").write_text("# rule")
             (source_pycache / "something.cpython-312.pyc").write_text("bytecode")
 
             dest_dir = Path(tmpdir) / "dest"
-            (dest_dir / ".claude").mkdir(parents=True)
+            dest_dir.mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -578,39 +565,40 @@ class TestClaudeFilesCustomRulesPreservation:
                 local_repo_dir=Path(tmpdir) / "source",
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Regular rule should be copied
-            assert (dest_dir / ".claude" / "rules" / "standard" / "test-rule.md").exists()
-
-            # __pycache__ should NOT be copied
-            assert not (dest_dir / ".claude" / "rules" / "standard" / "__pycache__").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert (global_rules / "test-rule.md").exists()
+            assert not (global_rules / "__pycache__").exists()
 
 
 class TestDirectoryClearing:
     """Test directory clearing behavior in local and normal mode."""
 
     def test_clears_directories_in_normal_local_mode(self):
-        """Standard rules directory is cleared when source != destination in local mode."""
+        """Global rules directory is cleared when source != destination in local mode."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with standard rules
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            old_global_rules = home_dir / ".claude" / "rules"
+            old_global_rules.mkdir(parents=True)
+            (old_global_rules / "old-rule.md").write_text("old rule to be removed")
+
             source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_rules = source_claude / "rules" / "standard"
+            source_pilot = source_dir / "pilot"
+            source_rules = source_pilot / "rules"
             source_rules.mkdir(parents=True)
             (source_rules / "new-rule.md").write_text("new rule content")
 
-            # Create destination with OLD standard rule (should be cleared)
             dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_rules = dest_claude / "rules" / "standard"
-            dest_rules.mkdir(parents=True)
-            (dest_rules / "old-rule.md").write_text("old rule to be removed")
+            dest_dir.mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -619,13 +607,13 @@ class TestDirectoryClearing:
                 local_repo_dir=source_dir,
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # New rule should be installed
-            assert (dest_rules / "new-rule.md").exists()
-            assert (dest_rules / "new-rule.md").read_text() == "new rule content"
-            # Old rule should have been removed (directory was cleared)
-            assert not (dest_rules / "old-rule.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert (global_rules / "new-rule.md").exists()
+            assert (global_rules / "new-rule.md").read_text() == "new rule content"
+            assert not (global_rules / "old-rule.md").exists()
 
     def test_skips_clearing_when_source_equals_destination(self):
         """Directories are NOT cleared when source == destination (same dir)."""
@@ -635,9 +623,11 @@ class TestDirectoryClearing:
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create .claude directory (source AND destination are same)
-            claude_dir = Path(tmpdir) / ".claude"
-            rules_dir = claude_dir / "rules" / "standard"
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            pilot_dir = Path(tmpdir) / "pilot"
+            rules_dir = pilot_dir / "rules"
             rules_dir.mkdir(parents=True)
             (rules_dir / "existing-rule.md").write_text("existing rule content")
 
@@ -645,39 +635,36 @@ class TestDirectoryClearing:
                 project_dir=Path(tmpdir),
                 ui=Console(non_interactive=True),
                 local_mode=True,
-                local_repo_dir=Path(tmpdir),  # Same as project_dir!
+                local_repo_dir=Path(tmpdir),
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Rules should still exist (NOT cleared because source==dest)
-            assert (rules_dir / "existing-rule.md").exists()
-            assert (rules_dir / "existing-rule.md").read_text() == "existing rule content"
+            assert (home_dir / ".claude" / "rules" / "existing-rule.md").exists()
 
-    def test_custom_rules_never_cleared(self):
-        """Custom rules directory is NEVER cleared, only standard rules."""
+    def test_project_rules_never_cleared(self):
+        """Project rules directory is NEVER cleared, only global standard rules."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with standard rules only
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_standard = source_claude / "rules" / "standard"
-            source_standard.mkdir(parents=True)
-            (source_standard / "new-rule.md").write_text("new standard rule")
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
 
-            # Create destination with custom rules AND old standard rules
+            source_dir = Path(tmpdir) / "source"
+            source_pilot = source_dir / "pilot"
+            source_rules = source_pilot / "rules"
+            source_rules.mkdir(parents=True)
+            (source_rules / "new-rule.md").write_text("new standard rule")
+
             dest_dir = Path(tmpdir) / "dest"
             dest_claude = dest_dir / ".claude"
-            dest_custom = dest_claude / "rules" / "custom"
-            dest_standard = dest_claude / "rules" / "standard"
-            dest_custom.mkdir(parents=True)
-            dest_standard.mkdir(parents=True)
-            (dest_custom / "my-project.md").write_text("USER CUSTOM RULE")
-            (dest_standard / "old-rule.md").write_text("old standard rule")
+            dest_project_rules = dest_claude / "rules"
+            dest_project_rules.mkdir(parents=True)
+            (dest_project_rules / "my-project.md").write_text("USER PROJECT RULE")
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -686,39 +673,39 @@ class TestDirectoryClearing:
                 local_repo_dir=source_dir,
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Custom rules should be PRESERVED (never cleared)
-            assert (dest_custom / "my-project.md").exists()
-            assert (dest_custom / "my-project.md").read_text() == "USER CUSTOM RULE"
+            assert (dest_project_rules / "my-project.md").exists()
+            assert (dest_project_rules / "my-project.md").read_text() == "USER PROJECT RULE"
 
-            # Old standard rule should be GONE (directory was cleared)
-            assert not (dest_standard / "old-rule.md").exists()
-            # New standard rule should be installed
-            assert (dest_standard / "new-rule.md").exists()
+            global_rules = home_dir / ".claude" / "rules"
+            assert (global_rules / "new-rule.md").exists()
 
     def test_standard_commands_are_cleared(self):
-        """Standard commands (spec, sync, plan, implement, verify) are cleared and replaced."""
+        """Global commands directory is cleared and replaced with new commands."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with new standard command
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
+
+            old_global_commands = home_dir / ".claude" / "commands"
+            old_global_commands.mkdir(parents=True)
+            (old_global_commands / "spec.md").write_text("old spec command")
+            (old_global_commands / "plan.md").write_text("old plan command")
+
             source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_commands = source_claude / "commands"
+            source_pilot = source_dir / "pilot"
+            source_commands = source_pilot / "commands"
             source_commands.mkdir(parents=True)
             (source_commands / "spec.md").write_text("new spec command")
 
-            # Create destination with OLD standard command
             dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_commands = dest_claude / "commands"
-            dest_commands.mkdir(parents=True)
-            (dest_commands / "spec.md").write_text("old spec command")
-            (dest_commands / "plan.md").write_text("old plan command")
+            dest_dir.mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -727,34 +714,38 @@ class TestDirectoryClearing:
                 local_repo_dir=source_dir,
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # New standard command should be installed
-            assert (dest_commands / "spec.md").exists()
-            assert (dest_commands / "spec.md").read_text() == "new spec command"
+            global_commands = home_dir / ".claude" / "commands"
+            assert (global_commands / "spec.md").exists()
+            assert (global_commands / "spec.md").read_text() == "new spec command"
 
-    def test_custom_commands_never_cleared(self):
-        """Custom commands (non-standard names) are NEVER cleared."""
+    def test_pilot_plugin_folder_is_installed(self):
+        """ClaudeFilesStep installs pilot plugin folder to ~/.claude/pilot/ (global)."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with standard command
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_commands = source_claude / "commands"
-            source_commands.mkdir(parents=True)
-            (source_commands / "spec.md").write_text("new spec command")
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
 
-            # Create destination with custom command AND standard command
+            source_dir = Path(tmpdir) / "source"
+            source_pilot = source_dir / "pilot"
+            source_pilot.mkdir(parents=True)
+            (source_pilot / "package.json").write_text('{"name": "pilot"}')
+            (source_pilot / "plugin.json").write_text('{"version": "1.0"}')
+            (source_pilot / ".mcp.json").write_text('{"servers": []}')
+            (source_pilot / ".lsp.json").write_text('{"python": {}}')
+            (source_pilot / "scripts").mkdir()
+            (source_pilot / "scripts" / "mcp-server.cjs").write_text("// mcp server")
+            (source_pilot / "hooks").mkdir()
+            (source_pilot / "hooks" / "hook.py").write_text("# hook")
+
             dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_commands = dest_claude / "commands"
-            dest_commands.mkdir(parents=True)
-            (dest_commands / "my-custom-workflow.md").write_text("USER CUSTOM COMMAND")
-            (dest_commands / "spec.md").write_text("old spec command")
+            dest_dir.mkdir()
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -763,154 +754,33 @@ class TestDirectoryClearing:
                 local_repo_dir=source_dir,
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Custom command should be PRESERVED
-            assert (dest_commands / "my-custom-workflow.md").exists()
-            assert (dest_commands / "my-custom-workflow.md").read_text() == "USER CUSTOM COMMAND"
-
-            # Standard command should be updated
-            assert (dest_commands / "spec.md").exists()
-            assert (dest_commands / "spec.md").read_text() == "new spec command"
-
-    def test_ccp_folder_is_installed(self):
-        """ClaudeFilesStep installs ccp folder from repo."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with ccp directory
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_ccp = source_claude / "ccp"
-            source_ccp.mkdir(parents=True)
-            (source_ccp / "package.json").write_text('{"name": "test"}')
-            (source_ccp / "scripts").mkdir()
-            (source_ccp / "scripts" / "mcp-server.cjs").write_text("// mcp server")
-            (source_ccp / "hooks").mkdir()
-            (source_ccp / "hooks" / "hook.py").write_text("# hook")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_claude.mkdir(parents=True)
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=source_dir,
-            )
-
-            step.run(ctx)
-
-            # CCP files SHOULD be installed
-            assert (dest_claude / "ccp" / "package.json").exists()
-            assert (dest_claude / "ccp" / "scripts" / "mcp-server.cjs").exists()
-            assert (dest_claude / "ccp" / "hooks" / "hook.py").exists()
-
-    def test_hooks_are_not_installed_from_repo(self):
-        """ClaudeFilesStep does NOT install hooks from repo (hooks come from plugin)."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with hooks directory
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_hooks = source_claude / "hooks"
-            source_hooks.mkdir(parents=True)
-            (source_hooks / "my_hook.py").write_text("# hook code")
-            (source_hooks / "another_hook.sh").write_text("# shell hook")
-
-            # Also add a command and rule to verify those ARE installed
-            source_commands = source_claude / "commands"
-            source_commands.mkdir(parents=True)
-            (source_commands / "test.md").write_text("test command")
-
-            source_rules = source_claude / "rules" / "standard"
-            source_rules.mkdir(parents=True)
-            (source_rules / "test-rule.md").write_text("test rule")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_claude.mkdir(parents=True)
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=source_dir,
-            )
-
-            step.run(ctx)
-
-            # Hooks should NOT be installed
-            assert not (dest_claude / "hooks" / "my_hook.py").exists()
-            assert not (dest_claude / "hooks" / "another_hook.sh").exists()
-
-            # Commands and rules SHOULD be installed
-            assert (dest_claude / "commands" / "test.md").exists()
-            assert (dest_claude / "rules" / "standard" / "test-rule.md").exists()
-
-    def test_skills_are_not_installed_from_repo(self):
-        """ClaudeFilesStep does NOT install skills from repo (skills come from plugin)."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with skills directory
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_skills = source_claude / "skills" / "standards-testing"
-            source_skills.mkdir(parents=True)
-            (source_skills / "SKILL.md").write_text("# skill content")
-
-            # Also add a command to verify those ARE installed
-            source_commands = source_claude / "commands"
-            source_commands.mkdir(parents=True)
-            (source_commands / "test.md").write_text("test command")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_claude = dest_dir / ".claude"
-            dest_claude.mkdir(parents=True)
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=source_dir,
-            )
-
-            step.run(ctx)
-
-            # Skills should NOT be installed
-            assert not (dest_claude / "skills" / "standards-testing" / "SKILL.md").exists()
-
-            # Commands SHOULD be installed
-            assert (dest_claude / "commands" / "test.md").exists()
+            global_pilot = home_dir / ".claude" / "pilot"
+            assert (global_pilot / "package.json").exists()
+            assert (global_pilot / "plugin.json").exists()
+            assert (global_pilot / ".mcp.json").exists()
+            assert (global_pilot / ".lsp.json").exists()
+            assert (global_pilot / "scripts" / "mcp-server.cjs").exists()
+            assert (global_pilot / "hooks" / "hook.py").exists()
 
     def test_old_plugin_directory_is_removed(self):
-        """ClaudeFilesStep removes old .claude/plugin directory (now renamed to ccp)."""
+        """ClaudeFilesStep removes old .claude/plugin directory (now renamed to pilot)."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with ccp directory (new name)
-            source_dir = Path(tmpdir) / "source"
-            source_claude = source_dir / ".claude"
-            source_ccp = source_claude / "ccp"
-            source_ccp.mkdir(parents=True)
-            (source_ccp / "package.json").write_text('{"name": "ccp"}')
+            home_dir = Path(tmpdir) / "home"
+            home_dir.mkdir()
 
-            # Create destination with OLD plugin directory
+            source_dir = Path(tmpdir) / "source"
+            source_pilot = source_dir / "pilot"
+            source_pilot.mkdir(parents=True)
+            (source_pilot / "package.json").write_text('{"name": "pilot"}')
+
             dest_dir = Path(tmpdir) / "dest"
             dest_claude = dest_dir / ".claude"
             old_plugin = dest_claude / "plugin"
@@ -926,9 +796,68 @@ class TestDirectoryClearing:
                 local_repo_dir=source_dir,
             )
 
-            step.run(ctx)
+            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
+                step.run(ctx)
 
-            # Old plugin directory should be REMOVED
             assert not old_plugin.exists()
             assert not (old_plugin / "package.json").exists()
             assert not (old_plugin / "scripts").exists()
+
+
+class TestRepoFallback:
+    """Tests for repository fallback logic."""
+
+    def test_resolve_repo_url_returns_primary_when_available(self):
+        """_resolve_repo_url returns primary repo when it responds successfully."""
+        import urllib.error
+        from unittest.mock import MagicMock
+
+        from installer.steps.claude_files import ClaudeFilesStep
+
+        step = ClaudeFilesStep()
+
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            result = step._resolve_repo_url("v5.0.0")
+
+        assert result == "https://github.com/maxritter/claude-pilot"
+
+    def test_resolve_repo_url_falls_back_when_primary_fails(self):
+        """_resolve_repo_url returns fallback repo when primary fails."""
+        import urllib.error
+        from unittest.mock import MagicMock
+
+        from installer.steps.claude_files import ClaudeFilesStep
+
+        step = ClaudeFilesStep()
+
+        def side_effect(req, timeout=None):
+            if "claude-pilot" in req.full_url:
+                raise urllib.error.URLError("Not found")
+            mock_response = MagicMock()
+            mock_response.status = 200
+            mock_response.__enter__ = MagicMock(return_value=mock_response)
+            mock_response.__exit__ = MagicMock(return_value=False)
+            return mock_response
+
+        with patch("urllib.request.urlopen", side_effect=side_effect):
+            result = step._resolve_repo_url("v5.0.0")
+
+        assert result == "https://github.com/maxritter/claude-codepro"
+
+    def test_resolve_repo_url_returns_primary_when_both_fail(self):
+        """_resolve_repo_url returns primary repo as default when both fail."""
+        import urllib.error
+
+        from installer.steps.claude_files import ClaudeFilesStep
+
+        step = ClaudeFilesStep()
+
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")):
+            result = step._resolve_repo_url("v5.0.0")
+
+        assert result == "https://github.com/maxritter/claude-pilot"

@@ -27,25 +27,25 @@ const PricingSection = () => {
         <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
           {/* Trial */}
           <Card className="glass p-6 sm:p-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400 to-transparent" />
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-cyan-500/15 rounded-xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-cyan-500" />
+              <div className="w-12 h-12 bg-sky-400/15 rounded-xl flex items-center justify-center">
+                <Clock className="h-6 w-6 text-sky-400" />
               </div>
               <h3 className="text-xl font-bold text-foreground">Trial</h3>
             </div>
 
             <ul className="space-y-3 mb-6">
               <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-sky-400 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">Full features for 7 days</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-sky-400 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">No credit card required</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-sky-400 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">Starts automatically on install</span>
               </li>
             </ul>
@@ -83,7 +83,7 @@ const PricingSection = () => {
             </ul>
 
             <Button asChild className="w-full">
-              <a href="https://license.claude-code.pro" target="_blank" rel="noopener noreferrer">
+              <a href="https://license.claude-pilot.com" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Subscribe
               </a>
@@ -92,31 +92,31 @@ const PricingSection = () => {
 
           {/* Enterprise */}
           <Card className="glass p-6 sm:p-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-purple-500/15 rounded-xl flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-purple-500" />
+              <div className="w-12 h-12 bg-indigo-500/15 rounded-xl flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-indigo-500" />
               </div>
               <h3 className="text-xl font-bold text-foreground">Enterprise</h3>
             </div>
 
             <ul className="space-y-3 mb-6">
               <li className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                <Sparkles className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">Everything in Standard</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">Dedicated email support</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm">Priority feature requests</span>
               </li>
             </ul>
 
-            <Button asChild variant="outline" className="w-full border-purple-500/50 hover:bg-purple-500/10">
-              <a href="https://license.claude-code.pro" target="_blank" rel="noopener noreferrer">
+            <Button asChild variant="outline" className="w-full border-indigo-500/50 hover:bg-indigo-500/10">
+              <a href="https://license.claude-pilot.com" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Subscribe
               </a>

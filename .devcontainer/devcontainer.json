@@ -1,13 +1,13 @@
 {
-  "name": "claude-codepro",
+  "name": "claude-pilot",
   "build": {
     "dockerfile": "Dockerfile"
   },
   "runArgs": [
     "--name",
-    "claude-codepro"
+    "claude-pilot"
   ],
-  "workspaceFolder": "/workspaces/claude-codepro",
+  "workspaceFolder": "/workspaces/claude-pilot",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -89,7 +89,7 @@
     /* https://github.com/braun-daniel/devcontainer-features/blob/main/src/fzf */
     "ghcr.io/braun-daniel/devcontainer-features/fzf:1": {}
   },
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.4.12/install.sh | bash",
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash",
   "remoteUser": "root",
   "containerUser": "root"
 }

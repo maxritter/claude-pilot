@@ -1,127 +1,97 @@
-"""Shell config step - configures shell with ccp alias, fzf, dotenv, and zsh."""
+"""Shell config step - configures shell with claude alias."""
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 from installer.context import InstallContext
-from installer.platform_utils import get_shell_config_files, is_in_devcontainer
+from installer.platform_utils import get_shell_config_files
 from installer.steps.base import BaseStep
 
-CCP_ALIAS_MARKER = "# Claude CodePro alias"
-FZF_MARKER = "source <(fzf --zsh)"
-DOTENV_MARKER = "ZSH_DOTENV_PROMPT"
-BUN_PATH_MARKER = "# bun PATH"
+OLD_CCP_MARKER = "# Claude CodePro alias"
+CLAUDE_ALIAS_MARKER = "# Claude Pilot"
+PILOT_BIN = "$HOME/.pilot/bin/pilot"
 
 
-def get_alias_line(shell_type: str) -> str:
-    """Get the function/alias line for the given shell type.
-
-    Creates a function that:
-    1. If current dir is CCP project (.claude/bin/ccp exists) → use it
-    2. If in devcontainer (/workspaces exists) → find CCP project there
-    3. Otherwise → show error
-
-    Uses a function (not alias) to properly forward arguments like 'ccp activate KEY'.
-    """
-    if shell_type == "fish":
-        return (
-            f"{CCP_ALIAS_MARKER}\n"
-            "function ccp\n"
-            "    if test -f .claude/bin/ccp\n"
-            '        "$PWD/.claude/bin/ccp" $argv\n'
-            "    else if test -d /workspaces\n"
-            '        set ccp_dir ""\n'
-            "        for d in /workspaces/*/\n"
-            '            if test -f "$d.claude/bin/ccp"\n'
-            '                set ccp_dir "$d"\n'
-            "                break\n"
-            "            end\n"
-            "        end\n"
-            '        if test -n "$ccp_dir"\n'
-            '            cd "$ccp_dir" && "$PWD/.claude/bin/ccp" $argv\n'
-            "        else\n"
-            '            echo "Error: No CCP project found in /workspaces"\n'
-            "        end\n"
-            "    else\n"
-            '        echo "Error: Not a Claude CodePro project. Run the installer first or cd to a CCP-enabled project."\n'
-            "    end\n"
-            "end"
-        )
-    else:
-        return (
-            f"{CCP_ALIAS_MARKER}\n"
-            "ccp() {\n"
-            "    if [ -f .claude/bin/ccp ]; then\n"
-            '        "$PWD/.claude/bin/ccp" "$@"\n'
-            "    elif [ -d /workspaces ]; then\n"
-            '        ccp_dir=""\n'
-            "        for d in /workspaces/*/; do\n"
-            '            [ -f "$d.claude/bin/ccp" ] && ccp_dir="$d" && break\n'
-            "        done\n"
-            '        if [ -n "$ccp_dir" ]; then\n'
-            '            cd "$ccp_dir" && "$PWD/.claude/bin/ccp" "$@"\n'
-            "        else\n"
-            '            echo "Error: No CCP project found in /workspaces"\n'
-            "        fi\n"
-            "    else\n"
-            '        echo "Error: Not a Claude CodePro project. Run the installer first or cd to a CCP-enabled project."\n'
-            "    fi\n"
-            "}"
-        )
+def get_alias_lines(shell_type: str) -> str:
+    """Get both claude and ccp alias lines for the given shell type."""
+    _ = shell_type
+    return f'{CLAUDE_ALIAS_MARKER}\nalias claude="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
 
 
 def alias_exists_in_file(config_file: Path) -> bool:
-    """Check if ccp alias already exists in config file."""
+    """Check if claude alias already exists in config file."""
     if not config_file.exists():
         return False
     content = config_file.read_text()
-    return "alias ccp" in content or CCP_ALIAS_MARKER in content
+    return (
+        CLAUDE_ALIAS_MARKER in content
+        or OLD_CCP_MARKER in content
+        or "alias ccp" in content
+        or "alias claude" in content
+    )
 
 
 def remove_old_alias(config_file: Path) -> bool:
-    """Remove old ccp alias/function from config file to allow clean update."""
+    """Remove old ccp/claude alias from config file to allow clean update."""
     if not config_file.exists():
         return False
 
     content = config_file.read_text()
-    if CCP_ALIAS_MARKER not in content and "ccp()" not in content and "alias ccp" not in content:
+    has_old = (
+        OLD_CCP_MARKER in content
+        or CLAUDE_ALIAS_MARKER in content
+        or "alias ccp" in content
+        or "alias claude" in content
+        or "ccp()" in content
+        or "claude()" in content
+        or "function ccp" in content
+        or "function claude" in content
+    )
+    if not has_old:
         return False
 
     lines = content.split("\n")
     new_lines = []
-    inside_ccp_function = False
+    inside_function = False
     brace_count = 0
 
     for line in lines:
         stripped = line.strip()
 
-        if CCP_ALIAS_MARKER in line:
+        if OLD_CCP_MARKER in line or CLAUDE_ALIAS_MARKER in line:
             continue
 
-        if stripped.startswith("alias ccp="):
+        if (
+            stripped.startswith("alias ccp=")
+            or stripped.startswith("alias claude=")
+            or stripped.startswith("alias ccp ")
+            or stripped.startswith("alias claude ")
+        ):
             continue
 
         if stripped.startswith("ccp()") or stripped == "ccp () {":
-            inside_ccp_function = True
+            inside_function = True
+            brace_count = 0
+        elif stripped.startswith("claude()") or stripped == "claude () {":
+            inside_function = True
             brace_count = 0
 
-        if inside_ccp_function:
+        if inside_function:
             brace_count += line.count("{") - line.count("}")
-            if brace_count <= 0 and "{" in content[content.find("ccp()") :]:
-                inside_ccp_function = False
+            if brace_count <= 0:
+                inside_function = False
             continue
 
-        if stripped.startswith("function ccp"):
-            inside_ccp_function = True
+        if stripped.startswith("function ccp") or stripped.startswith("function claude"):
+            inside_function = True
             continue
 
-        if inside_ccp_function and stripped == "end":
-            inside_ccp_function = False
+        if inside_function and stripped == "end":
+            inside_function = False
             continue
 
-        if not inside_ccp_function:
+        if not inside_function:
             new_lines.append(line)
 
     final_lines = []
@@ -137,107 +107,8 @@ def remove_old_alias(config_file: Path) -> bool:
     return True
 
 
-def _configure_zsh_fzf(zshrc: Path, ui) -> bool:
-    """Configure fzf in zshrc (idempotent)."""
-    if not zshrc.exists():
-        return False
-
-    content = zshrc.read_text()
-    if FZF_MARKER in content:
-        return False
-
-    with open(zshrc, "a") as f:
-        f.write(f"\n{FZF_MARKER}\n")
-    if ui:
-        ui.success("Added fzf configuration")
-    return True
-
-
-def _configure_zsh_dotenv(zshrc: Path, ui) -> bool:
-    """Configure dotenv plugin in zshrc (idempotent)."""
-    if not zshrc.exists():
-        return False
-
-    content = zshrc.read_text()
-    modified = False
-
-    if "plugins=(" in content and "dotenv" not in content:
-        content = content.replace("plugins=(", "plugins=(dotenv ")
-        zshrc.write_text(content)
-        if ui:
-            ui.success("Added dotenv plugin")
-        modified = True
-    elif "dotenv" in content:
-        pass
-
-    if DOTENV_MARKER not in content:
-        content = zshrc.read_text()
-        dotenv_setting = "# Auto-load .env files without prompting\nexport ZSH_DOTENV_PROMPT=false\n\n"
-
-        if "source $ZSH/oh-my-zsh.sh" in content:
-            content = content.replace("source $ZSH/oh-my-zsh.sh", dotenv_setting + "source $ZSH/oh-my-zsh.sh")
-            zshrc.write_text(content)
-        else:
-            with open(zshrc, "a") as f:
-                f.write(f"\n{dotenv_setting}")
-
-        if ui:
-            ui.success("Added ZSH_DOTENV_PROMPT setting")
-        modified = True
-
-    return modified
-
-
-def _configure_bun_path(config_file: Path, ui, quiet: bool = False) -> bool:
-    """Add bun to PATH in shell config (idempotent)."""
-    if not config_file.exists():
-        return False
-
-    content = config_file.read_text()
-    if BUN_PATH_MARKER in content or ".bun/bin" in content:
-        return False
-
-    if "fish" in config_file.name:
-        bun_path_line = f"\n{BUN_PATH_MARKER}\nset -gx PATH $HOME/.bun/bin $PATH\n"
-    else:
-        bun_path_line = f'\n{BUN_PATH_MARKER}\nexport PATH="$HOME/.bun/bin:$PATH"\n'
-
-    with open(config_file, "a") as f:
-        f.write(bun_path_line)
-
-    if ui and not quiet:
-        ui.success(f"Added bun to PATH in {config_file.name}")
-    return True
-
-
-def _set_zsh_default_shell(ui) -> bool:
-    """Set zsh as default shell if not already (idempotent)."""
-    import os
-
-    current_shell = os.environ.get("SHELL", "")
-    if current_shell.endswith("/zsh"):
-        return False
-
-    zsh_path = subprocess.run(["which", "zsh"], capture_output=True, text=True).stdout.strip()
-
-    if not zsh_path:
-        if ui:
-            ui.warning("zsh not found, skipping default shell change")
-        return False
-
-    try:
-        subprocess.run(["chsh", "-s", zsh_path], check=True, capture_output=True)
-        if ui:
-            ui.success("Set zsh as default shell")
-        return True
-    except subprocess.CalledProcessError:
-        if ui:
-            ui.warning("Could not change default shell (may need sudo)")
-        return False
-
-
 class ShellConfigStep(BaseStep):
-    """Step that configures shell with ccp alias, fzf, dotenv, and zsh."""
+    """Step that configures shell with claude alias."""
 
     name = "shell_config"
 
@@ -247,28 +118,11 @@ class ShellConfigStep(BaseStep):
         return False
 
     def run(self, ctx: InstallContext) -> None:
-        """Configure shell with alias, fzf, dotenv, and zsh settings."""
+        """Configure shell with claude alias."""
         ui = ctx.ui
         config_files = get_shell_config_files()
         modified_files: list[str] = []
-        needs_reload = False  # Track if shell reload is actually needed
-
-        if is_in_devcontainer():
-            zshrc = Path.home() / ".zshrc"
-            if zshrc.exists():
-                if ui:
-                    ui.status("Configuring zsh environment...")
-                if _configure_zsh_fzf(zshrc, ui):
-                    needs_reload = True
-                if _configure_zsh_dotenv(zshrc, ui):
-                    needs_reload = True
-                _set_zsh_default_shell(ui)
-
-        if ui:
-            ui.status("Configuring bun PATH...")
-        for config_file in config_files:
-            if _configure_bun_path(config_file, ui, quiet=True):
-                needs_reload = True
+        needs_reload = False
 
         if ui:
             ui.status("Configuring shell alias...")
@@ -282,26 +136,25 @@ class ShellConfigStep(BaseStep):
                 remove_old_alias(config_file)
 
             shell_type = "fish" if "fish" in config_file.name else "bash"
-            alias_line = get_alias_line(shell_type)
+            alias_lines = get_alias_lines(shell_type)
 
             try:
                 with open(config_file, "a") as f:
-                    f.write(f"\n{alias_line}\n")
+                    f.write(f"\n{alias_lines}\n")
                 modified_files.append(str(config_file))
                 if ui:
                     if alias_existed:
                         ui.success(f"Updated alias in {config_file.name}")
                     else:
                         ui.success(f"Added alias to {config_file.name}")
-                        needs_reload = True  # New alias added, reload needed
+                        needs_reload = True
             except (OSError, IOError) as e:
                 if ui:
                     ui.warning(f"Could not modify {config_file.name}: {e}")
 
         ctx.config["modified_shell_configs"] = modified_files
 
-        # Only show reload prompt if new config was actually added
         if ui and needs_reload and not ui.quiet:
             ui.print()
-            ui.status("To use the 'ccp' command, reload your shell:")
+            ui.status("To use the 'claude' command, reload your shell:")
             ui.print("  source ~/.bashrc  # or ~/.zshrc")

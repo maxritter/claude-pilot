@@ -8,9 +8,9 @@ const NotFoundComponent = () => {
   return (
     <>
       <SEO 
-        title="404 - Page Not Found | Claude CodePro Academy"
-        description="The page you're looking for doesn't exist. Return to Claude CodePro Academy homepage."
-        canonicalUrl="https://www.claude-code.pro/404"
+        title="404 - Page Not Found | Claude Pilot Academy"
+        description="The page you're looking for doesn't exist. Return to Claude Pilot Academy homepage."
+        canonicalUrl="https://www.claude-pilot.com/404"
       />
       <main className="min-h-screen flex items-center justify-center px-6 bg-gradient-dark">
         <div className="text-center">

@@ -26,8 +26,8 @@ const HeroSection = () => {
         {/* Badge */}
         <div className="animate-fade-in mb-4 xs:mb-6">
           <Badge variant="outline" className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 text-[10px] xs:text-xs sm:text-sm border-primary/50 text-primary">
-            <span className="hidden xs:inline">Production-Grade Development Environment for Claude Code</span>
-            <span className="xs:hidden">Production-Grade Dev for Claude Code</span>
+            <span className="hidden xs:inline">Claude Code, Done Right</span>
+            <span className="xs:hidden">Done Right</span>
           </Badge>
         </div>
 
@@ -39,10 +39,10 @@ const HeroSection = () => {
         {/* Subtitle */}
         <div className="animate-fade-in animation-delay-200 mb-6 xs:mb-8 px-1">
           <p className="text-muted-foreground text-[11px] xs:text-xs sm:text-sm md:text-base lg:text-lg max-w-[90%] xs:max-w-xl sm:max-w-2xl mx-auto leading-relaxed">
-            Quality automated. Context optimized. Testing enforced. Ship with confidence.
+            Claude is powerful but inconsistent. Pilot adds the structure it needs.
           </p>
           <p className="text-muted-foreground/70 text-[10px] xs:text-xs sm:text-sm md:text-base max-w-[90%] xs:max-w-xl sm:max-w-2xl mx-auto mt-2 leading-relaxed">
-            A shortcut to state-of-the-art Claude Code development, continuously improved.
+            Tests enforced. Context preserved. Quality automated.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ const HeroSection = () => {
             asChild
             className="w-full xs:w-auto text-sm xs:text-base border-primary/50 hover:bg-primary/10"
           >
-            <a href="https://github.com/maxritter/claude-codepro" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/maxritter/claude-pilot" target="_blank" rel="noopener noreferrer">
               <Github className="mr-1.5 xs:mr-2 h-3.5 w-3.5 xs:h-4 xs:w-4" />
               View on GitHub
             </a>

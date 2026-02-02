@@ -22,7 +22,7 @@ reviews:
 
   path_filters:
     # Exclude git-crypted directory from reviews
-    - "!ccp/**"
+    - "!pilot/**"
 
   path_instructions:
     # Test files - brief review focused on coverage

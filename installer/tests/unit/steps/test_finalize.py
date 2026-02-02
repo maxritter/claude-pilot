@@ -9,59 +9,57 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-class TestGetCcpVersion:
-    """Test _get_ccp_version function."""
+class TestGetPilotVersion:
+    """Test _get_pilot_version function."""
 
     @patch("installer.steps.finalize.subprocess.run")
-    def test_returns_version_from_ccp_binary(self, mock_run):
-        """_get_ccp_version returns version from ccp --version output."""
-        from installer.steps.finalize import _get_ccp_version
+    def test_returns_version_from_pilot_binary(self, mock_run):
+        """_get_pilot_version returns version from pilot --version output."""
+        from installer.steps.finalize import _get_pilot_version
 
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout="Claude CodePro v5.2.3",
+            stdout="Claude Pilot v5.2.3",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch("installer.steps.finalize.Path.cwd", return_value=Path(tmpdir)):
-                # Create fake ccp binary
-                bin_dir = Path(tmpdir) / ".claude" / "bin"
+            with patch("installer.steps.finalize.Path.home", return_value=Path(tmpdir)):
+                bin_dir = Path(tmpdir) / ".pilot" / "bin"
                 bin_dir.mkdir(parents=True)
-                ccp_path = bin_dir / "ccp"
-                ccp_path.write_text("#!/bin/bash\necho 'Claude CodePro v5.2.3'")
+                pilot_path = bin_dir / "pilot"
+                pilot_path.write_text("#!/bin/bash\necho 'Claude Pilot v5.2.3'")
 
-                version = _get_ccp_version()
+                version = _get_pilot_version()
                 assert version == "5.2.3"
 
     @patch("installer.steps.finalize.subprocess.run")
-    def test_returns_dev_version_from_ccp_binary(self, mock_run):
-        """_get_ccp_version returns dev version from ccp --version output."""
-        from installer.steps.finalize import _get_ccp_version
+    def test_returns_dev_version_from_pilot_binary(self, mock_run):
+        """_get_pilot_version returns dev version from pilot --version output."""
+        from installer.steps.finalize import _get_pilot_version
 
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout="Claude CodePro vdev-abc1234-20260125",
+            stdout="Claude Pilot vdev-abc1234-20260125",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch("installer.steps.finalize.Path.cwd", return_value=Path(tmpdir)):
-                bin_dir = Path(tmpdir) / ".claude" / "bin"
+            with patch("installer.steps.finalize.Path.home", return_value=Path(tmpdir)):
+                bin_dir = Path(tmpdir) / ".pilot" / "bin"
                 bin_dir.mkdir(parents=True)
-                ccp_path = bin_dir / "ccp"
-                ccp_path.write_text("#!/bin/bash")
+                pilot_path = bin_dir / "pilot"
+                pilot_path.write_text("#!/bin/bash")
 
-                version = _get_ccp_version()
+                version = _get_pilot_version()
                 assert version == "dev-abc1234-20260125"
 
-    def test_returns_fallback_when_ccp_not_found(self):
-        """_get_ccp_version returns installer version when ccp not found."""
+    def test_returns_fallback_when_pilot_not_found(self):
+        """_get_pilot_version returns installer version when pilot not found."""
         from installer import __version__
-        from installer.steps.finalize import _get_ccp_version
+        from installer.steps.finalize import _get_pilot_version
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch("installer.steps.finalize.Path.cwd", return_value=Path(tmpdir)):
-                # No ccp binary exists
-                version = _get_ccp_version()
+            with patch("installer.steps.finalize.Path.home", return_value=Path(tmpdir)):
+                version = _get_pilot_version()
                 assert version == __version__
 
 
@@ -89,7 +87,6 @@ class TestFinalizeStep:
                 ui=Console(non_interactive=True),
             )
 
-            # Finalize always runs
             assert step.check(ctx) is False
 
 
@@ -113,9 +110,7 @@ class TestFinalSuccessPanel:
                 ui=console,
             )
 
-            # Mock to capture output
             with patch.object(console, "next_steps") as mock_next_steps:
                 step.run(ctx)
 
-                # Should display next steps
                 mock_next_steps.assert_called()

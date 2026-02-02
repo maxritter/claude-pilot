@@ -13,12 +13,12 @@ from installer.config import load_config, save_config
 from installer.context import InstallContext
 from installer.errors import FatalInstallError, InstallationCancelled
 from installer.steps.base import BaseStep
-from installer.steps.bootstrap import BootstrapStep
 from installer.steps.claude_files import ClaudeFilesStep
 from installer.steps.config_files import ConfigFilesStep
 from installer.steps.dependencies import DependenciesStep
 from installer.steps.finalize import FinalizeStep
 from installer.steps.git_setup import GitSetupStep
+from installer.steps.migration import MigrationStep
 from installer.steps.prerequisites import PrerequisitesStep
 from installer.steps.shell_config import ShellConfigStep
 from installer.steps.vscode_extensions import VSCodeExtensionsStep
@@ -28,9 +28,9 @@ from installer.ui import Console
 def get_all_steps() -> list[BaseStep]:
     """Get all installation steps in order."""
     return [
-        BootstrapStep(),
         PrerequisitesStep(),
         GitSetupStep(),
+        MigrationStep(),
         ClaudeFilesStep(),
         ConfigFilesStep(),
         DependenciesStep(),
@@ -40,23 +40,13 @@ def get_all_steps() -> list[BaseStep]:
     ]
 
 
-def _validate_license_key(
-    console: Console,
-    project_dir: Path,
-    license_key: str,
-    local_mode: bool,
-    local_repo_dir: Path | None,
-) -> bool:
-    """Validate license key using ccp binary."""
-    bin_path = project_dir / ".claude" / "bin" / "ccp"
-
-    if local_mode and local_repo_dir:
-        local_bin = local_repo_dir / ".claude" / "bin" / "ccp"
-        if local_bin.exists():
-            bin_path = local_bin
+def _validate_license_key(console: Console, project_dir: Path, license_key: str) -> bool:
+    """Validate license key using pilot binary."""
+    _ = project_dir
+    bin_path = Path.home() / ".pilot" / "bin" / "pilot"
 
     if not bin_path.exists():
-        console.warning("CCP binary not found - skipping license validation")
+        console.warning("Pilot binary not found - skipping license validation")
         console.info("License will be validated on first run")
         return True
 
@@ -88,15 +78,12 @@ def _start_trial(
     local_mode: bool,
     local_repo_dir: Path | None,
 ) -> bool:
-    """Start a 7-day trial using ccp binary."""
-    bin_path = project_dir / ".claude" / "bin" / "ccp"
-    if not bin_path.exists() and local_mode and local_repo_dir:
-        local_bin = local_repo_dir / ".claude" / "bin" / "ccp"
-        if local_bin.exists():
-            bin_path = local_bin
+    """Start a 7-day trial using pilot binary."""
+    _ = project_dir, local_mode, local_repo_dir
+    bin_path = Path.home() / ".pilot" / "bin" / "pilot"
 
     if not bin_path.exists():
-        console.error("CCP binary not found")
+        console.error("Pilot binary not found")
         return False
 
     def _run_trial_start() -> bool:
@@ -114,7 +101,7 @@ def _start_trial(
                 data = json.loads(output)
                 if data.get("error") == "trial_already_used":
                     console.error("Trial has already been used on this machine")
-                    console.print("  [cyan]Subscribe at: https://license.claude-code.pro[/cyan]")
+                    console.print("  [cyan]Subscribe at: https://license.claude-pilot.com[/cyan]")
                     console.print("  [bold green]Use code TRIAL50OFF for 50% off your first month![/bold green]")
                 else:
                     console.error(f"Failed to start trial: {data.get('error', 'Unknown error')}")
@@ -140,17 +127,9 @@ def _check_trial_used(
     local_mode: bool,
     local_repo_dir: Path | None,
 ) -> tuple[bool | None, bool]:
-    """Check if trial has been used via ccp binary.
-
-    Returns (trial_used, can_reactivate):
-    - trial_used: True if trial was used, False if not, None if check failed
-    - can_reactivate: True if within 7-day window and can reactivate
-    """
-    bin_path = project_dir / ".claude" / "bin" / "ccp"
-    if not bin_path.exists() and local_mode and local_repo_dir:
-        local_bin = local_repo_dir / ".claude" / "bin" / "ccp"
-        if local_bin.exists():
-            bin_path = local_bin
+    """Check if trial has been used via pilot binary."""
+    _ = project_dir, local_mode, local_repo_dir
+    bin_path = Path.home() / ".pilot" / "bin" / "pilot"
 
     if not bin_path.exists():
         return None, False
@@ -179,16 +158,9 @@ def _get_license_info(
     local_repo_dir: Path | None = None,
     console: Console | None = None,
 ) -> dict | None:
-    """Get current license information using ccp binary.
-
-    Returns dict with: tier, email, created_at, expires_at, days_remaining, is_expired
-    or None if no license exists or ccp binary not found.
-    """
-    bin_path = project_dir / ".claude" / "bin" / "ccp"
-    if not bin_path.exists() and local and local_repo_dir:
-        local_bin = local_repo_dir / ".claude" / "bin" / "ccp"
-        if local_bin.exists():
-            bin_path = local_bin
+    """Get current license information using pilot binary."""
+    _ = project_dir, local, local_repo_dir, console
+    bin_path = Path.home() / ".pilot" / "bin" / "pilot"
 
     if not bin_path.exists():
         return None
@@ -245,8 +217,6 @@ def run_installation(ctx: InstallContext) -> None:
 def _prompt_license_key(
     console: Console,
     project_dir: Path,
-    local_mode: bool,
-    local_repo_dir: Path | None,
     max_attempts: int = 3,
 ) -> bool:
     """Prompt user for license key with retry logic."""
@@ -258,18 +228,18 @@ def _prompt_license_key(
                 console.print("  [dim]Please try again.[/dim]")
             continue
 
-        validated = _validate_license_key(console, project_dir, license_key, local_mode, local_repo_dir)
+        validated = _validate_license_key(console, project_dir, license_key)
         if validated:
             return True
         if attempt < max_attempts - 1:
             console.print()
             console.print("  [dim]Please check your license key and try again.[/dim]")
-            console.print("  [dim]Subscribe: https://license.claude-code.pro[/dim]")
+            console.print("  [dim]Subscribe: https://license.claude-pilot.com[/dim]")
             console.print()
 
     console.print()
     console.error(f"License validation failed after {max_attempts} attempts.")
-    console.print("  [bold]Subscribe at:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
+    console.print("  [bold]Subscribe at:[/bold] [cyan]https://license.claude-pilot.com[/cyan]")
     console.print()
     return False
 
@@ -291,7 +261,7 @@ def _handle_license_flow(
             console.print()
             console.print("  [bold]Enter your license key to continue:[/bold]")
             console.print()
-            if not _prompt_license_key(console, project_dir, local_mode, local_repo_dir):
+            if not _prompt_license_key(console, project_dir):
                 return 1
             console.print()
         return None
@@ -309,7 +279,7 @@ def _handle_license_flow(
     console.print()
     console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
     console.print()
-    console.print("  [dim]Subscribe: https://license.claude-code.pro[/dim]")
+    console.print("  [dim]Subscribe: https://license.claude-pilot.com[/dim]")
     console.print()
     console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
     console.print()
@@ -326,7 +296,7 @@ def _handle_license_flow(
         console.print("  [bold green]Use code TRIAL50OFF for 50% off your first month![/bold green]")
         console.print("  [dim](Regular pricing applies after first month)[/dim]")
         console.print()
-        if not _prompt_license_key(console, project_dir, local_mode, local_repo_dir):
+        if not _prompt_license_key(console, project_dir):
             return 1
     else:
         started = _start_trial(console, project_dir, local_mode, local_repo_dir)
@@ -335,12 +305,12 @@ def _handle_license_flow(
             console.success("Your 7-day trial has started!")
             console.print("  All features are unlocked for 7 days.")
             console.print()
-            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
+            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://license.claude-pilot.com[/cyan]")
             console.print()
         else:
             console.print()
             console.error("Could not start trial. Please enter a license key.")
-            console.print("  [bold]Subscribe at:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
+            console.print("  [bold]Subscribe at:[/bold] [cyan]https://license.claude-pilot.com[/cyan]")
             console.print()
             return 1
 
@@ -355,14 +325,7 @@ def _prompt_for_features(
     skip_golang: bool,
     skip_prompts: bool,
 ) -> tuple[bool, bool, bool]:
-    """Prompt for feature installation preferences. Returns (python, typescript, golang).
-
-    Priority order for each feature:
-    1. CLI flag (--skip-python etc) - explicit override, always wins
-    2. Saved config - always read, regardless of interactive mode
-    3. User prompt - only in interactive mode when no saved config
-    4. Default (False) - non-interactive mode with no saved config (don't enable by default)
-    """
+    """Prompt for feature installation preferences. Returns (python, typescript, golang)."""
     enable_python = not skip_python
     if not skip_python:
         if "enable_python" in saved_config:
@@ -410,13 +373,13 @@ def _prompt_for_features(
 
 
 def cmd_install(args: argparse.Namespace) -> int:
-    """Install Claude CodePro."""
+    """Install Claude Pilot."""
     console = Console(non_interactive=args.non_interactive, quiet=args.quiet)
 
     effective_local_repo_dir = args.local_repo_dir if args.local_repo_dir else (Path.cwd() if args.local else None)
     skip_prompts = args.non_interactive
     project_dir = Path.cwd()
-    saved_config = load_config(project_dir)
+    saved_config = load_config()
 
     license_info = _get_license_info(project_dir, args.local, effective_local_repo_dir, console)
     license_acknowledged = license_info is not None and license_info.get("tier") in ("trial", "standard", "enterprise")
@@ -438,7 +401,7 @@ def cmd_install(args: argparse.Namespace) -> int:
         saved_config["enable_python"] = enable_python
         saved_config["enable_typescript"] = enable_typescript
         saved_config["enable_golang"] = enable_golang
-        save_config(project_dir, saved_config)
+        save_config(saved_config)
 
     ctx = InstallContext(
         project_dir=project_dir,
@@ -472,25 +435,25 @@ def cmd_install(args: argparse.Namespace) -> int:
 
 def cmd_version(_args: argparse.Namespace) -> int:
     """Show version information."""
-    print(f"ccp-installer (build: {__build__})")
+    print(f"pilot-installer (build: {__build__})")
     return 0
 
 
-def find_ccp_binary() -> Path | None:
-    """Find the ccp binary in .claude/bin/."""
-    binary_path = Path.cwd() / ".claude" / "bin" / "ccp"
+def find_pilot_binary() -> Path | None:
+    """Find the pilot binary in ~/.pilot/bin/."""
+    binary_path = Path.home() / ".pilot" / "bin" / "pilot"
     if binary_path.exists():
         return binary_path
     return None
 
 
 def cmd_launch(args: argparse.Namespace) -> int:
-    """Launch Claude Code via ccp binary."""
+    """Launch Claude Code via pilot binary."""
     claude_args = args.args or []
 
-    ccp_path = find_ccp_binary()
-    if ccp_path:
-        cmd = [str(ccp_path)] + claude_args
+    pilot_path = find_pilot_binary()
+    if pilot_path:
+        cmd = [str(pilot_path)] + claude_args
     else:
         cmd = ["claude"] + claude_args
 
@@ -501,11 +464,11 @@ def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser(
         prog="installer",
-        description="Claude CodePro Installer",
+        description="Claude Pilot Installer",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    install_parser = subparsers.add_parser("install", help="Install Claude CodePro")
+    install_parser = subparsers.add_parser("install", help="Install Claude Pilot")
     install_parser.add_argument(
         "-n",
         "--non-interactive",
@@ -563,7 +526,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("version", help="Show version information")
 
-    launch_parser = subparsers.add_parser("launch", help="Launch Claude Code via ccp binary")
+    launch_parser = subparsers.add_parser("launch", help="Launch Claude Code via pilot binary")
     launch_parser.add_argument(
         "args",
         nargs="*",

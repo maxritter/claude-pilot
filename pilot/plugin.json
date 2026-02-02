@@ -1,0 +1,12 @@
+{
+  "name": "claude-pilot-plugin",
+  "version": "1.0.0",
+  "description": "Claude Pilot Plugin",
+  "author": {
+    "name": "Max Ritter",
+    "email": "mail@maxritter.net"
+  },
+  "repository": "https://github.com/maxritter/claude-pilot",
+  "license": "AGPL-3.0 / Paid",
+  "keywords": ["pilot", "claude-pilot"]
+}

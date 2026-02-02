@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 const InstallSection = () => {
   const [copied, setCopied] = useState(false);
-  const installCommand = "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.4.12/install.sh | bash";
+  const installCommand = "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash";
 
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(installCommand);
@@ -21,7 +21,7 @@ const InstallSection = () => {
             One-Command Installation
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Install Claude CodePro into any existing project
+            Install Claude Pilot into any existing project
           </p>
         </div>
 

@@ -24,6 +24,7 @@ var/
 wheels/
 node_modules/
 .pnpm-store/**
+.mypy_cache/**
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -224,18 +225,11 @@ __marimo__/
 CLAUDE.md
 .claude.backup.*
 *.backup
-.claude/rules/custom/*
-!.claude/rules/custom/python-rules.md
-!.claude/rules/custom/typescript-rules.md
 .claude/config/
-tmp/
-
-# Skills directory (generated/user-specific)
 .claude/skills/
+.claude/rules/
 
 # Build artifacts
-.claude/bin/
-.claude/installer/
 docs/plans
 docs/license
 .install-version

@@ -24,13 +24,13 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/^__version__ = \".*\"/__version__ = \"${nextRelease.version}\"/' installer/__init__.py ccp/__init__.py && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' README.md && sed -i 's/^DEFAULT_VERSION=\"[^\"]*\"/DEFAULT_VERSION=\"${nextRelease.version}\"/' install.sh && sed -i 's|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' .devcontainer/devcontainer.json && sed -i 's|claude-codepro/main|claude-codepro/v${nextRelease.version}|g; s|claude-codepro/v[0-9.]*|claude-codepro/v${nextRelease.version}|g' docs/site/src/components/InstallSection.tsx"
+        "prepareCmd": "sed -i 's/^__version__ = \".*\"/__version__ = \"${nextRelease.version}\"/' installer/__init__.py launcher/__init__.py && sed -i 's|claude-pilot/v[0-9.]*|claude-pilot/v${nextRelease.version}|g' .devcontainer/devcontainer.json"
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["installer/__init__.py", "ccp/__init__.py", "README.md", "install.sh", ".devcontainer/devcontainer.json", "docs/site/src/components/InstallSection.tsx"],
+        "assets": ["installer/__init__.py", "launcher/__init__.py", "README.md", "install.sh", ".devcontainer/devcontainer.json", "CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],

@@ -100,13 +100,11 @@ class TestPrerequisitesStep:
         step = PrerequisitesStep()
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Test all 4 combinations
             test_cases = [
-                # (is_local_install, in_devcontainer, should_skip)
-                (False, False, True),   # Not local, not devcontainer -> skip
-                (False, True, True),    # Not local, in devcontainer -> skip
-                (True, True, True),     # Local but in devcontainer -> skip
-                (True, False, False),   # Local and not devcontainer -> RUN (don't skip)
+                (False, False, True),
+                (False, True, True),
+                (True, True, True),
+                (True, False, False),
             ]
 
             for is_local, in_dc, should_skip in test_cases:
@@ -121,8 +119,7 @@ class TestPrerequisitesStep:
                         with patch("installer.steps.prerequisites.command_exists", return_value=False):
                             result = step.check(ctx)
                             assert result == should_skip, (
-                                f"is_local={is_local}, in_dc={in_dc}: "
-                                f"expected skip={should_skip}, got skip={result}"
+                                f"is_local={is_local}, in_dc={in_dc}: expected skip={should_skip}, got skip={result}"
                             )
 
 
@@ -252,7 +249,6 @@ class TestPrerequisitesHelpers:
         mock_exists.side_effect = lambda p: p == "/opt/homebrew/bin/brew"
         original_path = os.environ.get("PATH", "")
 
-        # Temporarily set PATH without homebrew
         os.environ["PATH"] = "/usr/bin:/bin"
         try:
             _ensure_homebrew_in_path()
@@ -270,11 +266,9 @@ class TestPrerequisitesHelpers:
         mock_exists.side_effect = lambda p: p == "/opt/homebrew/bin/brew"
         original_path = os.environ.get("PATH", "")
 
-        # Set PATH with homebrew already present
         os.environ["PATH"] = "/opt/homebrew/bin:/usr/bin:/bin"
         try:
             _ensure_homebrew_in_path()
-            # Should not duplicate
             assert os.environ["PATH"].count("/opt/homebrew/bin") == 1
         finally:
             os.environ["PATH"] = original_path

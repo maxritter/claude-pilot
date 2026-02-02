@@ -168,49 +168,55 @@ class TestLicenseInfo:
 
         assert callable(_get_license_info)
 
+    @patch("installer.cli.Path.home")
     @patch("subprocess.run")
-    def test_get_license_info_returns_valid_license(self, mock_run, tmp_path: Path):
+    def test_get_license_info_returns_valid_license(self, mock_run, mock_home, tmp_path: Path):
         """_get_license_info returns license data for valid license."""
         from installer.cli import _get_license_info
 
+        mock_home.return_value = tmp_path
         mock_run.return_value = MagicMock(
             returncode=0,
             stdout='{"tier": "standard", "email": "test@example.com"}',
             stderr="",
         )
 
-        bin_dir = tmp_path / ".claude" / "bin"
+        bin_dir = tmp_path / ".pilot" / "bin"
         bin_dir.mkdir(parents=True)
-        (bin_dir / "ccp").touch()
+        (bin_dir / "pilot").touch()
 
         result = _get_license_info(tmp_path)
         assert result is not None
         assert result["tier"] == "standard"
 
+    @patch("installer.cli.Path.home")
     @patch("subprocess.run")
-    def test_get_license_info_detects_expired_trial(self, mock_run, tmp_path: Path):
+    def test_get_license_info_detects_expired_trial(self, mock_run, mock_home, tmp_path: Path):
         """_get_license_info detects expired trial from stderr."""
         from installer.cli import _get_license_info
 
+        mock_home.return_value = tmp_path
         mock_run.return_value = MagicMock(
             returncode=1,
             stdout="",
             stderr='{"success": false, "error": "Trial expired", "tier": "trial"}',
         )
 
-        bin_dir = tmp_path / ".claude" / "bin"
+        bin_dir = tmp_path / ".pilot" / "bin"
         bin_dir.mkdir(parents=True)
-        (bin_dir / "ccp").touch()
+        (bin_dir / "pilot").touch()
 
         result = _get_license_info(tmp_path)
         assert result is not None
         assert result["tier"] == "trial"
         assert result.get("is_expired") is True
 
-    def test_get_license_info_returns_none_without_binary(self, tmp_path: Path):
-        """_get_license_info returns None when ccp binary doesn't exist."""
+    @patch("installer.cli.Path.home")
+    def test_get_license_info_returns_none_without_binary(self, mock_home, tmp_path: Path):
+        """_get_license_info returns None when pilot binary doesn't exist."""
         from installer.cli import _get_license_info
 
+        mock_home.return_value = tmp_path
         result = _get_license_info(tmp_path)
         assert result is None
 

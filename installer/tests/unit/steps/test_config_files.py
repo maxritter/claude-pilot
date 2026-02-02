@@ -12,5 +12,3 @@ class TestConfigFilesStep:
 
         step = ConfigFilesStep()
         assert step.name == "config_files"
-
-

@@ -6,8 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-CONFIG_DIR = ".claude/config"
-CONFIG_FILE = "ccp-config.json"
+CONFIG_FILE = "config.json"
 
 VALID_CONFIG_KEYS = frozenset(
     {
@@ -26,17 +25,14 @@ def _filter_valid_keys(config: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
 
 
-def get_config_path(project_dir: Path) -> Path:
-    """Get the path to the config file."""
-    return project_dir / CONFIG_DIR / CONFIG_FILE
+def get_config_path() -> Path:
+    """Get the path to the config file (~/.pilot/config.json)."""
+    return Path.home() / ".pilot" / CONFIG_FILE
 
 
-def load_config(project_dir: Path) -> dict[str, Any]:
-    """Load user configuration from .claude/config/ccp-config.json.
-
-    Automatically removes any deprecated/unknown keys.
-    """
-    config_path = get_config_path(project_dir)
+def load_config() -> dict[str, Any]:
+    """Load user configuration from ~/.pilot/config.json."""
+    config_path = get_config_path()
     if config_path.exists():
         try:
             raw_config = json.loads(config_path.read_text())
@@ -46,12 +42,11 @@ def load_config(project_dir: Path) -> dict[str, Any]:
     return {}
 
 
-def save_config(project_dir: Path, config: dict[str, Any]) -> bool:
-    """Save user configuration to .claude/config/ccp-config.json.
-
-    Automatically removes any deprecated/unknown keys before saving.
-    """
-    config_path = get_config_path(project_dir)
+def save_config(config: dict[str, Any] | None = None) -> bool:
+    """Save user configuration to ~/.pilot/config.json."""
+    if config is None:
+        config = {}
+    config_path = get_config_path()
     try:
         config_path.parent.mkdir(parents=True, exist_ok=True)
         filtered = _filter_valid_keys(config)

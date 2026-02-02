@@ -1,7 +1,7 @@
 {
   "name": "Claude Pilot",
   "short_name": "Pilot",
-  "description": "Claude Code, Done Right",
+  "description": "Production-Grade Development with Claude Code",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

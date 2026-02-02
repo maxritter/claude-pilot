@@ -14,13 +14,13 @@ PILOT_BIN = "$HOME/.pilot/bin/pilot"
 
 
 def get_alias_lines(shell_type: str) -> str:
-    """Get both claude and ccp alias lines for the given shell type."""
+    """Get pilot and ccp alias lines for the given shell type."""
     _ = shell_type
-    return f'{CLAUDE_ALIAS_MARKER}\nalias claude="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
+    return f'{CLAUDE_ALIAS_MARKER}\nalias pilot="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
 
 
 def alias_exists_in_file(config_file: Path) -> bool:
-    """Check if claude alias already exists in config file."""
+    """Check if claude/ccp/pilot alias already exists in config file."""
     if not config_file.exists():
         return False
     content = config_file.read_text()
@@ -29,6 +29,7 @@ def alias_exists_in_file(config_file: Path) -> bool:
         or OLD_CCP_MARKER in content
         or "alias ccp" in content
         or "alias claude" in content
+        or "alias pilot" in content
     )
 
 
@@ -43,10 +44,13 @@ def remove_old_alias(config_file: Path) -> bool:
         or CLAUDE_ALIAS_MARKER in content
         or "alias ccp" in content
         or "alias claude" in content
+        or "alias pilot" in content
         or "ccp()" in content
         or "claude()" in content
+        or "pilot()" in content
         or "function ccp" in content
         or "function claude" in content
+        or "function pilot" in content
     )
     if not has_old:
         return False
@@ -65,8 +69,10 @@ def remove_old_alias(config_file: Path) -> bool:
         if (
             stripped.startswith("alias ccp=")
             or stripped.startswith("alias claude=")
+            or stripped.startswith("alias pilot=")
             or stripped.startswith("alias ccp ")
             or stripped.startswith("alias claude ")
+            or stripped.startswith("alias pilot ")
         ):
             continue
 
@@ -76,6 +82,9 @@ def remove_old_alias(config_file: Path) -> bool:
         elif stripped.startswith("claude()") or stripped == "claude () {":
             inside_function = True
             brace_count = 0
+        elif stripped.startswith("pilot()") or stripped == "pilot () {":
+            inside_function = True
+            brace_count = 0
 
         if inside_function:
             brace_count += line.count("{") - line.count("}")
@@ -83,7 +92,11 @@ def remove_old_alias(config_file: Path) -> bool:
                 inside_function = False
             continue
 
-        if stripped.startswith("function ccp") or stripped.startswith("function claude"):
+        if (
+            stripped.startswith("function ccp")
+            or stripped.startswith("function claude")
+            or stripped.startswith("function pilot")
+        ):
             inside_function = True
             continue
 
@@ -156,5 +169,5 @@ class ShellConfigStep(BaseStep):
 
         if ui and needs_reload and not ui.quiet:
             ui.print()
-            ui.status("To use the 'claude' command, reload your shell:")
+            ui.status("To use the 'pilot' command, reload your shell:")
             ui.print("  source ~/.bashrc  # or ~/.zshrc")

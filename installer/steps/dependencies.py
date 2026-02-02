@@ -573,8 +573,8 @@ def _patch_claude_mem_config() -> bool:
         "CLAUDE_MEM_CONTEXT_FULL_COUNT": "10",
         "CLAUDE_MEM_CONTEXT_FULL_FIELD": "facts",
         "CLAUDE_MEM_CONTEXT_SESSION_COUNT": "10",
-        "CLAUDE_MEM_CHROMA_ENABLED": False,
-        "CLAUDE_MEM_VECTOR_DB": "none",
+        "CLAUDE_MEM_CHROMA_ENABLED": True,
+        "CLAUDE_MEM_VECTOR_DB": "chroma",
     }
 
     try:

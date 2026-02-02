@@ -127,18 +127,18 @@ class Console:
             return
 
         logo = """
-[bold cyan]   _____ _                 _          _____ _ _       _
-  / ____| |               | |        |  __ (_) |     | |
- | |    | | __ _ _   _  __| | ___    | |__) | | | ___| |_
- | |    | |/ _` | | | |/ _` |/ _ \\   |  ___/| | |/ _ \\ __|
- | |____| | (_| | |_| | (_| |  __/   | |    | | | (_) | |_
-  \\_____|_|\\__,_|\\__,_|\\__,_|\\___|   |_|    |_|_|\\___/ \\__|[/bold cyan]
+[bold blue]   ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗[/bold blue]    [bold cyan]██████╗ ██╗██╗      ██████╗ ████████╗[/bold cyan]
+[bold blue]  ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝[/bold blue]    [bold cyan]██╔══██╗██║██║     ██╔═══██╗╚══██╔══╝[/bold cyan]
+[bold blue]  ██║     ██║     ███████║██║   ██║██║  ██║█████╗  [/bold blue]    [bold cyan]██████╔╝██║██║     ██║   ██║   ██║[/bold cyan]
+[bold blue]  ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝  [/bold blue]    [bold cyan]██╔═══╝ ██║██║     ██║   ██║   ██║[/bold cyan]
+[bold blue]  ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗[/bold blue]    [bold cyan]██║     ██║███████╗╚██████╔╝   ██║[/bold cyan]
+[bold blue]   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝[/bold blue]    [bold cyan]╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝[/bold cyan]
 """
         self._console.print(logo)
 
         tagline = Text()
         tagline.append("  ✈ ", style="cyan")
-        tagline.append("Claude Code, Done Right", style="bold white")
+        tagline.append("Production-Grade Development with Claude Code", style="bold white")
         self._console.print(tagline)
         self._console.print()
 

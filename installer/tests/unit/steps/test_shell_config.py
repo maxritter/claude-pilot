@@ -39,8 +39,8 @@ class TestShellConfigStep:
             assert step.check(ctx) is False
 
     @patch("installer.steps.shell_config.get_shell_config_files")
-    def test_shell_config_run_adds_claude_alias(self, mock_get_files):
-        """ShellConfigStep.run adds claude alias to shell configs."""
+    def test_shell_config_run_adds_pilot_alias(self, mock_get_files):
+        """ShellConfigStep.run adds pilot and ccp aliases to shell configs."""
         from installer.context import InstallContext
         from installer.ui import Console
 
@@ -59,7 +59,7 @@ class TestShellConfigStep:
 
             content = bashrc.read_text()
             assert CLAUDE_ALIAS_MARKER in content
-            assert "alias claude=" in content
+            assert "alias pilot=" in content
             assert "alias ccp=" in content
             assert PILOT_BIN in content
 
@@ -86,7 +86,7 @@ class TestShellConfigStep:
             assert "wrapper.py" not in content
             assert OLD_CCP_MARKER not in content
             assert CLAUDE_ALIAS_MARKER in content
-            assert "alias claude=" in content
+            assert "alias pilot=" in content
 
 
 class TestAliasLines:
@@ -98,19 +98,21 @@ class TestAliasLines:
         assert isinstance(result, str)
         assert len(result) > 0
 
-    def test_get_alias_lines_contains_both_aliases(self):
-        """Alias lines contain both claude and ccp aliases."""
+    def test_get_alias_lines_contains_pilot_and_ccp_aliases(self):
+        """Alias lines contain pilot and ccp aliases (not claude to avoid overriding binary)."""
         result = get_alias_lines("bash")
-        assert "alias claude=" in result
+        assert "alias pilot=" in result
         assert "alias ccp=" in result
+        assert "alias claude=" not in result
         assert PILOT_BIN in result
         assert CLAUDE_ALIAS_MARKER in result
 
     def test_get_alias_lines_fish_uses_alias_syntax(self):
-        """Fish alias uses alias syntax for both aliases."""
+        """Fish alias uses alias syntax for pilot and ccp aliases."""
         result = get_alias_lines("fish")
-        assert "alias claude=" in result
+        assert "alias pilot=" in result
         assert "alias ccp=" in result
+        assert "alias claude=" not in result
         assert PILOT_BIN in result
         assert CLAUDE_ALIAS_MARKER in result
 

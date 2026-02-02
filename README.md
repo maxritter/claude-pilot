@@ -2,9 +2,9 @@
 
 <img src="docs/img/logo.png" alt="Claude Pilot" width="400">
 
-### Claude Code, Done Right
+### ✈︎ Production-Grade Development with Claude Code
 
-Claude is powerful but inconsistent. Pilot adds the structure it needs:</br>
+Claude Code ships fast but breaks things — Pilot fixes that:</br>
 **Tests enforced. Context preserved. Quality automated.**
 
 [![Version](https://img.shields.io/github/v/release/maxritter/claude-pilot?label=Version&color=orange)](https://github.com/maxritter/claude-pilot/releases)
@@ -26,7 +26,7 @@ First, `cd` into your project folder, then run:
 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
 ```
 
-After installation, run `claude` to launch Claude Pilot. Use `/sync` to load rules and `/spec` for planned features.
+After installation, run `pilot` to launch Claude Pilot. Use `/sync` to load rules and `/spec` for planned features.
 
 ---
 
@@ -50,7 +50,7 @@ Claude Code writes code fast. But without structure, you get:
 - **Session amnesia** — Every restart, you re-explain everything
 - **Inconsistent results** — Same prompt, different outcomes
 
-Sound familiar? Pilot adds the structure Claude needs to be reliable.
+Sound familiar? Pilot fixes that.
 
 ---
 
@@ -78,7 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install
 
 You'll be asked to choose between **Dev Container** or **Local Installation**.
 
-After installation, run `claude` in your project folder to start Claude Pilot.
+After installation, run `pilot` in your project folder to start Claude Pilot.
 
 ### 📌 Installing a Specific Version
 
@@ -132,7 +132,7 @@ VERSION=6.0.2 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilo
 - **Automated Container Setup** - Isolated Linux environment with pre-configured tools and extensions
 - **Extended Language Support** - Optionally install extended support for Python, TypeScript & Go
 - **Automated Updater** - Updates Pilot to the latest version when launched over the binary
-- **Shell Integration** - Auto-configures bash, fish and zsh so `claude` launches Pilot
+- **Shell Integration** - Auto-configures bash, fish and zsh with `pilot` alias (and `ccp` for migration)
 
 ---
 
@@ -152,10 +152,10 @@ VERSION=6.0.2 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilo
 
 ### 🔄 Sync Rules & Skills
 
-Run `/sync` to sync custom rules and skills with your codebase. Run it once initially, then anytime after major changes:
+Run `/sync` to sync custom rules and skills with your codebase. Run it once initially, then anytime again:
 
 ```bash
-claude
+pilot
 > /sync
 ```
 
@@ -164,7 +164,7 @@ claude
 Best for complex features, refactoring, or when you want to review a plan before implementation:
 
 ```bash
-claude
+pilot
 > /spec "Add user authentication with OAuth and JWT tokens"
 ```
 
@@ -188,24 +188,22 @@ Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement
 Best for bug fixes, small improvements, and exploratory work:
 
 ```bash
-claude
+pilot
 > Fix the null pointer bug in user.py
 ```
 
 ### 🧠 Online Learning
 
-Capture non-obvious discoveries as reusable skills. Automatically prompted by the context monitor, or invoke manually:
+Capture non-obvious discoveries as reusable skills. Automatically prompted by the context monitor or manually:
 
 ```bash
-claude
+pilot
 > /learn "Extract the debugging workflow we used for the race condition"
 ```
 
 ### 📐 Rules, Commands & Skills
 
-Claude Pilot automatically installs best-practice rules, commands, and coding standard skills when you run the installer.
-
-Create your own in your project's `.claude/` folder:
+Create your own rules, commands or skills in your project's `.claude/` folder:
 
 | Type         | Loaded                            | Best for                                |
 | ------------ | --------------------------------- | --------------------------------------- |
@@ -213,12 +211,14 @@ Create your own in your project's `.claude/` folder:
 | **Commands** | On demand via `/command`          | Specific workflows or multi-step tasks  |
 | **Skills**   | Dynamically when relevant         | Specialized knowledge for specific tasks |
 
+Claude Pilot automatically installs best-practice rules, commands, and coding standard skills.
+
 ### 👥 Team Vault
 
 Share rules, commands, and skills across your team via a private Git repository:
 
 ```bash
-claude
+pilot
 > /sync  # Configure team vault and sync assets
 ```
 

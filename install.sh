@@ -441,9 +441,7 @@ if ! is_in_container; then
 	echo "  Claude Pilot Installer (v${VERSION})"
 	echo "======================================================================"
 	echo ""
-	echo "  ⚠️  Run this in your PROJECT FOLDER (not home directory)"
-	echo ""
-	echo "  Current directory: $(pwd)"
+	echo "  Current project folder: $(pwd)"
 	echo ""
 
 	if [ -d ".devcontainer" ]; then
@@ -508,7 +506,6 @@ fi
 if [ "$USE_LOCAL_INSTALLER" = true ]; then
 	if [ -d "installer" ] && [ -f "pyproject.toml" ]; then
 		echo "  [OK] Using local installer from current directory"
-		# Create symlink structure expected by run_installer
 		rm -rf "$HOME/.pilot/installer"
 		mkdir -p "$HOME/.pilot/installer"
 		ln -sf "$(pwd)/installer" "$HOME/.pilot/installer/installer"

@@ -15,7 +15,7 @@ const SEO = ({
   description = "Claude Code ships fast but breaks things — Pilot fixes that. Tests enforced, context preserved, quality automated.",
   keywords = "Claude Pilot, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
   canonicalUrl = "https://www.claude-pilot.com",
-  ogImage = "https://storage.googleapis.com/gpt-engineer-file-uploads/qmjt5RyHpNP9GFnerZmcYYkrVd13/social-images/social-1762415471953-share.png",
+  ogImage = "https://www.claude-pilot.com/logo.png",
   type = "website",
   structuredData
 }: SEOProps) => {

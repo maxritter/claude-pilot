@@ -18,7 +18,7 @@
         "ALLOWED_SEARCH_ENGINES": "duckduckgo,bing,exa"
       }
     },
-    "code-search": {
+    "grep-mcp": {
       "type": "http",
       "url": "https://mcp.grep.app"
     },

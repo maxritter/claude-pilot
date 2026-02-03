@@ -76,6 +76,5 @@
     "pr": ""
   },
   "respectGitignore": false,
-  "cleanupPeriodDays": 31,
-  "plansDirectory": "./docs/plans"
+  "cleanupPeriodDays": 31
 }

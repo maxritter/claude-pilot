@@ -35,6 +35,10 @@ conventional_commits = true
 filter_unconventional = true
 split_commits = false
 
+# Only include commits from v6.0.0 onwards (project rebranding)
+# This prevents git-cliff from regenerating old changelog entries
+skip_tags = "v[0-5].*"
+
 # Commit preprocessors
 commit_preprocessors = [
     # Remove issue numbers from commits

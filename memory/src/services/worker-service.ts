@@ -316,7 +316,7 @@ export class WorkerService {
       });
 
       const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-      const STALE_SESSION_THRESHOLD_MS = 30 * 60 * 1000;
+      const STALE_SESSION_THRESHOLD_MS = 60 * 60 * 1000;
       this.cleanupInterval = setInterval(async () => {
         try {
           const staleSessions = await this.sessionManager.cleanupStaleSessions(STALE_SESSION_THRESHOLD_MS);

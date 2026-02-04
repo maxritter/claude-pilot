@@ -13,7 +13,6 @@ const navItems = [
   { icon: 'lucide:search', label: 'Search', href: '#/search' },
   { icon: 'lucide:tags', label: 'Tags', href: '#/tags' },
   { icon: 'lucide:activity', label: 'Live', href: '#/live' },
-  { icon: 'lucide:settings', label: 'Settings', href: '#/settings' },
 ];
 
 export function SidebarNav({ currentPath, collapsed = false }: SidebarNavProps) {

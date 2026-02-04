@@ -328,7 +328,8 @@ export class SessionRoutes extends BaseRouteHandler {
       });
     }
 
-    this.startGeneratorWithProvider(session, this.getSelectedProvider(), 'init');
+    // Fixes: https://github.com/maxritter/claude-pilot/issues/43
+    this.ensureGeneratorRunning(sessionDbId, 'init');
 
     this.eventBroadcaster.broadcastSessionStarted(sessionDbId, session.project);
 

@@ -37,10 +37,8 @@ export function CommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Build command list
   const commands = useMemo<InternalCommand[]>(() => {
     const cmds: InternalCommand[] = [
-      // Navigation
       {
         id: 'nav-dashboard',
         label: 'Go to Dashboard',
@@ -74,15 +72,6 @@ export function CommandPalette({
         action: () => onNavigate('/search'),
       },
       {
-        id: 'nav-settings',
-        label: 'Go to Settings',
-        shortcut: 'G S',
-        category: 'navigation',
-        icon: 'lucide:settings',
-        action: () => onNavigate('/settings'),
-      },
-      // Actions
-      {
         id: 'action-theme',
         label: 'Toggle Theme',
         shortcut: getShortcutDisplay(SHORTCUTS.TOGGLE_THEME),
@@ -98,7 +87,6 @@ export function CommandPalette({
         icon: 'lucide:panel-left',
         action: onToggleSidebar,
       },
-      // Projects
       {
         id: 'project-all',
         label: 'All Projects',
@@ -117,7 +105,6 @@ export function CommandPalette({
     return cmds;
   }, [onNavigate, onToggleTheme, onToggleSidebar, projects, onSelectProject]);
 
-  // Filter commands
   const filteredCommands = useMemo(() => {
     if (!query) return commands;
     const lowerQuery = query.toLowerCase();
@@ -128,12 +115,10 @@ export function CommandPalette({
     );
   }, [commands, query]);
 
-  // Reset selection when query changes
   useEffect(() => {
     setSelectedIndex(0);
   }, [query]);
 
-  // Focus input when opened
   useEffect(() => {
     if (open) {
       setQuery('');
@@ -142,7 +127,6 @@ export function CommandPalette({
     }
   }, [open]);
 
-  // Scroll selected item into view
   useEffect(() => {
     if (!listRef.current) return;
     const selected = listRef.current.querySelector('[data-selected="true"]');
@@ -179,7 +163,6 @@ export function CommandPalette({
 
   if (!open) return null;
 
-  // Group commands by category
   const groupedCommands = filteredCommands.reduce(
     (acc, cmd) => {
       if (!acc[cmd.category]) acc[cmd.category] = [];

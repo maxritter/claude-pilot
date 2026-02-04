@@ -16,7 +16,6 @@ export interface SequenceShortcut {
   action: string;
 }
 
-// Single-key shortcuts with modifiers
 export const SHORTCUTS: Record<string, Shortcut> = {
   COMMAND_PALETTE: {
     key: 'k',
@@ -49,16 +48,13 @@ export const SHORTCUTS: Record<string, Shortcut> = {
   },
 } as const;
 
-// Sequence shortcuts (g then d, etc.)
 export const SEQUENCE_SHORTCUTS: SequenceShortcut[] = [
   { sequence: ['g', 'd'], description: 'Go to Dashboard', action: 'navigate:/' },
   { sequence: ['g', 'm'], description: 'Go to Memories', action: 'navigate:/memories' },
   { sequence: ['g', 'l'], description: 'Go to Live', action: 'navigate:/live' },
-  { sequence: ['g', 's'], description: 'Go to Settings', action: 'navigate:/settings' },
   { sequence: ['g', 'r'], description: 'Go to Search', action: 'navigate:/search' },
 ];
 
-// Command palette commands
 export interface Command {
   id: string;
   label: string;

@@ -233,6 +233,7 @@ CLAUDE.md
 docs/plans
 docs/license
 .install-version
+bun.lock
 
 # Kiro
 .kiro/

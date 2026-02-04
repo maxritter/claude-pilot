@@ -52,6 +52,8 @@
       "mcp__plugin_pilot_context7__*",
       "mcp__plugin_pilot_web-search__*",
       "mcp__plugin_pilot_web-fetch__*",
+      "mcp__plugin_pilot_grep-mcp__grep_query",
+      "mcp__plugin_pilot_grep-mcp__searchGitHub",
       "Skill(spec)",
       "Skill(sync)",
       "Skill(learn)",

@@ -106,15 +106,15 @@ class FinalizeStep(BaseStep):
         if ctx.is_local_install:
             steps.append(
                 (
-                    "Memory Observation Dashboard (Optional)",
-                    "View stored memories at http://localhost:37777",
+                    "Claude Pilot UI",
+                    "Open http://localhost:37777 → Browse memories, sessions, tags, and live activity",
                 )
             )
         else:
             steps.append(
                 (
-                    "Memory Observation Dashboard (Optional)",
-                    "View stored memories and observations at http://localhost:37777\n"
+                    "Claude Pilot UI",
+                    "Open http://localhost:37777 → Browse memories, sessions, tags, and live activity\n"
                     "     (Check VS Code Ports tab if 37777 is unavailable - may be 37778)",
                 )
             )

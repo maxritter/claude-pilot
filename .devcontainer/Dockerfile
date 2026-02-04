@@ -20,6 +20,7 @@ RUN rm -rf /var/lib/apt/lists/* && \
         git \
         jq \
         vim \
-        netcat-openbsd && \
+        netcat-openbsd \
+        socat && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

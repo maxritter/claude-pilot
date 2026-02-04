@@ -18,29 +18,22 @@ import { HOOK_TIMEOUTS } from '../../shared/hook-constants.js';
 
 const execAsync = promisify(exec);
 
-// Standard paths for PID file management
 const DATA_DIR = path.join(homedir(), '.claude-mem');
 const PID_FILE = path.join(DATA_DIR, 'worker.pid');
 
-// Process patterns to clean up (orphaned from previous sessions)
-// These are the main claude-mem processes that can accumulate if not properly terminated
 const ORPHAN_PROCESS_PATTERNS = [
-  'mcp-server',      // Main MCP server process
-  'worker-service',  // Background worker daemon
-  'claude-mem',      // Any claude-mem related process
-  'chroma-mcp'       // ChromaDB MCP subprocess
+  'mcp-server',
+  'worker-service',
+  'claude-mem',
+  'chroma-mcp'
 ];
 
-// Only kill processes older than this to avoid killing the current session
-// Reduced from 30 to 10 minutes for faster cleanup of zombie processes
-const ORPHAN_MAX_AGE_MINUTES = 10;
+const ORPHAN_MAX_AGE_MINUTES = 60;
 
-// Known init process names for container detection (tini, dumb-init, etc.)
 const KNOWN_INIT_PROCESS_NAMES = [
   'init', 'systemd', 'tini', 'dumb-init', 'docker-init', 's6-svscan', 'runsv'
 ];
 
-// Pattern for Claude CLI/SDK processes spawned by claude-mem
 const CLAUDE_CLI_PATTERN = 'claude.*--output-format.*stream-json';
 
 export interface PidInfo {
@@ -81,7 +74,6 @@ export function removePidFile(): void {
   try {
     unlinkSync(PID_FILE);
   } catch (error) {
-    // [ANTI-PATTERN IGNORED]: Cleanup function - PID file removal failure is non-critical
     logger.warn('SYSTEM', 'Failed to remove PID file', { path: PID_FILE }, error as Error);
   }
 }
@@ -103,17 +95,14 @@ export async function getChildProcesses(parentPid: number): Promise<number[]> {
     return [];
   }
 
-  // SECURITY: Validate PID is a positive integer to prevent command injection
   if (!Number.isInteger(parentPid) || parentPid <= 0) {
     logger.warn('SYSTEM', 'Invalid parent PID for child process enumeration', { parentPid });
     return [];
   }
 
   try {
-    // PowerShell Get-Process instead of WMIC (deprecated in Windows 11)
     const cmd = `powershell -NoProfile -NonInteractive -Command "Get-Process | Where-Object { \\$_.ParentProcessId -eq ${parentPid} } | Select-Object -ExpandProperty Id"`;
     const { stdout } = await execAsync(cmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND });
-    // PowerShell outputs just numbers (one per line), simpler than WMIC's "ProcessId=1234" format
     return stdout
       .split('\n')
       .map(line => line.trim())
@@ -121,7 +110,6 @@ export async function getChildProcesses(parentPid: number): Promise<number[]> {
       .map(line => parseInt(line, 10))
       .filter(pid => pid > 0);
   } catch (error) {
-    // Shutdown cleanup - failure is non-critical, continue without child process cleanup
     logger.error('SYSTEM', 'Failed to enumerate child processes', { parentPid }, error as Error);
     return [];
   }
@@ -133,7 +121,6 @@ export async function getChildProcesses(parentPid: number): Promise<number[]> {
  * Unix: uses SIGKILL
  */
 export async function forceKillProcess(pid: number): Promise<void> {
-  // SECURITY: Validate PID is a positive integer to prevent command injection
   if (!Number.isInteger(pid) || pid <= 0) {
     logger.warn('SYSTEM', 'Invalid PID for force kill', { pid });
     return;
@@ -141,14 +128,12 @@ export async function forceKillProcess(pid: number): Promise<void> {
 
   try {
     if (process.platform === 'win32') {
-      // /T kills entire process tree, /F forces termination
       await execAsync(`taskkill /PID ${pid} /T /F`, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND });
     } else {
       process.kill(pid, 'SIGKILL');
     }
     logger.info('SYSTEM', 'Killed process', { pid });
   } catch (error) {
-    // [ANTI-PATTERN IGNORED]: Shutdown cleanup - process already exited, continue
     logger.debug('SYSTEM', 'Process already exited during force kill', { pid }, error as Error);
   }
 }
@@ -165,7 +150,6 @@ export async function waitForProcessesExit(pids: number[], timeoutMs: number): P
         process.kill(pid, 0);
         return true;
       } catch (error) {
-        // [ANTI-PATTERN IGNORED]: Tight loop checking 100s of PIDs every 100ms during cleanup
         return false;
       }
     });
@@ -192,7 +176,6 @@ function parseElapsedTime(etime: string): number {
   const cleaned = etime.trim();
   let totalMinutes = 0;
   
-  // Handle DD-HH:MM:SS format
   if (cleaned.includes('-')) {
     const [daysPart, timePart] = cleaned.split('-');
     totalMinutes += parseInt(daysPart, 10) * 24 * 60;
@@ -201,10 +184,8 @@ function parseElapsedTime(etime: string): number {
   } else {
     const parts = cleaned.split(':').map(n => parseInt(n, 10));
     if (parts.length === 3) {
-      // HH:MM:SS
       totalMinutes = parts[0] * 60 + parts[1];
     } else if (parts.length === 2) {
-      // MM:SS
       totalMinutes = parts[0];
     }
   }
@@ -234,74 +215,63 @@ function isInitLikeProcess(processName: string): boolean {
  * @returns true if the process is orphaned, false otherwise (or on error)
  */
 export async function isOrphanedProcess(pid: number): Promise<boolean> {
-  // SECURITY: Validate PID
   if (!Number.isInteger(pid) || pid <= 0) {
     return false;
   }
 
-  // Never consider current process as orphaned
   if (pid === process.pid) {
     return false;
   }
 
-  // PID 1 cannot be orphaned (it IS init)
   if (pid === 1) {
     return false;
   }
 
   try {
     if (process.platform === 'win32') {
-      // Windows: Check parent process ID using PowerShell
       const cmd = `powershell -NoProfile -NonInteractive -Command "(Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}').ParentProcessId"`;
       const { stdout } = await execAsync(cmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND });
       const ppid = parseInt(stdout.trim(), 10);
 
       if (isNaN(ppid)) {
-        return false; // Process may have exited
+        return false;
       }
 
-      // On Windows, orphaned processes typically have PPID=0 or parent doesn't exist
       if (ppid === 0) {
         return true;
       }
 
-      // Check if parent still exists
       try {
         const checkCmd = `powershell -NoProfile -NonInteractive -Command "Get-Process -Id ${ppid} -ErrorAction SilentlyContinue | Measure-Object | Select-Object -ExpandProperty Count"`;
         const { stdout: countStr } = await execAsync(checkCmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND });
         const count = parseInt(countStr.trim(), 10);
-        return count === 0; // Parent doesn't exist = orphaned
+        return count === 0;
       } catch {
-        return false; // Error checking parent, assume not orphaned
+        return false;
       }
     } else {
-      // Unix: Check PPID using /proc filesystem (faster than ps)
       const { stdout } = await execAsync(`cat /proc/${pid}/stat 2>/dev/null | awk '{print $4}'`);
       const ppid = parseInt(stdout.trim(), 10);
 
       if (isNaN(ppid)) {
-        return false; // Process may have exited
+        return false;
       }
 
-      // PPID === 1 means adopted by init (orphaned)
       if (ppid === 1) {
         return true;
       }
 
-      // Check if parent is a known init-like process (for containers)
       try {
         const { stdout: parentComm } = await execAsync(`cat /proc/${ppid}/comm 2>/dev/null`);
         if (isInitLikeProcess(parentComm.trim())) {
           return true;
         }
       } catch {
-        // Can't read parent comm, assume not orphaned
       }
 
       return false;
     }
   } catch (error) {
-    // SAFETY: On any error, return false to avoid killing active processes
     logger.debug('SYSTEM', 'Error checking if process is orphaned, assuming active', { pid }, error as Error);
     return false;
   }
@@ -323,7 +293,6 @@ export async function cleanupOrphanedClaudeProcesses(): Promise<void> {
 
   try {
     if (process.platform === 'win32') {
-      // Windows: Find Claude processes with the SDK pattern
       const cmd = `powershell -NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { \\$_.CommandLine -match '${CLAUDE_CLI_PATTERN}' -and \\$_.ProcessId -ne ${currentPid} } | Select-Object ProcessId | ConvertTo-Json"`;
       const { stdout } = await execAsync(cmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND });
 
@@ -341,7 +310,6 @@ export async function cleanupOrphanedClaudeProcesses(): Promise<void> {
         }
       }
     } else {
-      // Unix: Find Claude processes using pgrep
       const { stdout } = await execAsync(
         `pgrep -f '${CLAUDE_CLI_PATTERN}' 2>/dev/null || true`
       );
@@ -366,7 +334,6 @@ export async function cleanupOrphanedClaudeProcesses(): Promise<void> {
     return;
   }
 
-  // Check each candidate to see if it's actually orphaned
   for (const pid of candidatePids) {
     const isOrphaned = await isOrphanedProcess(pid);
     if (isOrphaned) {
@@ -390,21 +357,17 @@ export async function cleanupOrphanedClaudeProcesses(): Promise<void> {
     pids: orphanedPids
   });
 
-  // Kill orphaned processes
   for (const pid of orphanedPids) {
     try {
       if (process.platform === 'win32') {
         execSync(`taskkill /PID ${pid} /T /F`, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND, stdio: 'ignore' });
       } else {
-        // Try SIGTERM first for graceful shutdown
         process.kill(pid, 'SIGTERM');
-        // Wait briefly then SIGKILL if still alive
         await new Promise(r => setTimeout(r, 500));
         try {
-          process.kill(pid, 0); // Check if still alive
+          process.kill(pid, 0);
           process.kill(pid, 'SIGKILL');
         } catch {
-          // Process already exited from SIGTERM
         }
       }
     } catch (error) {
@@ -439,8 +402,6 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
 
   try {
     if (isWindows) {
-      // Windows: Use PowerShell Get-CimInstance instead of WMIC (deprecated in Windows 11)
-      // Build pattern match for all process types
       const patternConditions = ORPHAN_PROCESS_PATTERNS
         .map(p => `\\$_.CommandLine -like '*${p}*'`)
         .join(' -or ');
@@ -453,31 +414,26 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
         return;
       }
 
-      // Parse JSON output from PowerShell
       const processes = JSON.parse(stdout);
       const processList = Array.isArray(processes) ? processes : [processes];
       const now = Date.now();
 
       for (const proc of processList) {
         const pid = proc.ProcessId;
-        // SECURITY: Validate PID is positive integer
         if (!Number.isInteger(pid) || pid <= 0 || pid === currentPid) continue;
 
-        // Parse Windows WMI date format: /Date(1234567890123)/
         const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\//);
+
         if (creationMatch) {
           const creationTime = parseInt(creationMatch[1], 10);
           const ageMinutes = (now - creationTime) / (1000 * 60);
 
-          // Only consider processes older than threshold as candidates
           if (ageMinutes >= ORPHAN_MAX_AGE_MINUTES) {
             candidatePids.push(pid);
           }
         }
       }
     } else {
-      // Unix: Use ps with elapsed time to filter by age
-      // Output format: PID ELAPSED COMMAND
       const patternRegex = ORPHAN_PROCESS_PATTERNS.join('|');
       const { stdout } = await execAsync(
         `ps -eo pid,etime,command | grep -E "${patternRegex}" | grep -v grep || true`
@@ -490,25 +446,21 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
 
       const lines = stdout.trim().split('\n');
       for (const line of lines) {
-        // Parse: "  1234  01:23:45 /path/to/process"
         const match = line.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
         if (!match) continue;
 
         const pid = parseInt(match[1], 10);
         const etime = match[2];
 
-        // SECURITY: Validate PID is positive integer and not current process
         if (!Number.isInteger(pid) || pid <= 0 || pid === currentPid) continue;
 
         const ageMinutes = parseElapsedTime(etime);
-        // Only consider processes older than threshold as candidates
         if (ageMinutes >= ORPHAN_MAX_AGE_MINUTES) {
           candidatePids.push(pid);
         }
       }
     }
   } catch (error) {
-    // Orphan cleanup is non-critical - log and continue
     logger.error('SYSTEM', 'Failed to enumerate processes', {}, error as Error);
     return;
   }
@@ -521,7 +473,6 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
     return;
   }
 
-  // Filter candidates by PPID check - only kill truly orphaned processes
   for (const pid of candidatePids) {
     const isOrphaned = await isOrphanedProcess(pid);
     if (isOrphaned) {
@@ -550,10 +501,8 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
     maxAgeMinutes: ORPHAN_MAX_AGE_MINUTES
   });
 
-  // Kill only orphaned processes
   if (isWindows) {
     for (const pid of orphanedPids) {
-      // SECURITY: Double-check PID validation before using in taskkill command
       if (!Number.isInteger(pid) || pid <= 0) {
         logger.warn('SYSTEM', 'Skipping invalid PID', { pid });
         continue;
@@ -561,7 +510,6 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
       try {
         execSync(`taskkill /PID ${pid} /T /F`, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND, stdio: 'ignore' });
       } catch (error) {
-        // [ANTI-PATTERN IGNORED]: Cleanup loop - process may have exited, continue to next PID
         logger.debug('SYSTEM', 'Failed to kill process, may have already exited', { pid }, error as Error);
       }
     }
@@ -570,7 +518,6 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
       try {
         process.kill(pid, 'SIGKILL');
       } catch (error) {
-        // [ANTI-PATTERN IGNORED]: Cleanup loop - process may have exited, continue to next PID
         logger.debug('SYSTEM', 'Process already exited', { pid }, error as Error);
       }
     }
@@ -627,10 +574,7 @@ export function createSignalHandler(
       await shutdownFn();
       process.exit(0);
     } catch (error) {
-      // Top-level signal handler - log any shutdown error and exit
       logger.error('SYSTEM', 'Error during shutdown', {}, error as Error);
-      // Exit gracefully: Windows Terminal won't keep tab open on exit 0
-      // Even on shutdown errors, exit cleanly to prevent tab accumulation
       process.exit(0);
     }
   };
@@ -658,7 +602,6 @@ export async function getProcessStats(): Promise<ProcessStats> {
 
   try {
     if (process.platform === 'win32') {
-      // Windows: Use PowerShell
       const cmd = `powershell -NoProfile -NonInteractive -Command "
         $claudeMem = (Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'claude-mem|worker-service|mcp-server' -and $_.ProcessId -ne ${currentPid} }).Count
         $claudeCli = (Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '${CLAUDE_CLI_PATTERN}' }).Count
@@ -671,7 +614,6 @@ export async function getProcessStats(): Promise<ProcessStats> {
       claudeCliCount = cc;
       chromaCount = ch;
     } else {
-      // Unix: Use pgrep
       try {
         const { stdout: cmOut } = await execAsync(
           `pgrep -f 'claude-mem|worker-service|mcp-server' 2>/dev/null | grep -v "^${currentPid}$" | wc -l`

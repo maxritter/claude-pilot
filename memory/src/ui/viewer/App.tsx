@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from './layouts';
 import { Router, useRouter } from './router';
-import { DashboardView, MemoriesView, SearchView, SettingsView, LiveView, SessionsView, TagsView } from './views';
+import { DashboardView, MemoriesView, SearchView, LiveView, SessionsView, TagsView } from './views';
 import { LogsDrawer } from './components/LogsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { useTheme } from './hooks/useTheme';
@@ -17,8 +17,6 @@ const routes = [
   { path: '/search', component: SearchView },
   { path: '/tags', component: TagsView },
   { path: '/live', component: LiveView },
-  { path: '/settings', component: SettingsView },
-  { path: '/settings/:tab', component: SettingsView },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'claude-mem-sidebar-collapsed';
@@ -32,7 +30,6 @@ export function App() {
   const [projects, setProjects] = useState<{ name: string; observationCount: number }[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    // Default to collapsed on mobile (< 1024px)
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     if (isMobile) return true;
     try {
@@ -50,7 +47,6 @@ export function App() {
   });
   const [showCommandPalette, setShowCommandPalette] = useState(false);
 
-  // Fetch projects (without individual counts for performance)
   useEffect(() => {
     async function fetchProjects() {
       try {
@@ -60,7 +56,6 @@ export function App() {
           .filter((p: string) => p && p.trim() && !p.startsWith('.') && !p.startsWith('-'))
           .slice(0, 30);
 
-        // Just use the project names without counts
         setProjects(projectNames.map((name: string) => ({ name, observationCount: 0 })));
       } catch (error) {
         console.error('Failed to fetch projects:', error);
@@ -80,7 +75,6 @@ export function App() {
   const handleSelectProject = useCallback(
     (projectName: string | null) => {
       setSelectedProject(projectName);
-      // Navigate to memories with project filter
       if (projectName) {
         navigate(`/memories?project=${encodeURIComponent(projectName)}`);
       } else {
@@ -114,7 +108,6 @@ export function App() {
     });
   }, []);
 
-  // Keyboard shortcuts handler
   const handleShortcut = useCallback(
     (action: string) => {
       if (action === 'openCommandPalette') {

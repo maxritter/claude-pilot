@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.0.13] - 2026-02-04
+
+### Bug Fixes
+
+- Prevent blocking on worker restart and shutdown
+
 ## [6.0.12] - 2026-02-04
 
 ### Bug Fixes

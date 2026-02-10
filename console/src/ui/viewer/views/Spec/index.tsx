@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardBody, Badge, Icon, Button, Spinner, Progress, Tooltip, ScopeBadge } from '../../components/ui';
+import { Card, CardBody, Badge, Icon, Button, Spinner, Progress, Tooltip } from '../../components/ui';
 import { SpecContent } from './SpecContent';
 import { WorktreePanel } from './WorktreePanel';
 import { TIMING } from '../../constants/timing';
@@ -195,11 +195,10 @@ export function SpecView() {
 
   return (
     <div className="space-y-6">
-      {/* Spec selector: tabs for active, dropdown for archived */}
-      <div className="flex items-center gap-2">
-        <ScopeBadge project={null} workspace />
-      </div>
-      <div className="flex items-center gap-2">
+      {/* Header: title + spec selector */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold mr-auto">Specifications</h1>
+
         {/* Active plan tabs */}
         {activeSpecs.length > 0 && (
           <div role="tablist" className="flex items-center gap-1.5 flex-shrink-0">
@@ -235,7 +234,7 @@ export function SpecView() {
         {/* Archived plans dropdown */}
         {archivedSpecs.length > 0 && (
           <select
-            className="select select-bordered select-sm ml-auto"
+            className="select select-bordered select-sm"
             value={currentSpec?.status === 'VERIFIED' ? selectedSpec || '' : ''}
             onChange={(e) => setSelectedSpec(e.target.value)}
           >
@@ -264,7 +263,6 @@ export function SpecView() {
               size="sm"
               onClick={() => deleteSpec(selectedSpec)}
               disabled={isDeleting}
-              className={archivedSpecs.length === 0 ? 'ml-auto' : ''}
             >
               <Icon icon="lucide:trash-2" size={16} className="text-error" />
             </Button>

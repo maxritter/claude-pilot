@@ -3,14 +3,11 @@ import { WorkerStatus } from './WorkerStatus';
 import { VexorStatus } from './VexorStatus';
 import { PlanStatus } from './PlanStatus';
 import { GitStatus } from './GitStatus';
-import { RecentActivity } from './RecentActivity';
-import { SpecActivity } from './SpecActivity';
-import { ObservationTimeline } from './ObservationTimeline';
 import { useStats } from '../../hooks/useStats';
 import { useProject } from '../../context';
 
 export function DashboardView() {
-  const { stats, workerStatus, vexorStatus, recentActivity, planStatus, gitInfo, specStats, observationTimeline, isLoading } = useStats();
+  const { stats, workerStatus, vexorStatus, planStatus, gitInfo, specStats, isLoading } = useStats();
   const { selectedProject } = useProject();
 
   if (isLoading) {
@@ -31,18 +28,7 @@ export function DashboardView() {
       </div>
 
       {/* Stats Grid */}
-      <StatsGrid stats={stats} specStats={specStats} selectedProject={selectedProject} />
-
-      {/* Activity Panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SpecActivity specStats={specStats} />
-        <ObservationTimeline data={observationTimeline} />
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RecentActivity items={recentActivity} />
-      </div>
+      <StatsGrid stats={stats} specStats={specStats} />
 
       {/* Workspace-level status (shown when no project filter or matching workspace project) */}
       {(!selectedProject || selectedProject === workerStatus.workspaceProject) && <div className="space-y-4">

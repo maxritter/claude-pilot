@@ -1,7 +1,7 @@
 /**
  * Dashboard Project Filter Tests
  *
- * Tests that StatsGrid hides "Projects" card when a project is selected,
+ * Tests that StatsGrid renders 8 tiles consistently,
  * Dashboard shows project filter indicator, and workspace section is separated.
  */
 
@@ -10,7 +10,7 @@ import { renderToString } from "react-dom/server";
 import React from "react";
 
 describe("Dashboard project filtering", () => {
-  it("StatsGrid accepts selectedProject prop", async () => {
+  it("StatsGrid renders 8 tiles including Tasks Completed", async () => {
     const { StatsGrid } = await import(
       "../../src/ui/viewer/views/Dashboard/StatsGrid.js"
     );
@@ -23,15 +23,23 @@ describe("Dashboard project filtering", () => {
       projects: 3,
     };
 
-    const htmlAll = renderToString(
-      React.createElement(StatsGrid, { stats, selectedProject: null })
-    );
-    expect(htmlAll).toContain("Projects");
+    const specStats = {
+      totalSpecs: 4,
+      verified: 2,
+      inProgress: 1,
+      pending: 1,
+      avgIterations: 1.5,
+      totalTasksCompleted: 12,
+      totalTasks: 20,
+      completionTimeline: [],
+      recentlyVerified: [],
+    };
 
-    const htmlFiltered = renderToString(
-      React.createElement(StatsGrid, { stats, selectedProject: "my-project" })
+    const html = renderToString(
+      React.createElement(StatsGrid, { stats, specStats })
     );
-    expect(htmlFiltered).not.toContain("Projects");
+    expect(html).toContain("Tasks Completed");
+    expect(html).toContain("of 20 total");
   });
 
   it("Dashboard shows project filter indicator when project selected", async () => {

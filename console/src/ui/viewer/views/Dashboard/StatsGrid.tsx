@@ -23,10 +23,9 @@ interface SpecStats {
 interface StatsGridProps {
   stats: Stats;
   specStats?: SpecStats;
-  selectedProject?: string | null;
 }
 
-export function StatsGrid({ stats, specStats, selectedProject }: StatsGridProps) {
+export function StatsGrid({ stats, specStats }: StatsGridProps) {
   const successRate = specStats && specStats.totalSpecs > 0
     ? `${Math.round((specStats.verified / specStats.totalSpecs) * 100)}% success`
     : undefined;
@@ -41,18 +40,18 @@ export function StatsGrid({ stats, specStats, selectedProject }: StatsGridProps)
       <StatsCard
         icon="lucide:scroll"
         label="Total Specs"
-        value={specStats?.totalSpecs ?? 0}
+        value={(specStats?.totalSpecs ?? 0).toLocaleString()}
       />
       <StatsCard
         icon="lucide:shield-check"
         label="Verified"
-        value={specStats?.verified ?? 0}
+        value={(specStats?.verified ?? 0).toLocaleString()}
         subtext={successRate}
       />
       <StatsCard
         icon="lucide:loader"
         label="In Progress"
-        value={specStats?.inProgress ?? 0}
+        value={(specStats?.inProgress ?? 0).toLocaleString()}
       />
       <StatsCard
         icon="lucide:history"
@@ -69,13 +68,12 @@ export function StatsGrid({ stats, specStats, selectedProject }: StatsGridProps)
         label="Summaries"
         value={stats.summaries.toLocaleString()}
       />
-      {!selectedProject && (
-        <StatsCard
-          icon="lucide:folder"
-          label="Projects"
-          value={stats.projects.toLocaleString()}
-        />
-      )}
+      <StatsCard
+        icon="lucide:check-square"
+        label="Tasks Completed"
+        value={(specStats?.totalTasksCompleted ?? 0).toLocaleString()}
+        subtext={specStats && specStats.totalTasks > 0 ? `of ${specStats.totalTasks} total` : undefined}
+      />
     </div>
   );
 }

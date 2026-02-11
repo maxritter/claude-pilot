@@ -2,6 +2,12 @@
 
 Semantic file discovery via `vexor`. Use whenever locating where something is implemented/loaded/defined in a medium or large repo, or when the file location is unclear. Prefer this over manual browsing. Find files by intent (what they do), not exact text.
 
+### ⛔ CRITICAL: Timeout and No Background
+
+**ALWAYS set `timeout: 30000` (30s) on Bash when running vexor.** First-time indexing can exceed the default 2-minute timeout on large repos. If vexor gets auto-backgrounded, the user sees no output and you lose visibility.
+
+**NEVER let vexor run in background.** If it times out, increase the timeout — don't background it.
+
 ### When to Use Vexor
 
 - **Replaces the Explore agent** — vexor delivers higher-quality results with semantic ranking
@@ -9,6 +15,7 @@ Semantic file discovery via `vexor`. Use whenever locating where something is im
 - Prefer over Grep/Glob when searching by meaning, not exact text
 - Great for: "where is X implemented?", "how does Y work?", "find config loading"
 - Use `Grep`/`Glob` for exact text/pattern matching; use `vexor` for everything else
+- **Do NOT use vexor when you already know the file paths** — use `Read`/`Grep` directly instead
 
 ### Command
 

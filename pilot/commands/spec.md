@@ -224,7 +224,7 @@ Pilot will restart with `/spec --continue <plan-path>`
 
 | #   | Rule                                                                                                                                                                  |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **NO sub-agents during planning/implementation** - Phase 1 and 2 use direct tools only. Verification steps (Step 1.7, Step 3.5) each use a single verifier sub-agent. |
+| 1   | **NO sub-agents during planning/implementation** - Phases 1 and 2 use direct tools only, all tasks run sequentially. Verification steps (Step 1.7, Step 3.5) each use a single verifier sub-agent. |
 | 2   | **NEVER SKIP verification** - Plan verification (Step 1.7) and Code verification (Step 3.5) are mandatory. No exceptions.                                             |
 | 3   | **ONLY stopping point is plan approval** - Everything else is automatic. Never ask "Should I fix these?"                                                              |
 | 4   | **Batch questions together** - Don't interrupt user flow                                                                                                              |

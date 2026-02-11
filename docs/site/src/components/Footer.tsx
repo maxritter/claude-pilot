@@ -74,6 +74,14 @@ const Footer = () => {
                 </button>
               </li>
               <li>
+                <button
+                  onClick={() => smoothScrollTo('faq')}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  FAQ
+                </button>
+              </li>
+              <li>
                 <a
                   href="https://pilot.openchangelog.com/"
                   target="_blank"

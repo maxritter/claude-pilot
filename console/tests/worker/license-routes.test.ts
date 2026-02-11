@@ -71,34 +71,6 @@ describe("LicenseRoutes", () => {
         email: "user@example.com",
         daysRemaining: null,
         isExpired: false,
-        seatsTotal: null,
-      });
-    });
-
-    it("should return seats_total for team license", () => {
-      const cliOutput = JSON.stringify({
-        success: true,
-        tier: "team",
-        email: "team@example.com",
-        days_remaining: null,
-        seats_total: 2,
-      });
-
-      mockSpawnSync.mockReturnValue({
-        status: 0,
-        stdout: Buffer.from(cliOutput),
-        stderr: Buffer.from(""),
-      });
-
-      const result = routes.getLicenseInfo();
-
-      expect(result).toEqual({
-        valid: true,
-        tier: "team",
-        email: "team@example.com",
-        daysRemaining: null,
-        isExpired: false,
-        seatsTotal: 2,
       });
     });
 
@@ -126,7 +98,6 @@ describe("LicenseRoutes", () => {
         email: "trial@example.com",
         daysRemaining: null,
         isExpired: true,
-        seatsTotal: null,
       });
     });
 
@@ -150,7 +121,6 @@ describe("LicenseRoutes", () => {
         email: null,
         daysRemaining: null,
         isExpired: false,
-        seatsTotal: null,
       });
     });
 
@@ -165,7 +135,6 @@ describe("LicenseRoutes", () => {
         email: null,
         daysRemaining: null,
         isExpired: false,
-        seatsTotal: null,
       });
       expect(mockSpawnSync).not.toHaveBeenCalled();
     });
@@ -183,7 +152,6 @@ describe("LicenseRoutes", () => {
         email: null,
         daysRemaining: null,
         isExpired: false,
-        seatsTotal: null,
       });
     });
 
@@ -209,7 +177,6 @@ describe("LicenseRoutes", () => {
         email: "trial@example.com",
         daysRemaining: 7,
         isExpired: false,
-        seatsTotal: null,
       });
     });
 

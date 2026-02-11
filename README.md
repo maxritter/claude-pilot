@@ -65,7 +65,7 @@ There are other AI coding frameworks out there. I tried them. They add complexit
 
 This isn't a vibe coding tool. It's built for developers who ship to production and need code that actually works. Every rule in the system comes from daily professional use: real bugs caught, real regressions prevented, real sessions where the AI cut corners and the hooks stopped it. The rules are continuously refined based on what measurably improves output.
 
-The system stays fast because it stays simple. Quick mode is direct execution with zero overhead — no sub-agents, no plan files, no directory scaffolding. You describe the task and it gets done. `/spec` adds structure only when you need it: plan verification, TDD enforcement, independent code review, parallel execution. Both modes share the same quality hooks. Both modes hand off cleanly across sessions with Endless Mode.
+The system stays fast because it stays simple. Quick mode is direct execution with zero overhead — no sub-agents, no plan files, no directory scaffolding. You describe the task and it gets done. `/spec` adds structure only when you need it: plan verification, TDD enforcement, independent code review, automated quality checks. Both modes share the same quality hooks. Both modes hand off cleanly across sessions with Endless Mode.
 
 ---
 
@@ -160,15 +160,12 @@ pilot
 Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
                                      │              ↑       ↓
                                      │              └─ Loop─┘
-                                     │
-                            ┌────────┼────────┐
-                            ▼        ▼        ▼
-                         Task 1   Task 2   Task 3    ← parallel waves
-                         (TDD)    (TDD)    (TDD)       for independent
-                            │        │        │          tasks
-                            └────────┼────────┘
                                      ▼
-                              Merge & Verify
+                                  Task 1 (TDD)
+                                     ▼
+                                  Task 2 (TDD)
+                                     ▼
+                                  Task 3 (TDD)
 ```
 
 <details>
@@ -187,12 +184,10 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 <summary><b>Implement Phase</b></summary>
 
 1. Creates an isolated git worktree on a dedicated branch — main branch stays clean
-2. Analyzes task graph to detect independent tasks — groups them into parallel waves
-3. Spawns `spec-implementer` sub-agents for each independent task in a wave, executing TDD in parallel with fresh context windows
-4. Falls back to sequential execution only when tasks share files or have linear dependencies
-5. Each task follows strict TDD: write failing test (RED), implement to pass (GREEN), refactor (REFACTOR)
-6. Quality hooks auto-lint, format, and type-check every file edit
-7. After each wave, runs the full test suite to catch cross-task conflicts before proceeding
+2. Implements each task sequentially with strict TDD (RED → GREEN → REFACTOR)
+3. Quality hooks auto-lint, format, and type-check every file edit
+4. Runs full test suite after each task to catch regressions early
+5. All tasks execute in the main context with full access to hooks and rules
 
 </details>
 
@@ -344,14 +339,12 @@ Run `/sync` after adding servers to generate documentation.
 
 After **every single file edit**, these hooks fire:
 
-| Hook                     | Type         | What it does                                                                                                                                                         |
-| ------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `file_checker_python.py` | Blocking     | Runs ruff format + lint + basedpyright type checking on `.py` files. Auto-fixes formatting and common lint issues.                                                   |
-| `file_checker_ts.py`     | Blocking     | Runs Prettier + ESLint + type checking on `.ts`/`.tsx` files. Auto-fixes formatting and common issues.                                                               |
-| `file_checker_go.py`     | Blocking     | Runs gofmt + golangci-lint + type checking on `.go` files. Auto-fixes formatting.                                                                                    |
-| `tdd_enforcer.py`        | Non-blocking | Checks if implementation files were modified without failing tests first. Shows reminder to write tests. Excludes test files, docs, config, TSX, and infrastructure. |
-| Memory observer          | Async        | Captures development observations to persistent memory.                                                                                                              |
-| `context_monitor.py`     | Non-blocking | Monitors context window usage. Warns as usage grows, forces handoff before hitting limits. Caches for 15 seconds to avoid spam.                                      |
+| Hook                 | Type         | What it does                                                                                                                                                         |
+| -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file_checker.py`    | Blocking     | Dispatches to language-specific checkers: Python (ruff + basedpyright), TypeScript (Prettier + ESLint + tsc), Go (gofmt + golangci-lint). Auto-fixes formatting.     |
+| `tdd_enforcer.py`    | Non-blocking | Checks if implementation files were modified without failing tests first. Shows reminder to write tests. Excludes test files, docs, config, TSX, and infrastructure. |
+| Memory observer      | Async        | Captures development observations to persistent memory.                                                                                                              |
+| `context_monitor.py` | Non-blocking | Monitors context window usage. Warns as usage grows, forces handoff before hitting limits. Caches for 15 seconds to avoid spam.                                      |
 
 #### PreToolUse (before search, web, or task tools)
 
@@ -509,6 +502,59 @@ Claude Pilot is source-available under a commercial license. See the [LICENSE](L
 | **Team** | Multi | Solo + multiple seats, dedicated email support, priority feature requests |
 
 Details and licensing at [claude-pilot.com](https://claude-pilot.com).
+
+---
+
+## FAQ
+
+<details>
+<summary><b>Does Pilot send my code or data to external services?</b></summary>
+
+No. All development data stays on your machine. Vector search (Vexor), embeddings, persistent memory (Pilot Console), and session state all run locally. Pilot does not operate any cloud backend or telemetry service. The only external communication is between Claude Code and Anthropic's API — using your own subscription or API key, exactly as it would without Pilot.
+
+</details>
+
+<details>
+<summary><b>Is Pilot enterprise-compliant for data privacy?</b></summary>
+
+Yes. Since Pilot runs entirely locally and adds no additional external data flows beyond what Claude Code itself uses, it is compatible with enterprise data policies. Your source code, project files, and development context never leave your machine through Pilot. Enterprises using Claude Code with their own API key or Anthropic Enterprise subscription can add Pilot without changing their data compliance posture.
+
+</details>
+
+<details>
+<summary><b>What are the licenses of Pilot's dependencies?</b></summary>
+
+All external tools and dependencies that Pilot installs and uses are open source with permissive licenses (MIT, Apache 2.0, BSD). This includes ruff, basedpyright, Prettier, ESLint, gofmt, uv, Vexor, playwright-cli, and all MCP servers. No copyleft or restrictive-licensed dependencies are introduced into your environment.
+
+</details>
+
+<details>
+<summary><b>Do I need a separate Anthropic subscription?</b></summary>
+
+Yes. Pilot enhances Claude Code — it doesn't replace it. You need an active Claude subscription (Max, Team, or Enterprise) or an Anthropic API key. Pilot adds quality automation on top of whatever Claude Code access you already have.
+
+</details>
+
+<details>
+<summary><b>Does Pilot work with any programming language?</b></summary>
+
+Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, Endless Mode, persistent memory, and all rules and skills work with any language that Claude Code supports. You can add custom hooks for additional languages.
+
+</details>
+
+<details>
+<summary><b>Can I use Pilot on multiple projects?</b></summary>
+
+Yes. Pilot installs once and works across all your projects. Each project can have its own `.claude/` rules, skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and skills.
+
+</details>
+
+<details>
+<summary><b>Can I customize the rules and hooks?</b></summary>
+
+Yes. All rules in `.claude/rules/` are markdown files you can edit, extend, or replace. Hooks are Python scripts you can modify. Skills are dynamically loaded and can be customized or created via `/learn`. Project-specific rules override global defaults. Use `/vault` to share customizations across your team.
+
+</details>
 
 ---
 

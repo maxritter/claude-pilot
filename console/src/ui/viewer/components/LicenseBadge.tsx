@@ -19,10 +19,6 @@ function buildTooltipText(license: LicenseResponse): string {
   const config = TIER_CONFIG[license.tier ?? ''];
   const parts: string[] = [config?.label ?? license.tier ?? 'Unknown'];
 
-  if (license.tier === 'team' && license.seatsTotal != null && license.seatsTotal > 1) {
-    parts.push(`${license.seatsTotal} seats`);
-  }
-
   if (license.email) {
     parts.push(license.email);
   }
@@ -55,8 +51,6 @@ export function LicenseBadge({ license, isLoading }: LicenseBadgeProps) {
   let label = config.label;
   if (license.tier === 'trial' && license.daysRemaining != null) {
     label = `${config.label} · ${license.daysRemaining}d left`;
-  } else if (license.tier === 'team' && license.seatsTotal != null && license.seatsTotal > 1) {
-    label = `${config.label} · ${license.seatsTotal} seats`;
   }
 
   return (

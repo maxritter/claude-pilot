@@ -221,6 +221,67 @@ class TestLicenseInfo:
         assert result is None
 
 
+class TestLicenseFlowTrialFallback:
+    """Test _handle_license_flow falls back to license key prompt when trial fails."""
+
+    @patch("installer.cli._start_trial", return_value=False)
+    @patch("installer.cli._check_trial_used", return_value=(False, False))
+    @patch("installer.cli._prompt_license_key", return_value=True)
+    def test_trial_failure_falls_back_to_license_prompt(
+        self, mock_prompt, mock_check_trial, mock_start_trial, tmp_path: Path
+    ):
+        """When trial start fails, user is prompted for license key."""
+        from installer.cli import _handle_license_flow
+        from installer.ui import Console
+
+        console = Console(non_interactive=False, quiet=True)
+        result = _handle_license_flow(
+            console, tmp_path, local_mode=False, local_repo_dir=None,
+            license_info=None, license_acknowledged=False,
+        )
+
+        mock_prompt.assert_called_once()
+        assert result is None
+
+    @patch("installer.cli._start_trial", return_value=False)
+    @patch("installer.cli._check_trial_used", return_value=(False, False))
+    @patch("installer.cli._prompt_license_key", return_value=False)
+    def test_trial_failure_and_license_failure_exits(
+        self, mock_prompt, mock_check_trial, mock_start_trial, tmp_path: Path
+    ):
+        """When trial and license both fail, returns exit code 1."""
+        from installer.cli import _handle_license_flow
+        from installer.ui import Console
+
+        console = Console(non_interactive=False, quiet=True)
+        result = _handle_license_flow(
+            console, tmp_path, local_mode=False, local_repo_dir=None,
+            license_info=None, license_acknowledged=False,
+        )
+
+        mock_prompt.assert_called_once()
+        assert result == 1
+
+    @patch("installer.cli._start_trial", return_value=True)
+    @patch("installer.cli._check_trial_used", return_value=(False, False))
+    def test_trial_success_does_not_prompt_for_license(
+        self, mock_check_trial, mock_start_trial, tmp_path: Path
+    ):
+        """When trial succeeds, no license prompt is shown."""
+        from installer.cli import _handle_license_flow
+        from installer.ui import Console
+
+        console = Console(non_interactive=False, quiet=True)
+        with patch("installer.cli._prompt_license_key") as mock_prompt:
+            result = _handle_license_flow(
+                console, tmp_path, local_mode=False, local_repo_dir=None,
+                license_info=None, license_acknowledged=False,
+            )
+
+        mock_prompt.assert_not_called()
+        assert result is None
+
+
 class TestPromptForFeatures:
     """Test _prompt_for_features function."""
 

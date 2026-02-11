@@ -1,11 +1,11 @@
-import { FileText, Code2, CheckCircle2, RefreshCw, Zap, Search, MessageSquare, Shield, Bug, Brain, GitBranch, Terminal } from "lucide-react";
+import { FileText, Code2, CheckCircle2, RefreshCw, Zap, Search, MessageSquare, Shield, Brain, GitBranch, Terminal } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
 const specSteps = [
   { icon: MessageSquare, title: "Discuss", desc: "Clarifies gray areas" },
   { icon: FileText, title: "Plan", desc: "Explores codebase, generates spec" },
   { icon: CheckCircle2, title: "Approve", desc: "You review and approve" },
-  { icon: Code2, title: "Implement", desc: "Parallel TDD execution" },
+  { icon: Code2, title: "Implement", desc: "TDD for each task" },
   { icon: RefreshCw, title: "Verify", desc: "Tests pass or loops back" },
 ];
 
@@ -18,11 +18,10 @@ const planDetails = [
 ];
 
 const implementDetails = [
-  { icon: GitBranch, text: "Analyzes task graph and spawns parallel sub-agents for independent tasks" },
-  { icon: Code2, text: "Each sub-agent runs TDD in its own context window (RED → GREEN → REFACTOR)" },
-  { icon: RefreshCw, text: "After each wave, runs full test suite to catch cross-task conflicts" },
-  { icon: Bug, text: "Falls back to sequential execution only when tasks share files or depend on each other" },
+  { icon: GitBranch, text: "Creates isolated git worktree on a dedicated branch" },
+  { icon: Code2, text: "Implements each task sequentially with strict TDD (RED → GREEN → REFACTOR)" },
   { icon: Shield, text: "Quality hooks auto-lint, format, and type-check every edit" },
+  { icon: RefreshCw, text: "Runs full test suite after each task to catch regressions" },
 ];
 
 const verifyDetails = [

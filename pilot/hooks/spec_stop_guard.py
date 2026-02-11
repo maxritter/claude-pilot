@@ -17,17 +17,10 @@ import sys
 import time
 from pathlib import Path
 
-RED = "\033[0;31m"
-YELLOW = "\033[0;33m"
-CYAN = "\033[0;36m"
-NC = "\033[0m"
+sys.path.insert(0, str(Path(__file__).parent))
+from _util import CYAN, NC, RED, YELLOW, _sessions_base, get_session_plan_path, is_waiting_for_user_input
 
 COOLDOWN_SECONDS = 60
-
-
-def _sessions_base() -> Path:
-    """Get base sessions directory."""
-    return Path.home() / ".pilot" / "sessions"
 
 
 def get_stop_guard_path() -> Path:
@@ -38,15 +31,9 @@ def get_stop_guard_path() -> Path:
     return guard_dir / "spec-stop-guard"
 
 
-def _get_session_plan_path() -> Path:
-    """Get session-scoped active plan JSON path."""
-    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
-    return _sessions_base() / session_id / "active_plan.json"
-
-
 def find_active_plan() -> tuple[Path | None, str | None, bool]:
     """Find the active plan for THIS session via session-scoped active_plan.json."""
-    plan_json = _get_session_plan_path()
+    plan_json = get_session_plan_path()
     if not plan_json.exists():
         return None, None, False
 
@@ -74,12 +61,8 @@ def find_active_plan() -> tuple[Path | None, str | None, bool]:
         status = status_match.group(1).upper()
         if status not in ("PENDING", "COMPLETE"):
             return None, None, False
-        approved_match = re.search(
-            r"^Approved:\s*(Yes|No)", content, re.MULTILINE | re.IGNORECASE
-        )
-        approved = bool(
-            approved_match and approved_match.group(1).lower() == "yes"
-        )
+        approved_match = re.search(r"^Approved:\s*(Yes|No)", content, re.MULTILINE | re.IGNORECASE)
+        approved = bool(approved_match and approved_match.group(1).lower() == "yes")
         return plan_file, status, approved
     except OSError:
         return None, None, False
@@ -94,45 +77,6 @@ def get_next_phase(status: str, approved: bool) -> str:
     if status == "COMPLETE":
         return "spec-verify"
     return "spec"
-
-
-def is_waiting_for_user_input(transcript_path: str) -> bool:
-    """Check if Claude's last action was asking the user a question."""
-    try:
-        transcript = Path(transcript_path)
-        if not transcript.exists():
-            return False
-
-        last_assistant_msg = None
-        with transcript.open() as f:
-            for line in f:
-                try:
-                    msg = json.loads(line)
-                    if msg.get("type") == "assistant":
-                        last_assistant_msg = msg
-                except json.JSONDecodeError:
-                    continue
-
-        if not last_assistant_msg:
-            return False
-
-        message = last_assistant_msg.get("message", {})
-        if not isinstance(message, dict):
-            return False
-
-        content = message.get("content", [])
-        if not isinstance(content, list):
-            return False
-
-        for block in content:
-            if isinstance(block, dict) and block.get("type") == "tool_use":
-                if block.get("name") == "AskUserQuestion":
-                    return True
-
-        return False
-
-    except OSError:
-        return False
 
 
 def main() -> int:
@@ -175,17 +119,11 @@ def main() -> int:
         f"{RED}⛔ /spec workflow active - cannot stop without user interaction{NC}",
         file=sys.stderr,
     )
-    print(
-        f"{YELLOW}Active plan: {plan_path} (Status: {status}){NC}", file=sys.stderr
-    )
-    print(
-        f"{YELLOW}💡 Stop again within 60s to force exit{NC}", file=sys.stderr
-    )
+    print(f"{YELLOW}Active plan: {plan_path} (Status: {status}){NC}", file=sys.stderr)
+    print(f"{YELLOW}💡 Stop again within 60s to force exit{NC}", file=sys.stderr)
     print("", file=sys.stderr)
     print("You may only stop when:", file=sys.stderr)
-    print(
-        "  • Asking user for plan approval (use AskUserQuestion)", file=sys.stderr
-    )
+    print("  • Asking user for plan approval (use AskUserQuestion)", file=sys.stderr)
     print(
         "  • Asking user for an important decision (use AskUserQuestion)",
         file=sys.stderr,
@@ -194,9 +132,7 @@ def main() -> int:
 
     if status == "PENDING" and not approved:
         print("Status is PENDING (not approved). Either:", file=sys.stderr)
-        print(
-            "  1. Ask user for plan approval with AskUserQuestion", file=sys.stderr
-        )
+        print("  1. Ask user for plan approval with AskUserQuestion", file=sys.stderr)
         print(
             "  2. If blocked, ask user for decision with AskUserQuestion",
             file=sys.stderr,

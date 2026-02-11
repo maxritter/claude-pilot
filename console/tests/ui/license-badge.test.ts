@@ -24,7 +24,6 @@ describe("LicenseBadge", () => {
       email: "user@example.com",
       daysRemaining: null,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toContain("Solo");
@@ -38,25 +37,9 @@ describe("LicenseBadge", () => {
       email: "team@example.com",
       daysRemaining: null,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toContain("Team");
-    expect(html).toContain("badge-accent");
-  });
-
-  it("should render Team badge with seat count when seatsTotal > 1", () => {
-    const html = renderBadge({
-      valid: true,
-      tier: "team",
-      email: "team@example.com",
-      daysRemaining: null,
-      isExpired: false,
-      seatsTotal: 2,
-    });
-
-    expect(html).toContain("Team");
-    expect(html).toContain("2 seats");
     expect(html).toContain("badge-accent");
   });
 
@@ -67,7 +50,6 @@ describe("LicenseBadge", () => {
       email: "trial@example.com",
       daysRemaining: 7,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toContain("Trial");
@@ -82,7 +64,6 @@ describe("LicenseBadge", () => {
       email: "trial@example.com",
       daysRemaining: null,
       isExpired: true,
-      seatsTotal: null,
     });
 
     expect(html).toContain("Expired");
@@ -96,7 +77,6 @@ describe("LicenseBadge", () => {
       email: null,
       daysRemaining: null,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toBe("");
@@ -109,7 +89,7 @@ describe("LicenseBadge", () => {
 
   it("should render nothing when isLoading is true", () => {
     const html = renderBadge(
-      { valid: true, tier: "solo", email: "user@example.com", daysRemaining: null, isExpired: false, seatsTotal: null },
+      { valid: true, tier: "solo", email: "user@example.com", daysRemaining: null, isExpired: false },
       true,
     );
     expect(html).toBe("");
@@ -122,7 +102,6 @@ describe("LicenseBadge", () => {
       email: "user@example.com",
       daysRemaining: null,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toContain("tooltip");
@@ -137,22 +116,9 @@ describe("LicenseBadge", () => {
       email: "trial@example.com",
       daysRemaining: 5,
       isExpired: false,
-      seatsTotal: null,
     });
 
     expect(html).toContain("5 days remaining");
   });
 
-  it("should include seat count in tooltip for team tier", () => {
-    const html = renderBadge({
-      valid: true,
-      tier: "team",
-      email: "team@example.com",
-      daysRemaining: null,
-      isExpired: false,
-      seatsTotal: 2,
-    });
-
-    expect(html).toContain("2 seats");
-  });
 });

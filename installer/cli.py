@@ -305,10 +305,10 @@ def _handle_license_flow(
             console.print()
         else:
             console.print()
-            console.error("Could not start trial. Please enter a license key.")
-            console.print("  [bold]Subscribe at:[/bold] [cyan]https://claude-pilot.com[/cyan]")
+            console.warning("Could not start trial. Enter a license key to continue.")
             console.print()
-            return 1
+            if not _prompt_license_key(console, project_dir):
+                return 1
 
     return None
 

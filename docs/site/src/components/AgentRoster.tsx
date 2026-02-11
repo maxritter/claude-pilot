@@ -58,12 +58,12 @@ const agents = [
   },
   {
     name: "IMPLEMENTER",
-    role: "Parallel Executor",
+    role: "TDD Executor",
     icon: Shield,
     color: "text-rose-400",
     bgColor: "bg-rose-400/10",
     borderColor: "border-rose-400/30",
-    desc: "Spawns parallel sub-agents for independent tasks, each running TDD in its own context. Sequential fallback when tasks share files.",
+    desc: "Implements each task with strict TDD in the main context. Full access to quality hooks, rules, and project context.",
   },
   {
     name: "SKILLS",

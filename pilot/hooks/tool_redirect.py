@@ -25,11 +25,10 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
-RED = "\033[0;31m"
-YELLOW = "\033[0;33m"
-CYAN = "\033[0;36m"
-NC = "\033[0m"
+sys.path.insert(0, str(Path(__file__).parent))
+from _util import CYAN, NC, RED, YELLOW
 
 SEMANTIC_PHRASES = [
     "where is",
@@ -89,7 +88,7 @@ EXPLORE_REDIRECT = {
     "example": 'vexor search "where is config loaded" --mode code --top 5',
 }
 
-REDIRECTS = {
+REDIRECTS: dict[str, dict] = {
     "Bash": {
         "message": "Background Bash tasks are BANNED",
         "alternative": "Run commands synchronously (remove run_in_background). Use timeout parameter if needed (up to 600000ms)",
@@ -123,8 +122,7 @@ REDIRECTS = {
         "alternative": "Use Read, Grep, Glob, Bash directly. For progress tracking, use TaskCreate/TaskList/TaskUpdate",
         "example": "TaskCreate(subject='...') or Read/Grep/Glob for exploration",
         "condition": lambda data: (
-            data.get("tool_input", {}).get("subagent_type", "")
-            not in ("pilot:spec-verifier", "pilot:plan-verifier", "pilot:spec-implementer")
+            data.get("tool_input", {}).get("subagent_type", "") not in ("pilot:spec-verifier", "pilot:plan-verifier")
             if isinstance(data.get("tool_input"), dict)
             else True
         ),

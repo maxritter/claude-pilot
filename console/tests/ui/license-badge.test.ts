@@ -120,4 +120,5 @@ describe("LicenseBadge", () => {
 
     expect(html).toContain("5 days remaining");
   });
+
 });

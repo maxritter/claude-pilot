@@ -99,7 +99,7 @@ def _start_trial(
                 data = json.loads(output)
                 if data.get("error") == "trial_already_used":
                     console.error("Trial has already been used on this machine")
-                    console.print("  [cyan]Subscribe at: https://www.claude-pilot.com[/cyan]")
+                    console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
                 else:
                     detail = data.get("detail", data.get("error", "Unknown error"))
                     console.error(f"Failed to start trial: {detail}")
@@ -232,12 +232,12 @@ def _prompt_license_key(
         if attempt < max_attempts - 1:
             console.print()
             console.print("  [dim]Please check your license key and try again.[/dim]")
-            console.print("  [dim]Subscribe: https://www.claude-pilot.com[/dim]")
+            console.print("  [dim]Subscribe: https://claude-pilot.com[/dim]")
             console.print()
 
     console.print()
     console.error(f"License validation failed after {max_attempts} attempts.")
-    console.print("  [bold]Subscribe at:[/bold] [cyan]https://www.claude-pilot.com[/cyan]")
+    console.print("  [bold]Subscribe at:[/bold] [cyan]https://claude-pilot.com[/cyan]")
     console.print()
     return False
 
@@ -277,7 +277,7 @@ def _handle_license_flow(
     console.print()
     console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
     console.print()
-    console.print("  [dim]Subscribe: https://www.claude-pilot.com[/dim]")
+    console.print("  [dim]Subscribe: https://claude-pilot.com[/dim]")
     console.print()
     console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
     console.print()
@@ -301,14 +301,14 @@ def _handle_license_flow(
             console.success("Your 7-day trial has started!")
             console.print("  All features are unlocked for 7 days.")
             console.print()
-            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://www.claude-pilot.com[/cyan]")
+            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://claude-pilot.com[/cyan]")
             console.print()
         else:
             console.print()
-            console.error("Could not start trial. Please enter a license key.")
-            console.print("  [bold]Subscribe at:[/bold] [cyan]https://www.claude-pilot.com[/cyan]")
+            console.warning("Could not start trial. Enter a license key to continue.")
             console.print()
-            return 1
+            if not _prompt_license_key(console, project_dir):
+                return 1
 
     return None
 

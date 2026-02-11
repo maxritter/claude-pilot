@@ -74,6 +74,14 @@ const Footer = () => {
                 </button>
               </li>
               <li>
+                <button
+                  onClick={() => smoothScrollTo('faq')}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  FAQ
+                </button>
+              </li>
+              <li>
                 <a
                   href="https://pilot.openchangelog.com/"
                   target="_blank"
@@ -140,7 +148,7 @@ const Footer = () => {
           <p className="text-sm text-muted-foreground text-center">
             © {new Date().getFullYear()}{" "}
             <a
-              href="https://www.claude-pilot.com/"
+              href="https://claude-pilot.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"

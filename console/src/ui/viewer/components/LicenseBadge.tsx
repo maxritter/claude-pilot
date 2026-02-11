@@ -48,9 +48,10 @@ export function LicenseBadge({ license, isLoading }: LicenseBadgeProps) {
     return null;
   }
 
-  const label = license.tier === 'trial' && license.daysRemaining != null
-    ? `${config.label} · ${license.daysRemaining}d left`
-    : config.label;
+  let label = config.label;
+  if (license.tier === 'trial' && license.daysRemaining != null) {
+    label = `${config.label} · ${license.daysRemaining}d left`;
+  }
 
   return (
     <Tooltip text={buildTooltipText(license)} position="bottom">

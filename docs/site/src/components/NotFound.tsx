@@ -7,10 +7,10 @@ const NotFoundComponent = () => {
 
   return (
     <>
-      <SEO 
+      <SEO
         title="404 - Page Not Found | Claude Pilot Academy"
         description="The page you're looking for doesn't exist. Return to Claude Pilot Academy homepage."
-        canonicalUrl="https://www.claude-pilot.com/404"
+        canonicalUrl="https://claude-pilot.com/404"
       />
       <main className="min-h-screen flex items-center justify-center px-6 bg-gradient-dark">
         <div className="text-center">
@@ -19,7 +19,7 @@ const NotFoundComponent = () => {
           <p className="text-xl text-muted-foreground mb-8">
             The page you're looking for doesn't exist.
           </p>
-          <Button 
+          <Button
             size="lg"
             onClick={() => navigate('/')}
             className="bg-gradient-primary hover:shadow-primary transition-all duration-300"

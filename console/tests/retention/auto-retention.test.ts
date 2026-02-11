@@ -8,13 +8,13 @@
 import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
 
 describe("Auto-Retention", () => {
-  describe("maxCount default updated to 10000", () => {
-    it("has CLAUDE_PILOT_RETENTION_MAX_COUNT set to 10000", async () => {
+  describe("maxCount default updated to 5000", () => {
+    it("has CLAUDE_PILOT_RETENTION_MAX_COUNT set to 5000", async () => {
       const { SettingsDefaultsManager } = await import(
         "../../src/shared/SettingsDefaultsManager.js"
       );
       const defaults = SettingsDefaultsManager.getAllDefaults();
-      expect(defaults.CLAUDE_PILOT_RETENTION_MAX_COUNT).toBe("10000");
+      expect(defaults.CLAUDE_PILOT_RETENTION_MAX_COUNT).toBe("5000");
     });
   });
 

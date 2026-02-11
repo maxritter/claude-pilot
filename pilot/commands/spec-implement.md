@@ -19,7 +19,7 @@ model: sonnet
 
 | #   | Rule                                                                                                                                                                               |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **NO ad-hoc sub-agents** (exploration, research, general-purpose) - Use direct tools only. Exception: `pilot:spec-implementer` agents for parallel wave execution (see Step 2.3a). |
+| 1   | **NO sub-agents** - Use direct tools only. All tasks are implemented sequentially in the main context.                                                                             |
 | 2   | **TDD is MANDATORY** - No production code without failing test first                                                                                                               |
 | 3   | **Update plan checkboxes AND task status after EACH task** - Not at the end                                                                                                        |
 | 4   | **NEVER SKIP TASKS** - Every task MUST be fully implemented                                                                                                                        |
@@ -192,127 +192,7 @@ TaskCreate: "Task 4: Add documentation"            → id=4, addBlockedBy: [2]
 
 ---
 
-### Step 2.3: Detect Execution Mode — Parallel or Sequential
-
-**⚠️ ALWAYS analyze the task graph before starting implementation.** Independent tasks run in parallel via `pilot:spec-implementer` subagents, each with a fresh context window. Dependent tasks run sequentially in the main context. This is the primary execution strategy — not an optional optimization.
-
-```
-┌─────────────────────────────────────────────────────┐
-│                  Task Graph Analysis                 │
-│                                                     │
-│  Parse Dependencies + Modify file lists per task    │
-│                       ↓                             │
-│            ┌─────────────────────┐                  │
-│            │ Independent tasks?  │                  │
-│            └──────┬──────┬──────┘                  │
-│              YES  │      │  NO                      │
-│                   ↓      ↓                          │
-│         Parallel Waves   Sequential TDD Loop        │
-│         (Step 2.3a)      (Step 2.3b)                │
-└─────────────────────────────────────────────────────┘
-```
-
-#### Execution Mode Decision Table
-
-| Condition                           | Execution Mode                                         |
-| ----------------------------------- | ------------------------------------------------------ |
-| Plan has `Wave:` markers on tasks   | **Parallel** — follow wave grouping from plan          |
-| Tasks have no shared files or deps  | **Parallel** — auto-detect waves from dependency graph |
-| Tasks share files in "Modify" lists | **Sequential** — conflict risk                         |
-| Only 1 task remaining               | **Sequential** — no parallelism benefit                |
-| All tasks depend on each other      | **Sequential** — linear dependency chain               |
-
-#### Wave Detection Algorithm
-
-```
-1. Parse each uncompleted task's Dependencies and Modify file lists
-2. Build dependency graph:
-   - Task B depends on Task A → B must wait for A
-   - Task B and C modify the same file → B must wait for C (or vice versa)
-3. Group into waves:
-   - Wave 1: Tasks with no dependencies and no file conflicts
-   - Wave 2: Tasks that depend only on Wave 1 tasks
-   - Wave N: Tasks that depend only on Wave 1..N-1 tasks
-4. If a wave has only 1 task → run directly in main context (no subagent overhead)
-5. If a wave has 2+ tasks → spawn parallel spec-implementer subagents
-```
-
----
-
-### Step 2.3a: Parallel Wave Execution
-
-**When independent tasks exist, execute them in parallel waves using `pilot:spec-implementer` subagents.** Each subagent gets a fresh context window, implements its task with TDD, and returns a structured JSON result.
-
-#### For each wave with 2+ independent tasks:
-
-**1. Prepare rich context** for each implementer by extracting these sections from the plan:
-
-- **Task definition:** The full task section (objective, files, key decisions, DoD, verify commands)
-- **Plan path:** Absolute path to the plan file (so the implementer can read full context)
-- **Project root:** Absolute path to working directory (worktree or main repo)
-- **Context for Implementer:** The plan's "Context for Implementer" section verbatim (conventions, patterns, gotchas, domain context)
-- **Runtime Environment:** The plan's "Runtime Environment" section verbatim (exact commands for tests, lint, typecheck)
-- **Sibling tasks:** One-line summary of each OTHER task in this wave (task number, objective, file list — so the implementer knows boundaries)
-
-**2. Spawn parallel implementers** using a single message with multiple Task tool calls:
-
-```
-Task(
-  subagent_type="pilot:spec-implementer",
-  prompt="""Execute Task N from the plan using TDD.
-
-**Task Definition:**
-{full_task_section_from_plan}
-
-**Plan Path:** {absolute_plan_path}
-**Project Root:** {project_root}
-
-**Context for Implementer:**
-{context_for_implementer_section}
-
-**Runtime Environment:**
-{runtime_environment_section}
-
-**Sibling Tasks in This Wave (DO NOT modify their files):**
-{sibling_task_summaries}
-""",
-  description="Spec implementer: Task N"
-)
-```
-
-**Send ALL implementer calls in ONE message** for true parallelism.
-
-**Why rich context matters:** Implementers run in fresh context windows with no access to the orchestrator's conversation. They need the plan's conventions, gotchas, and verification commands to produce quality output. The plan file path lets them read additional context if needed.
-
-**3. Collect results** from each implementer:
-
-- Parse the JSON output for status, files_changed, dod_checklist
-- Verify each task's DoD criteria are met
-- If any implementer reports `failed` or `blocked`, handle before proceeding
-
-**4. After all implementers in a wave complete:**
-
-- Run the full test suite to check for cross-task conflicts
-- Update plan checkboxes for all completed tasks (Step 2.4)
-- Mark completed tasks in the task list
-- Proceed to next wave
-
-#### Error Handling
-
-| Situation                           | Action                                                           |
-| ----------------------------------- | ---------------------------------------------------------------- |
-| Implementer returns `failed`        | Read the failure reason, fix directly (don't re-spawn), continue |
-| Implementer returns `blocked`       | Check if blocker is another task, reorder if needed              |
-| Cross-task test failures after wave | Fix conflicts directly before next wave                          |
-| Implementer times out               | Run task directly in main context                                |
-
-#### Single-task waves
-
-When a wave contains only 1 task, execute it directly in the main context using the sequential TDD loop (Step 2.3b) instead of spawning a subagent. The subagent overhead isn't worth it for a single task.
-
----
-
-### Step 2.3b: Sequential TDD Loop
+### Step 2.3: TDD Loop
 
 **TDD is MANDATORY. No production code without a failing test first.**
 

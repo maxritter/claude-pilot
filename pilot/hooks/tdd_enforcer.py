@@ -13,8 +13,8 @@ import re
 import sys
 from pathlib import Path
 
-YELLOW = "\033[0;33m"
-NC = "\033[0m"
+sys.path.insert(0, str(Path(__file__).parent))
+from _util import NC, YELLOW
 
 EXCLUDED_EXTENSIONS = [
     ".md",
@@ -88,6 +88,9 @@ def is_test_file(file_path: str) -> bool:
     if name.endswith((".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx")):
         return True
 
+    if name.endswith("_test.go"):
+        return True
+
     return False
 
 
@@ -145,6 +148,19 @@ def has_typescript_test_file(impl_path: str) -> bool:
             return True
 
     return False
+
+
+def has_go_test_file(impl_path: str) -> bool:
+    """Check if corresponding Go test file exists."""
+    path = Path(impl_path)
+
+    if not path.name.endswith(".go"):
+        return False
+
+    base_name = path.stem
+    test_file = path.parent / f"{base_name}_test.go"
+
+    return test_file.exists()
 
 
 def _is_import_line(line: str) -> bool:
@@ -258,6 +274,16 @@ def run_tdd_enforcer() -> int:
         return warn(
             "No test file found for this module",
             f"Consider creating {base_name}.test.ts first.",
+        )
+
+    if file_path.endswith(".go"):
+        if has_go_test_file(file_path):
+            return 0
+
+        base_name = Path(file_path).stem
+        return warn(
+            "No test file found",
+            f"Consider creating {base_name}_test.go first.",
         )
 
     return 0

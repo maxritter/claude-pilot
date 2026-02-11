@@ -3,6 +3,9 @@ description: "Spec planning phase - explore codebase, design plan, get approval"
 argument-hint: "<task description> or <path/to/plan.md>"
 user-invocable: false
 model: opus
+hooks:
+  Stop:
+    - command: uv run python "${CLAUDE_PLUGIN_ROOT}/hooks/spec_plan_validator.py"
 ---
 
 # /spec-plan - Planning Phase
@@ -296,7 +299,7 @@ Split a task if it has multiple unrelated DoD criteria. Merge tasks if one can't
 
 **For each task, populate:**
 
-- **Dependencies** — Which tasks must complete first? Use `None` for independent tasks. This enables wave-based parallel execution during implementation.
+- **Dependencies** — Which tasks must complete first? Use `None` for tasks with no ordering requirements.
 - **Verify** — What concrete commands prove this task is done? Include test commands, build commands, or curl/CLI invocations. The implementation phase runs these after completing each task.
 
 **Task Structure:**
@@ -332,8 +335,6 @@ Split a task if it has multiple unrelated DoD criteria. Merge tasks if one can't
 - `uv run pytest tests/path/to/test.py -q` — task-specific tests pass
 - [Additional verification command or check]
 ```
-
-**Wave grouping for parallel execution:** Tasks with `Dependencies: None` and no overlapping files in their "Modify" lists can run in parallel as Wave 1. Tasks that depend only on Wave 1 tasks form Wave 2, and so on. The `spec-implement` phase uses Dependencies and file overlap to auto-detect waves — you don't need to assign wave numbers manually, but you can add `Wave: N` to tasks if you want explicit control.
 
 **⚠️ DoD criteria must be verifiable.** The verification phase checks each criterion against the actual code and running program. Replace the `[Task-specific criterion]` placeholders with criteria that can be checked with a specific test, command, or observation.
 

@@ -2,7 +2,7 @@
 
 ## Task Complexity Triage
 
-**Default mode is quick mode (direct execution).** Only suggest `/spec` for high-complexity tasks, and always let the user decide.
+**Default mode is quick mode (direct execution).** `/spec` is ONLY used when the user explicitly types `/spec`.
 
 | Complexity   | Characteristics                                                              | Action                                           |
 | ------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
@@ -10,7 +10,14 @@
 | **Moderate** | 2-5 files, clear scope, straightforward                                      | Use TaskCreate/TaskUpdate to track, then execute |
 | **High**     | Major architectural change, cross-cutting refactor, new subsystem, 10+ files | **Ask user** if they want `/spec` or quick mode  |
 
-**When to suggest /spec (ask, never auto-invoke):**
+**⛔ NEVER auto-invoke `/spec` or `Skill('spec')`.** The user MUST explicitly type `/spec` or say "use spec" to trigger the spec workflow. No exceptions.
+
+- Do NOT invoke `/spec` because you think the task is complex
+- Do NOT invoke `/spec` "on behalf of" the user
+- Do NOT use `Skill('spec')`, `Skill('spec-plan')`, or `EnterPlanMode` unless the user explicitly requested it
+- If the user says "improve X" or "add Y", that is a direct request — execute in quick mode
+
+**When to suggest /spec (ASK, never invoke):**
 
 - Major new subsystem or architectural redesign
 - Cross-cutting changes spanning 10+ files with unclear dependencies
@@ -21,11 +28,9 @@
 - Bug fixes of any size
 - Features touching 2-8 files with clear scope
 - Refactors with well-understood boundaries
-- Anything the user didn't explicitly request `/spec` for
+- Anything the user didn't explicitly type `/spec` for
 
-**If you think `/spec` would help, ask:** "This looks like a larger architectural change. Want me to use `/spec` for planning, or continue in quick mode?"
-
-**Never auto-invoke `/spec`.** The user always chooses.
+**If you think `/spec` would help, ask:** "This looks like a larger architectural change. Want me to use `/spec` for planning, or continue in quick mode?" Then wait for the user to explicitly choose.
 
 ---
 
@@ -125,7 +130,7 @@ Tasks 3 and 4 won't show as ready until Task 2 completes.
 
 ## ⛔ ABSOLUTE BANS
 
-### No Ad-Hoc Sub-Agents (Exceptions: Verification + Parallel Waves)
+### No Ad-Hoc Sub-Agents (Exception: Verification)
 
 **NEVER use the Task tool to spawn sub-agents for exploration or ad-hoc implementation.**
 
@@ -149,14 +154,6 @@ There are TWO verification points that use a single verifier sub-agent each:
 | ---------------------------- | --------------- | ------------------------------------------------------ |
 | **`spec-plan` (Step 1.7)**   | `plan-verifier` | Verify plan captures user requirements before approval |
 | **`spec-verify` (Step 3.5)** | `spec-verifier` | Verify code implements the plan correctly              |
-
-**Exception 2: Parallel wave execution in spec-implement.**
-
-When independent tasks exist in a plan, `spec-implement` spawns `pilot:spec-implementer` subagents to run them in parallel waves (see Step 2.3a in spec-implement). Each implementer gets the task definition, plan context, and project root — it does NOT need full session context.
-
-| Phase Skill                      | Agent              | Purpose                                                  |
-| -------------------------------- | ------------------ | -------------------------------------------------------- |
-| **`spec-implement` (Step 2.3a)** | `spec-implementer` | Execute one independent task with TDD in a parallel wave |
 
 **⛔ VERIFICATION STEPS ARE MANDATORY - NEVER SKIP THEM.**
 

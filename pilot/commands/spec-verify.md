@@ -3,6 +3,9 @@ description: "Spec verification phase - tests, execution, rules audit, code revi
 argument-hint: "<path/to/plan.md>"
 user-invocable: false
 model: opus
+hooks:
+  Stop:
+    - command: uv run python "${CLAUDE_PLUGIN_ROOT}/hooks/spec_verify_validator.py"
 ---
 
 # /spec-verify - Verification Phase

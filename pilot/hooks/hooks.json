@@ -48,15 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/file_checker_python.py\""
-          },
-          {
-            "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/file_checker_ts.py\""
-          },
-          {
-            "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/file_checker_go.py\""
+            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/file_checker.py\""
           },
           {
             "type": "command",
@@ -69,18 +61,13 @@
         "hooks": [
           {
             "type": "command",
+            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/context_monitor.py\""
+          },
+          {
+            "type": "command",
             "command": "bun \"${CLAUDE_PLUGIN_ROOT}/scripts/worker-service.cjs\" hook claude-code observation",
             "async": true,
             "timeout": 15
-          }
-        ]
-      },
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/context_monitor.py\""
           }
         ]
       }

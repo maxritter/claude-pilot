@@ -19,7 +19,7 @@ export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
         <span>
           &copy; {new Date().getFullYear()}{' '}
           <a
-            href="https://www.claude-pilot.com"
+            href="https://claude-pilot.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary/70 hover:text-primary transition-colors"

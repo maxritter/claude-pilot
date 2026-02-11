@@ -10,43 +10,26 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _util import (
+    CYAN,
+    MAGENTA,
+    NC,
+    RED,
+    YELLOW,
+    get_session_cache_path,
+    get_session_plan_path,
+)
+
 THRESHOLD_WARN = 80
 THRESHOLD_STOP = 90
 THRESHOLD_CRITICAL = 95
 LEARN_THRESHOLDS = [40, 60, 80]
 
-CACHE_TTL = 15
-
-
-def _sessions_base() -> Path:
-    """Get base sessions directory."""
-    return Path.home() / ".pilot" / "sessions"
-
-
-def get_session_cache_path() -> Path:
-    """Get session-scoped context cache path."""
-    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
-    cache_dir = _sessions_base() / session_id
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    return cache_dir / "context-cache.json"
-
-
-RED = "\033[0;31m"
-YELLOW = "\033[0;33m"
-CYAN = "\033[0;36m"
-MAGENTA = "\033[0;35m"
-NC = "\033[0m"
-
-
-def _get_session_plan_path() -> Path:
-    """Get session-scoped active plan JSON path."""
-    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
-    return _sessions_base() / session_id / "active_plan.json"
-
 
 def find_active_spec() -> tuple[Path | None, str | None]:
     """Find the active spec for THIS session via session-scoped active_plan.json."""
-    plan_json = _get_session_plan_path()
+    plan_json = get_session_plan_path()
     if not plan_json.exists():
         return None, None
 
@@ -165,22 +148,6 @@ def get_actual_token_count(session_file: Path) -> int | None:
     return input_tokens + cache_creation + cache_read
 
 
-def get_cached_context(session_id: str) -> tuple[int, bool, list[int], bool]:
-    """Get cached context value if fresh enough and for current session.
-
-    Returns: (tokens, is_cached, shown_learn_thresholds, shown_80_warn)
-    """
-    if get_session_cache_path().exists():
-        try:
-            with get_session_cache_path().open() as f:
-                cache = json.load(f)
-                if cache.get("session_id") == session_id and time.time() - cache.get("timestamp", 0) < CACHE_TTL:
-                    return cache.get("tokens", 0), True, cache.get("shown_learn", []), cache.get("shown_80_warn", False)
-        except (json.JSONDecodeError, OSError):
-            pass
-    return 0, False, [], False
-
-
 def get_session_flags(session_id: str) -> tuple[list[int], bool]:
     """Get shown flags for this session (learn thresholds, 80% warning)."""
     if get_session_cache_path().exists():
@@ -271,10 +238,6 @@ def _resolve_context(session_id: str) -> tuple[float, int, list[int], bool] | No
         shown_learn, shown_80_warn = get_session_flags(session_id)
         return statusline_pct, int(statusline_pct / 100 * 200000), shown_learn, shown_80_warn
 
-    cached_tokens, is_cached, shown_learn, shown_80_warn = get_cached_context(session_id)
-    if is_cached:
-        return (cached_tokens / 200000) * 100, cached_tokens, shown_learn, shown_80_warn
-
     session_file = find_session_file(session_id)
     if not session_file:
         return None
@@ -298,6 +261,8 @@ def run_context_monitor() -> int:
         return 0
 
     percentage, total_tokens, shown_learn, shown_80_warn = resolved
+
+    save_cache(total_tokens, session_id)
 
     new_learn_shown: list[int] = []
     for threshold in LEARN_THRESHOLDS:

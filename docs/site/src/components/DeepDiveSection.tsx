@@ -34,9 +34,7 @@ const hooksPipeline = [
     trigger: "PostToolUse",
     description: "After every Write / Edit operation",
     hooks: [
-      "Python quality: ruff format + lint + basedpyright",
-      "TypeScript quality: Prettier + ESLint + type check",
-      "Go quality: gofmt + golangci-lint + type check",
+      "File checker: auto-format, lint, type-check (Python, TypeScript, Go)",
       "TDD enforcer: warns if no failing test exists",
       "Memory observation: captures development context",
       "Context monitor: automatic session handoff",

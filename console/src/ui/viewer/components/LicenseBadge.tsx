@@ -5,6 +5,7 @@ import type { LicenseResponse } from '../../../services/worker/http/routes/Licen
 interface LicenseBadgeProps {
   license: LicenseResponse | null;
   isLoading: boolean;
+  onClick?: () => void;
 }
 
 const TIER_CONFIG: Record<string, { label: string; variant: 'primary' | 'accent' | 'warning' | 'error' }> = {
@@ -30,15 +31,26 @@ function buildTooltipText(license: LicenseResponse): string {
   return parts.join(' · ');
 }
 
-export function LicenseBadge({ license, isLoading }: LicenseBadgeProps) {
+function isActivatable(license: LicenseResponse): boolean {
+  return license.isExpired || license.tier === 'trial';
+}
+
+export function LicenseBadge({ license, isLoading, onClick }: LicenseBadgeProps) {
   if (isLoading || !license || !license.tier) {
     return null;
   }
 
+  const clickable = isActivatable(license) && !!onClick;
+  const clickProps = clickable
+    ? { onClick, role: 'button' as const, className: 'cursor-pointer' }
+    : {};
+
   if (license.isExpired) {
     return (
       <Tooltip text={buildTooltipText(license)} position="bottom">
-        <Badge variant="error" size="xs">Expired</Badge>
+        <span {...clickProps}>
+          <Badge variant="error" size="xs">Expired</Badge>
+        </span>
       </Tooltip>
     );
   }
@@ -55,7 +67,9 @@ export function LicenseBadge({ license, isLoading }: LicenseBadgeProps) {
 
   return (
     <Tooltip text={buildTooltipText(license)} position="bottom">
-      <Badge variant={config.variant} size="xs">{label}</Badge>
+      <span {...clickProps}>
+        <Badge variant={config.variant} size="xs">{label}</Badge>
+      </span>
     </Tooltip>
   );
 }

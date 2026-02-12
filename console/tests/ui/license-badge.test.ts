@@ -10,9 +10,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { LicenseBadge } from "../../src/ui/viewer/components/LicenseBadge.js";
 import type { LicenseResponse } from "../../src/services/worker/http/routes/LicenseRoutes.js";
 
-function renderBadge(license: LicenseResponse | null, isLoading = false) {
+function renderBadge(license: LicenseResponse | null, isLoading = false, onClick?: () => void) {
   return renderToStaticMarkup(
-    React.createElement(LicenseBadge, { license, isLoading }),
+    React.createElement(LicenseBadge, { license, isLoading, onClick }),
   );
 }
 
@@ -121,4 +121,39 @@ describe("LicenseBadge", () => {
     expect(html).toContain("5 days remaining");
   });
 
+  it("should render as clickable button for trial tier when onClick provided", () => {
+    const html = renderBadge({
+      valid: true,
+      tier: "trial",
+      email: "trial@example.com",
+      daysRemaining: 5,
+      isExpired: false,
+    }, false, () => {});
+
+    expect(html).toContain("cursor-pointer");
+  });
+
+  it("should render as clickable button for expired license when onClick provided", () => {
+    const html = renderBadge({
+      valid: false,
+      tier: "trial",
+      email: "trial@example.com",
+      daysRemaining: null,
+      isExpired: true,
+    }, false, () => {});
+
+    expect(html).toContain("cursor-pointer");
+  });
+
+  it("should not render as clickable for paid license", () => {
+    const html = renderBadge({
+      valid: true,
+      tier: "solo",
+      email: "user@example.com",
+      daysRemaining: null,
+      isExpired: false,
+    }, false, () => {});
+
+    expect(html).not.toContain("cursor-pointer");
+  });
 });

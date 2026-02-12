@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Icon } from '../../components/ui';
 import { LicenseBadge } from '../../components/LicenseBadge';
+import { ActivationModal } from '../../components/ActivationModal';
 import { useLicense } from '../../hooks/useLicense';
 import { TopbarActions } from './TopbarActions';
 
@@ -10,7 +12,8 @@ interface TopbarProps {
 }
 
 export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
-  const { license, isLoading } = useLicense();
+  const { license, isLoading, refetch } = useLicense();
+  const [showActivation, setShowActivation] = useState(false);
 
   return (
     <header className="h-14 bg-base-100 border-b border-base-300/50 flex items-center justify-between px-6 gap-4">
@@ -40,9 +43,14 @@ export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
           </a>
         </span>
         {!isLoading && license?.tier && <span className="text-base-content/20">|</span>}
-        <LicenseBadge license={license} isLoading={isLoading} />
+        <LicenseBadge license={license} isLoading={isLoading} onClick={() => setShowActivation(true)} />
       </div>
       <TopbarActions theme={theme} onToggleTheme={onToggleTheme} onToggleLogs={onToggleLogs} />
+      <ActivationModal
+        open={showActivation}
+        onClose={() => setShowActivation(false)}
+        onActivated={refetch}
+      />
     </header>
   );
 }

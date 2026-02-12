@@ -38,6 +38,7 @@ describe("LicenseRoutes", () => {
       const registeredRoutes: string[] = [];
       const mockApp = {
         get: (path: string) => registeredRoutes.push(`GET ${path}`),
+        post: (path: string) => registeredRoutes.push(`POST ${path}`),
       };
 
       routes.setupRoutes(mockApp as any);
@@ -180,6 +181,24 @@ describe("LicenseRoutes", () => {
       });
     });
 
+    it("should return fallback when stdout is empty", () => {
+      mockSpawnSync.mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(""),
+        stderr: Buffer.from(""),
+      });
+
+      const result = routes.getLicenseInfo();
+
+      expect(result).toEqual({
+        valid: false,
+        tier: null,
+        email: null,
+        daysRemaining: null,
+        isExpired: false,
+      });
+    });
+
     it("should cache results for 5 minutes", () => {
       const cliOutput = JSON.stringify({
         success: true,
@@ -198,6 +217,124 @@ describe("LicenseRoutes", () => {
       routes.getLicenseInfo();
 
       expect(mockSpawnSync).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("route setup for activate", () => {
+    it("should register POST /api/license/activate", () => {
+      const registeredRoutes: string[] = [];
+      const mockApp = {
+        get: (path: string) => registeredRoutes.push(`GET ${path}`),
+        post: (path: string) => registeredRoutes.push(`POST ${path}`),
+      };
+
+      routes.setupRoutes(mockApp as any);
+
+      expect(registeredRoutes).toContain("POST /api/license/activate");
+    });
+  });
+
+  describe("activateLicense", () => {
+    it("should return success when pilot activate succeeds", () => {
+      const cliOutput = JSON.stringify({
+        success: true,
+        tier: "solo",
+        email: "user@example.com",
+        activations_used: 1,
+        activations_limit: 3,
+      });
+
+      mockSpawnSync.mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(cliOutput),
+        stderr: Buffer.from(""),
+      });
+
+      const result = routes.activateLicense("TEST-KEY-123");
+
+      expect(result).toEqual({
+        success: true,
+        tier: "solo",
+        email: "user@example.com",
+        error: null,
+      });
+    });
+
+    it("should return error when pilot activate fails", () => {
+      const cliOutput = JSON.stringify({
+        success: false,
+        error: "Invalid license key",
+      });
+
+      mockSpawnSync.mockReturnValue({
+        status: 1,
+        stdout: Buffer.from(cliOutput),
+        stderr: Buffer.from(""),
+      });
+
+      const result = routes.activateLicense("BAD-KEY");
+
+      expect(result).toEqual({
+        success: false,
+        tier: null,
+        email: null,
+        error: "Invalid license key",
+      });
+    });
+
+    it("should return error when pilot binary not found", () => {
+      mockExistsSync.mockReturnValue(false);
+
+      const result = routes.activateLicense("ANY-KEY");
+
+      expect(result).toEqual({
+        success: false,
+        tier: null,
+        email: null,
+        error: "Pilot binary not found",
+      });
+    });
+
+    it("should invalidate license cache after successful activation", () => {
+      const statusOutput = JSON.stringify({
+        success: true,
+        tier: "trial",
+        email: "trial@example.com",
+        days_remaining: 3,
+      });
+      mockSpawnSync.mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(statusOutput),
+        stderr: Buffer.from(""),
+      });
+      routes.getLicenseInfo();
+
+      const activateOutput = JSON.stringify({
+        success: true,
+        tier: "solo",
+        email: "user@example.com",
+      });
+      mockSpawnSync.mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(activateOutput),
+        stderr: Buffer.from(""),
+      });
+      routes.activateLicense("VALID-KEY");
+
+      const newStatusOutput = JSON.stringify({
+        success: true,
+        tier: "solo",
+        email: "user@example.com",
+        days_remaining: null,
+      });
+      mockSpawnSync.mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(newStatusOutput),
+        stderr: Buffer.from(""),
+      });
+      routes.getLicenseInfo();
+
+      expect(mockSpawnSync).toHaveBeenCalledTimes(3);
     });
   });
 });

@@ -2,7 +2,7 @@
 name: plan-verifier
 description: Verifies plan completeness and alignment with user requirements. Returns structured JSON findings.
 tools: Read, Grep, Glob, Write
-model: opus
+model: sonnet
 permissionMode: plan
 ---
 

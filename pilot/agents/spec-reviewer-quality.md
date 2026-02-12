@@ -16,26 +16,30 @@ You review implementation code for quality, security, testing, performance, and 
 
 ### Step 0: Load Rules (DO THIS FIRST)
 
-```bash
-# 1. List and read ALL global rules
-ls ~/.claude/rules/*.md
+Read **quality-relevant** rules only. Skip workflow/tool rules (context-continuation, pilot-cli, memory, web-search, etc.) — they don't apply to code review.
 
-# 2. List and read ALL project rules
+```bash
+# 1. Read coding standards and language-specific rules
+ls ~/.claude/rules/{coding-standards,tdd-enforcement,execution-verification,verification-before-completion,systematic-debugging,testing-*,python-rules,typescript-rules,golang-rules,standards-*}.md
+
+# 2. Read ALL project rules (these are few and always relevant)
 ls .claude/rules/*.md
 ```
 
-**For EACH rule file found, use the Read tool to read it completely.**
+**For EACH matched rule file, use the Read tool to read it completely.**
 
-The rules contain critical requirements like:
+Rules to SKIP (not relevant to code review):
+- `context-continuation.md`, `context7-docs.md` — session management
+- `gh-cli.md`, `git-operations.md` — git/GitHub workflow
+- `grep-mcp.md`, `mcp-cli.md` — tool usage
+- `learn.md`, `memory.md` — learning/memory systems
+- `pilot-cli.md` — CLI reference
+- `playwright-cli.md` — browser automation
+- `vexor-search.md`, `web-search.md` — search tools
+- `team-vault.md` — vault management
+- `workflow-enforcement.md` — task/workflow orchestration
 
-- TDD enforcement details
-- Testing strategies and coverage requirements
-- Execution verification requirements
-- Git commit standards
-- Language-specific conventions
-- Security requirements
-
-**DO NOT skip this step. DO NOT proceed to code review until you have read every rule file.**
+**DO NOT skip this step. DO NOT proceed to code review until you have read the quality-relevant rules.**
 
 ### Why This Matters
 
@@ -46,6 +50,7 @@ Without reading the rules, you will miss:
 - Mandatory mocking in unit tests
 - Error handling standards
 - Security requirements
+- Language-specific conventions (Python, TypeScript, Go)
 
 ## Quick Rule Reference (After Reading Full Rules)
 

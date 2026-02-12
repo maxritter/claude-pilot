@@ -174,7 +174,7 @@ There are TWO verification points, each launching TWO agents via `Task()`:
 | **`spec-plan` (Step 1.7)**   | `plan-verifier` + `plan-challenger`                     | `pilot:plan-verifier` + `pilot:plan-challenger`         |
 | **`spec-verify` (Step 3.0, 3.5)** | `spec-reviewer-compliance` + `spec-reviewer-quality` | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` |
 
-**How to launch:** Use TWO `Task()` calls in a SINGLE message with `subagent_type="pilot:*"`. In `spec-verify`, also set `run_in_background=true` so agents work while automated checks proceed. See `spec-plan.md` Step 1.7 and `spec-verify.md` Step 3.0d for exact syntax.
+**How to launch:** Use TWO `Task()` calls in a SINGLE message with `subagent_type="pilot:*"`. **ALWAYS set `run_in_background=true` on BOTH agents** — in both `spec-plan` and `spec-verify`. Without `run_in_background`, the first Task blocks and the second runs only after it finishes, making them sequential. See `spec-plan.md` Step 1.7 and `spec-verify.md` Step 3.0d for exact syntax.
 
 **⛔ VERIFICATION STEPS ARE MANDATORY - NEVER SKIP THEM.**
 

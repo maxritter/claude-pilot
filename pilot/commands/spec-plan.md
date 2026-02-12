@@ -528,12 +528,13 @@ Define output paths (replace `<session-id>` with the resolved value):
 
 #### Launch Plan Verification (Parallel Review)
 
-Spawn 2 agents in parallel using TWO Task tool calls in a SINGLE message:
+**⛔ CRITICAL: You MUST send BOTH Task calls in a SINGLE message.** Set `run_in_background=true` on both so they run in parallel. If you send them in separate messages, the first blocks and the second waits — defeating the purpose.
 
 **Agent 1: plan-verifier** (alignment and completeness)
 ```
 Task(
   subagent_type="pilot:plan-verifier",
+  run_in_background=true,
   prompt="""
   **Plan file:** <plan-path>
   **User request:** <original task description from user>
@@ -552,6 +553,7 @@ Task(
 ```
 Task(
   subagent_type="pilot:plan-challenger",
+  run_in_background=true,
   prompt="""
   **Plan file:** <plan-path>
   **User request:** <original task description from user>
@@ -575,7 +577,7 @@ Both agents persist their findings JSON to the session directory for reliable re
 
 #### Collect and Merge Findings
 
-After BOTH agents complete:
+After BOTH background agents complete (use Read tool to check output files, retry if not yet written):
 
 1. **Read findings from files** using the Read tool on the paths defined above
 2. **Fall back** to agent return values if files are missing

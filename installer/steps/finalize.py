@@ -107,14 +107,14 @@ class FinalizeStep(BaseStep):
             steps.append(
                 (
                     "Claude Pilot Console",
-                    "Open http://localhost:41777 → Browse memories, sessions, tags, and live activity",
+                    "Open http://localhost:41777 → Browse specifications, memories, sessions and search",
                 )
             )
         else:
             steps.append(
                 (
                     "Claude Pilot Console",
-                    "Open http://localhost:41777 → Browse memories, sessions, tags, and live activity\n"
+                    "Open http://localhost:41777 → Browse specifications, memories, sessions and search\n"
                     "     (Check VS Code Ports tab if 41777 is unavailable - may be another port)",
                 )
             )

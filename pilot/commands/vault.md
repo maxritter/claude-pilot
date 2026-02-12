@@ -120,13 +120,13 @@ Options:
 
 ## Pull: Install Team Assets
 
-Assets are installed **per-project** by default — they go to the project's `.claude/` directory, not `~/.claude/`. This keeps each project self-contained with exactly the assets it needs.
+Assets are installed **per-project** by default — they go to the project's `.claude/` directory, not `~/.claude/`. Always use `--target` to ensure assets install to the current project:
 
 ```bash
-sx install --repair
+sx install --repair --target .
 ```
 
-The `--repair` flag verifies assets are actually installed and fixes any discrepancies (missing files, broken symlinks). Project-scoped assets install to `.claude/` in the current project; global assets install to `~/.claude/`.
+The `--target .` flag ensures assets are installed to the current project's `.claude/` directory. The `--repair` flag verifies assets are actually installed and fixes any discrepancies.
 
 **For CI/automation** where you're not inside the project directory:
 
@@ -389,8 +389,41 @@ To change an existing asset's scope, run `sx add <name>` again (without a path) 
 | Error                     | Action                                                  |
 | ------------------------- | ------------------------------------------------------- |
 | "configuration not found" | Run setup flow                                          |
-| "authentication failed"   | Check git credentials/SSH key. Suggest `--ssh-key` flag |
+| "authentication failed" / "could not read Username" | Run the **Git Authentication Fix** below |
 | "repository not found"    | Verify URL is correct and user has access               |
 | "asset already exists"    | sx will auto-increment version — this is expected       |
 | "failed to install"       | Run `sx install --repair` to fix discrepancies          |
 | Network errors            | Check internet connection, retry                        |
+
+### Git Authentication Fix
+
+When HTTPS git operations fail (common in dev containers and fresh environments), determine the git host from the vault repo URL and guide accordingly:
+
+**GitHub** (recommended — uses `gh` CLI):
+
+1. Check if `gh` is installed and authenticated:
+   ```bash
+   gh auth status 2>&1
+   ```
+2. If not authenticated, run the interactive login:
+   ```bash
+   gh auth login
+   ```
+3. Configure git to use `gh` as credential helper. **IMPORTANT: Only use this exact command — do NOT manually set `credential.helper` via `git config`:**
+   ```bash
+   gh auth setup-git
+   ```
+4. Retry the vault operation.
+
+**GitLab / Bitbucket / other hosts:**
+
+1. Suggest switching to SSH — ask user to re-initialize the vault with an SSH URL:
+   ```bash
+   sx init --type git --repo-url git@gitlab.com:org/vault.git
+   ```
+2. Or configure a personal access token for HTTPS:
+   ```bash
+   git config --global credential.helper store
+   # Then retry — git will prompt for username/token and save it
+   ```
+3. Retry the vault operation.

@@ -63,7 +63,7 @@ def _get_installed_extensions(cli: str) -> set[str]:
 
 
 def _install_extension(cli: str, extension_id: str) -> bool:
-    """Install a single extension and verify it was installed."""
+    """Install a single extension."""
     try:
         result = subprocess.run(
             [cli, "--install-extension", extension_id, "--force"],
@@ -73,8 +73,7 @@ def _install_extension(cli: str, extension_id: str) -> bool:
         output = result.stdout + result.stderr
         if "Cannot install" in output or "not found" in output.lower():
             return False
-        installed = _get_installed_extensions(cli)
-        return extension_id.lower() in installed
+        return result.returncode == 0
     except subprocess.CalledProcessError:
         return False
 

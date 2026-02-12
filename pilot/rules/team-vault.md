@@ -9,7 +9,7 @@ Share AI assets (rules, skills, commands, agents, hooks) across your team using 
 | User says "share", "push", "vault" | Use `/vault` command |
 | After `/sync` creates new rules/skills | Suggest `/vault` to share |
 | User wants team consistency | Set up vault + push standards |
-| New team member onboarding | `sx install --repair` |
+| New team member onboarding | `sx install --repair --target .` |
 
 ### Quick Reference
 
@@ -18,8 +18,8 @@ Share AI assets (rules, skills, commands, agents, hooks) across your team using 
 sx config                              # Show config, vault URL, installed assets
 sx vault list                          # List all vault assets with versions
 
-# Pull team assets (installs to project .claude/ or ~/.claude/ based on scope)
-sx install --repair                    # Fetch and install, fix discrepancies
+# Pull team assets (always use --target to install to project .claude/)
+sx install --repair --target .         # Fetch and install to current project
 sx install --repair --target /path     # Install for a project you're not inside (CI/Docker)
 
 # Push assets to team (project-scoped — recommended)
@@ -96,6 +96,6 @@ sx vault list
 
 - Always use `--no-install` when pushing your own assets (they're already local)
 - Use `--name` to control the asset name in the vault
-- Run `sx install --repair` after pulling to fix any missing installations
-- Use `--target` to install for a project from outside it (CI pipelines, Docker)
+- Always use `sx install --repair --target .` to install assets to the current project
+- Use `--target /path` to install for a project from outside it (CI pipelines, Docker)
 - Multiple profiles supported via `--profile` flag or `SX_PROFILE` env var

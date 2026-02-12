@@ -105,7 +105,7 @@ class TestInstallPlaywrightCli:
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
     def test_installs_browser_when_npm_succeeds_but_not_ready(self, mock_run, mock_ready, mock_subprocess):
-        """Runs playwright-cli install-browser when npm succeeds but Chromium not cached."""
+        """Runs playwright-cli install when npm succeeds but Chromium not cached."""
         from installer.steps.dependencies import install_playwright_cli
 
         mock_ready.side_effect = [False, False, False]
@@ -115,9 +115,10 @@ class TestInstallPlaywrightCli:
         mock_subprocess.run.return_value = mock_result
         assert install_playwright_cli() is True
         mock_subprocess.run.assert_called_once_with(
-            ["playwright-cli", "install-browser"],
+            ["playwright-cli", "install"],
             capture_output=True,
             text=True,
+            timeout=300,
         )
 
     @patch("installer.steps.dependencies.subprocess")

@@ -1,3 +1,5 @@
 launcher/** filter=git-crypt diff=git-crypt
+console/src/** filter=git-crypt diff=git-crypt
+console/scripts/** filter=git-crypt diff=git-crypt
 docs/site/api/** filter=git-crypt diff=git-crypt
 .gitattributes !filter !diff

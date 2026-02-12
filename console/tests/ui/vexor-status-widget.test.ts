@@ -73,7 +73,7 @@ describe("VexorStatus Widget", () => {
       expect(html).toContain("Never");
     });
 
-    it("renders display-only mode without reindex button", async () => {
+    it("renders hint text for re-indexing when files are indexed", async () => {
       const { VexorStatus } = await import(
         "../../src/ui/viewer/views/Dashboard/VexorStatus.js"
       );
@@ -87,9 +87,28 @@ describe("VexorStatus Widget", () => {
         })
       );
 
-      expect(html).not.toContain("Re-index");
       expect(html).toContain("Codebase Indexing");
       expect(html).toContain("100");
+      expect(html).toContain("/sync");
+      expect(html).toContain("vexor index --clear");
+    });
+
+    it("renders sync prompt when zero files indexed", async () => {
+      const { VexorStatus } = await import(
+        "../../src/ui/viewer/views/Dashboard/VexorStatus.js"
+      );
+
+      const html = renderToString(
+        React.createElement(VexorStatus, {
+          isIndexed: false,
+          files: 0,
+          generatedAt: null,
+          isReindexing: false,
+        })
+      );
+
+      expect(html).toContain("/sync");
+      expect(html).not.toContain("vexor index --clear");
     });
 
     it("renders indexing badge when isReindexing is true", async () => {

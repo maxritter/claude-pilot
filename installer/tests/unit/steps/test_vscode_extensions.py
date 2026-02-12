@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from installer.steps.vscode_extensions import (
     CONTAINER_EXTENSIONS,
     VSCodeExtensionsStep,
+    _install_extension,
 )
 
 
@@ -78,3 +79,22 @@ class TestVSCodeExtensionsStep:
         ctx = MagicMock()
         step = VSCodeExtensionsStep()
         assert step.check(ctx) is False
+
+
+class TestInstallExtension:
+    """Test _install_extension function."""
+
+    @patch("installer.steps.vscode_extensions.subprocess.run")
+    def test_returns_true_when_command_succeeds_but_not_in_list_yet(self, mock_run):
+        """Returns True when install command exits 0 even if extension not yet in list.
+
+        In dev containers, the extension host may register extensions asynchronously,
+        so the extension might not appear in --list-extensions immediately.
+        """
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "Extension 'test.ext' was successfully installed.\n"
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        assert _install_extension("code", "test.ext") is True

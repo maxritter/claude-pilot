@@ -486,21 +486,23 @@ def install_playwright_cli(ui: Any = None) -> bool:
         return True
 
     try:
+        spinner_label = "Downloading Chromium browser..."
         if ui:
-            with ui.spinner("Downloading Chromium browser..."):
+            with ui.spinner(spinner_label):
                 result = subprocess.run(
-                    ["playwright-cli", "install-browser"],
+                    ["playwright-cli", "install"],
                     capture_output=True,
                     text=True,
+                    timeout=300,
                 )
-            return result.returncode == 0
         else:
             result = subprocess.run(
-                ["playwright-cli", "install-browser"],
+                ["playwright-cli", "install"],
                 capture_output=True,
                 text=True,
+                timeout=300,
             )
-            return result.returncode == 0
+        return result.returncode == 0
     except Exception:
         return False
 

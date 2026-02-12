@@ -609,14 +609,26 @@ def _install_vexor_with_ui(ui: Any) -> bool:
         return False
 
 
+def _extract_npx_package_name(package: str) -> str:
+    """Extract npm package name without version/tag suffix.
+
+    Examples: "fetcher-mcp" → "fetcher-mcp",
+    "open-websearch@latest" → "open-websearch",
+    "@upstash/context7-mcp" → "@upstash/context7-mcp",
+    "@scope/pkg@1.0" → "@scope/pkg"
+    """
+    if package.startswith("@"):
+        parts = package[1:].split("@", 1)
+        return "@" + parts[0]
+    return package.split("@", 1)[0]
+
+
 def _is_npx_package_cached(package: str) -> bool:
     """Check if an npx package is already cached in ~/.npm/_npx/."""
     npx_cache = Path.home() / ".npm" / "_npx"
     if not npx_cache.exists():
         return False
-    pkg_name = package.split("@")[0] if "@" not in package or package.startswith("@") else package
-    if package.startswith("@"):
-        pkg_name = package.rsplit("@", 1)[0] if package.count("@") > 1 else package
+    pkg_name = _extract_npx_package_name(package)
     for hash_dir in npx_cache.iterdir():
         candidate = hash_dir / "node_modules" / pkg_name
         if candidate.is_dir():

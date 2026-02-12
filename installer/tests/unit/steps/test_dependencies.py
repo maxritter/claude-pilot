@@ -727,3 +727,23 @@ class TestPrecacheNpxMcpServers:
 
             with patch.object(Path, "home", return_value=Path(tmpdir)):
                 assert _is_npx_package_cached("@upstash/context7-mcp") is True
+
+    def test_is_npx_package_cached_strips_version_tag(self):
+        """_is_npx_package_cached strips @latest/@version from package names."""
+        from installer.steps.dependencies import _is_npx_package_cached
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            npx_cache = Path(tmpdir) / ".npm" / "_npx" / "abc123" / "node_modules" / "open-websearch"
+            npx_cache.mkdir(parents=True)
+
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                assert _is_npx_package_cached("open-websearch@latest") is True
+
+    def test_extract_npx_package_name(self):
+        """_extract_npx_package_name strips version/tag suffixes correctly."""
+        from installer.steps.dependencies import _extract_npx_package_name
+
+        assert _extract_npx_package_name("fetcher-mcp") == "fetcher-mcp"
+        assert _extract_npx_package_name("open-websearch@latest") == "open-websearch"
+        assert _extract_npx_package_name("@upstash/context7-mcp") == "@upstash/context7-mcp"
+        assert _extract_npx_package_name("@scope/pkg@1.0.0") == "@scope/pkg"

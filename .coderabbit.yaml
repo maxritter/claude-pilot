@@ -24,8 +24,6 @@ reviews:
     # Exclude git-crypt encrypted directories from reviews (see .gitattributes)
     - "!launcher/**"
     - "!pilot/**"
-    - "!console/src/**"
-    - "!console/scripts/**"
     - "!docs/site/api/**"
 
   path_instructions:

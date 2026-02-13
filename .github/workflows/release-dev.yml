@@ -59,14 +59,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Install git-crypt
-        run: sudo apt-get update && sudo apt-get install -y git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -88,14 +80,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Install git-crypt
-        run: sudo apt-get update && sudo apt-get install -y git-crypt
-
-      - name: Unlock repository
-        env:
-          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-        run: bash .github/workflows/scripts/setup-git-crypt.sh
 
       - name: Setup Node.js
         uses: actions/setup-node@v6

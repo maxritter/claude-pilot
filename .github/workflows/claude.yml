@@ -16,8 +16,6 @@ on:
     types: [opened, synchronize, ready_for_review, reopened]
     paths-ignore:
       - 'launcher/**'       # git-crypted - exclude from review
-      - 'console/src/**'    # git-crypted - exclude from review
-      - 'console/scripts/**' # git-crypted - exclude from review
       - 'docs/site/api/**'  # git-crypted - exclude from review
 
   # Manual trigger
@@ -97,8 +95,6 @@ jobs:
             IMPORTANT: The following paths are git-crypt encrypted and will appear as binary data.
             Do NOT flag them as issues or claim you cannot verify their contents:
             - launcher/**
-            - console/src/**
-            - console/scripts/**
             - docs/site/api/**
             Skip these paths entirely in your review. Only review non-encrypted files.
 
@@ -118,8 +114,6 @@ jobs:
             IMPORTANT: The following paths are git-crypt encrypted and will appear as binary data.
             Do NOT flag them as issues or claim you cannot verify their contents:
             - launcher/**
-            - console/src/**
-            - console/scripts/**
             - docs/site/api/**
             Skip these paths entirely in your review. Only review non-encrypted files.
 

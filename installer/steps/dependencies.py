@@ -361,7 +361,7 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
             _configure_vexor_local()
             return True
         if not command_exists("vexor"):
-            if not _run_bash_with_retry("uv pip install --system 'vexor[local]'"):
+            if not _run_bash_with_retry("uv tool install 'vexor[local]'"):
                 return False
         _configure_vexor_local()
         return _setup_vexor_local_model(ui)

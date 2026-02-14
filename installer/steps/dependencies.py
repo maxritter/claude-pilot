@@ -90,23 +90,6 @@ def install_python_tools() -> bool:
         return False
 
 
-def _remove_native_claude_binaries() -> None:
-    """Remove native-installed Claude Code to avoid conflicts with npm install."""
-    import shutil
-
-    native_bin = Path.home() / ".local" / "bin" / "claude"
-    native_data = Path.home() / ".local" / "share" / "claude"
-
-    if native_bin.exists() or native_bin.is_symlink():
-        try:
-            native_bin.unlink()
-        except Exception:
-            pass
-
-    if native_data.exists():
-        shutil.rmtree(native_data, ignore_errors=True)
-
-
 def _patch_claude_config(config_updates: dict) -> bool:
     """Patch ~/.claude.json with the given config updates.
 
@@ -165,7 +148,6 @@ def _configure_claude_defaults() -> bool:
             "lspRecommendationDisabled": True,
             "showTurnDuration": False,
             "terminalProgressBarEnabled": True,
-            "preferredNotifChannel": "iterm2_with_bell",
         }
     )
     settings_ok = _patch_claude_settings(
@@ -236,7 +218,6 @@ def _get_installed_claude_version() -> str | None:
 
 def install_claude_code(project_dir: Path, ui: Any = None) -> tuple[bool, str]:
     """Install/upgrade Claude Code CLI via npm and configure defaults."""
-    _remove_native_claude_binaries()
     _clean_npm_stale_dirs()
 
     forced_version = _get_forced_claude_version(project_dir)

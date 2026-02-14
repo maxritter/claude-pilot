@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Github, Menu, X, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { navigateToSection } from "@/utils/navigateToSection";
-import logoPng from "@/assets/logo.png";
+import boxPng from "@/assets/box.png";
 
 const navLinks = [
   { label: "Getting Started", href: "#installation" },
@@ -29,7 +29,7 @@ const NavBar = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3">
-          <img src={logoPng} alt="Claude Pilot" className="h-8 sm:h-10 w-auto" />
+          <img src={boxPng} alt="Claude Pilot" className="h-8 sm:h-10 w-auto rounded-md border border-primary/20" />
         </Link>
 
         {/* Desktop Navigation */}

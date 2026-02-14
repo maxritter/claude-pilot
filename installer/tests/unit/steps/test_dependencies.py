@@ -150,9 +150,8 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
     @patch("installer.steps.dependencies._clean_npm_stale_dirs")
-    def test_install_claude_code_cleans_stale_dirs(self, mock_clean, _mock_remove, _mock_run, _mock_config, _mock_version):
+    def test_install_claude_code_cleans_stale_dirs(self, mock_clean, _mock_run, _mock_config, _mock_version):
         """install_claude_code cleans stale npm temp directories before install."""
         from installer.steps.dependencies import install_claude_code
 
@@ -164,21 +163,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_removes_native_binaries(self, mock_remove, _mock_run, _mock_config, _mock_version):
-        """install_claude_code removes native binaries before npm install."""
-        from installer.steps.dependencies import install_claude_code
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            install_claude_code(Path(tmpdir))
-
-        mock_remove.assert_called_once()
-
-    @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
-    @patch("installer.steps.dependencies._configure_claude_defaults")
-    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_uses_npm(self, _mock_remove, mock_run, _mock_config, _mock_version):
+    def test_install_claude_code_uses_npm(self, mock_run, _mock_config, _mock_version):
         """install_claude_code uses npm install -g."""
         from installer.steps.dependencies import install_claude_code
 
@@ -194,8 +179,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value="2.1.19")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_uses_version_tag(self, _mock_remove, mock_run, _mock_config, _mock_version):
+    def test_install_claude_code_uses_version_tag(self, mock_run, _mock_config, _mock_version):
         """install_claude_code uses npm version tag for pinned version."""
         from installer.steps.dependencies import install_claude_code
 
@@ -212,10 +196,9 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=False)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
     @patch("installer.steps.dependencies._get_installed_claude_version", return_value="1.0.0")
     def test_install_claude_code_succeeds_if_already_installed(
-        self, _mock_get_ver, _mock_remove, _mock_run, mock_config, _mock_version, _mock_cmd_exists
+        self, _mock_get_ver, _mock_run, mock_config, _mock_version, _mock_cmd_exists
     ):
         """install_claude_code returns success when npm fails but claude already exists."""
         from installer.steps.dependencies import install_claude_code
@@ -230,8 +213,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_configures_defaults(self, _mock_remove, _mock_run, mock_config, _mock_version):
+    def test_install_claude_code_configures_defaults(self, _mock_run, mock_config, _mock_version):
         """install_claude_code configures Claude defaults after npm install."""
         from installer.steps.dependencies import install_claude_code
 
@@ -243,9 +225,8 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value="2.1.19")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
     def test_install_claude_code_with_ui_shows_pinned_version_info(
-        self, _mock_remove, _mock_run, _mock_config, _mock_version
+        self, _mock_run, _mock_config, _mock_version
     ):
         """_install_claude_code_with_ui shows info about pinned version."""
         from installer.steps.dependencies import _install_claude_code_with_ui

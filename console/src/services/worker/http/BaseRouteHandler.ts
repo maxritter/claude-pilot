@@ -20,6 +20,7 @@ export abstract class BaseRouteHandler {
     handler: (req: Request, res: Response) => void | Promise<void>,
   ): (req: Request, res: Response) => void {
     return (req: Request, res: Response): void => {
+      res.setHeader?.("Cache-Control", "no-store");
       try {
         const result = handler(req, res);
         if (result instanceof Promise) {

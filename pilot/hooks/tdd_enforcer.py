@@ -127,10 +127,48 @@ def has_related_failing_test(project_dir: str, impl_file: str) -> bool:
         return False
 
 
-def has_typescript_test_file(impl_path: str) -> bool:
-    """Check if corresponding TypeScript test file exists."""
+def _find_test_dirs(start: Path) -> list[Path]:
+    """Walk up from start to find common test directories."""
+    dirs: list[Path] = []
+    current = start
+    for _ in range(15):
+        for name in ("tests", "test", "__tests__"):
+            candidate = current / name
+            if candidate.is_dir():
+                dirs.append(candidate)
+        if current.parent == current:
+            break
+        current = current.parent
+    return dirs
+
+
+def _search_test_dirs(test_dirs: list[Path], base_name: str, extensions: list[str]) -> bool:
+    """Search test directories for files matching base_name with any of the given extensions."""
+    patterns = [f"**/{base_name}{ext}" for ext in extensions]
+    for test_dir in test_dirs:
+        for pattern in patterns:
+            if list(test_dir.glob(pattern)):
+                return True
+    return False
+
+
+def has_python_test_file(impl_path: str) -> bool:
+    """Check if corresponding Python test file exists (sibling or in test dirs)."""
     path = Path(impl_path)
-    directory = path.parent
+    module_name = path.stem
+
+    sibling_names = [f"test_{module_name}.py", f"{module_name}_test.py"]
+    for name in sibling_names:
+        if (path.parent / name).exists():
+            return True
+
+    test_dirs = _find_test_dirs(path.parent)
+    return _search_test_dirs(test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"])
+
+
+def has_typescript_test_file(impl_path: str) -> bool:
+    """Check if corresponding TypeScript test file exists (sibling or in test dirs)."""
+    path = Path(impl_path)
 
     if path.name.endswith(".tsx"):
         base_name = path.name[:-4]
@@ -142,24 +180,27 @@ def has_typescript_test_file(impl_path: str) -> bool:
         return False
 
     for ext in extensions:
-        test_file = directory / f"{base_name}{ext}"
-        if test_file.exists():
+        if (path.parent / f"{base_name}{ext}").exists():
             return True
 
-    return False
+    test_dirs = _find_test_dirs(path.parent)
+    return _search_test_dirs(test_dirs, base_name, extensions)
 
 
 def has_go_test_file(impl_path: str) -> bool:
-    """Check if corresponding Go test file exists."""
+    """Check if corresponding Go test file exists (sibling or in test dirs)."""
     path = Path(impl_path)
 
     if not path.name.endswith(".go"):
         return False
 
     base_name = path.stem
-    test_file = path.parent / f"{base_name}_test.go"
 
-    return test_file.exists()
+    if (path.parent / f"{base_name}_test.go").exists():
+        return True
+
+    test_dirs = _find_test_dirs(path.parent)
+    return _search_test_dirs(test_dirs, base_name, ["_test.go"])
 
 
 def _is_import_line(line: str) -> bool:
@@ -259,10 +300,13 @@ def run_tdd_enforcer() -> int:
         if found_failing:
             return 0
 
+        if has_python_test_file(file_path):
+            return 0
+
         module_name = Path(file_path).stem
         return warn(
-            f"No failing test for '{module_name}' module",
-            f"Write a failing test in test_{module_name}.py first.",
+            f"No test file found for '{module_name}' module",
+            f"Consider creating test_{module_name}.py first.",
         )
 
     if file_path.endswith((".ts", ".tsx")):

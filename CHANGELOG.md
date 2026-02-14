@@ -25,7 +25,7 @@ All notable changes to Claude Pilot will be documented in this file.
 
 ### Features
 
-- Add Usage tab with cost/token tracking 
+- Add Usage tab with cost/token tracking
 
 ## [6.4.5] - 2026-02-12
 
@@ -68,7 +68,6 @@ All notable changes to Claude Pilot will be documented in this file.
 
 ### Miscellaneous
 
-- Add DataFast analytics tracking script
 - Restore STANDARDS in agent roster, remove from hero, add sessions command to docs
 - Remove STANDARDS from hero section, consolidate footer links, restore lightweight website deploy
 
@@ -81,7 +80,7 @@ All notable changes to Claude Pilot will be documented in this file.
 
 ### Features
 
-- Parallel multi-agent verification, standards migration, blog & dashboard 
+- Parallel multi-agent verification, standards migration, blog & dashboard
 
 ### Miscellaneous
 

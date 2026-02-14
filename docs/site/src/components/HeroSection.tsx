@@ -1,9 +1,7 @@
-import { Suspense, lazy } from "react";
 import { Github, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-const VoxelLogo3D = lazy(() => import("@/components/VoxelLogo3D"));
+import Logo from "@/components/Logo";
 
 const HeroSection = () => {
   const scrollToInstall = () => {
@@ -50,11 +48,9 @@ const HeroSection = () => {
           </Badge>
         </div>
 
-        {/* 3D Voxel Logo */}
+        {/* Logo */}
         <div className="animate-fade-in-up animation-delay-100 flex justify-center my-2 xs:my-4 sm:my-6">
-          <Suspense fallback={<div className="w-[85vw] max-w-[240px] xs:max-w-[300px] sm:max-w-[420px] md:max-w-[500px] lg:max-w-[580px] aspect-[2/1]" />}>
-            <VoxelLogo3D />
-          </Suspense>
+          <Logo variant="hero" />
         </div>
 
         {/* Subtitle */}

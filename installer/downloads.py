@@ -5,13 +5,56 @@ from __future__ import annotations
 import filecmp
 import hashlib
 import json
+import os
 import shutil
+import ssl
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+_ssl_context: ssl.SSLContext | None = None
+
+
+def _get_ssl_context() -> ssl.SSLContext:
+    """Create SSL context with CA cert fallbacks for macOS, Linux, and containers."""
+    global _ssl_context
+    if _ssl_context is not None:
+        return _ssl_context
+
+    try:
+        import certifi
+
+        _ssl_context = ssl.create_default_context(cafile=certifi.where())
+        return _ssl_context
+    except ImportError:
+        pass
+
+    ctx = ssl.create_default_context()
+
+    for ca_path in (
+        "/etc/ssl/certs/ca-certificates.crt",
+        "/etc/pki/tls/certs/ca-bundle.crt",
+        "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+        "/etc/ssl/ca-bundle.pem",
+        "/etc/ssl/cert.pem",
+        "/etc/ca-certificates/extracted/tls-ca-bundle.pem",
+        "/opt/homebrew/etc/ca-certificates/cert.pem",
+        "/usr/local/etc/openssl@3/cert.pem",
+        "/opt/homebrew/etc/openssl@3/cert.pem",
+    ):
+        if os.path.isfile(ca_path):
+            try:
+                ctx.load_verify_locations(ca_path)
+                _ssl_context = ctx
+                return _ssl_context
+            except (ssl.SSLError, OSError):
+                continue
+
+    _ssl_context = ctx
+    return _ssl_context
 
 
 @dataclass
@@ -107,7 +150,7 @@ def download_file(
     file_url = f"{config.repo_url}/raw/{config.repo_branch}/{repo_path}"
     try:
         request = urllib.request.Request(file_url)
-        with urllib.request.urlopen(request, timeout=30.0) as response:
+        with urllib.request.urlopen(request, timeout=30.0, context=_get_ssl_context()) as response:
             if response.status != 200:
                 return False
 
@@ -196,7 +239,7 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[FileInfo]:
     tree_json_url = f"{config.repo_url}/releases/download/{config.repo_branch}/tree.json"
     try:
         request = urllib.request.Request(tree_json_url)
-        with urllib.request.urlopen(request, timeout=30.0) as response:
+        with urllib.request.urlopen(request, timeout=30.0, context=_get_ssl_context()) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode("utf-8"))
                 remote_files: list[FileInfo] = []
@@ -219,7 +262,7 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[FileInfo]:
         if cached_etag:
             request.add_header("If-None-Match", cached_etag)
 
-        with urllib.request.urlopen(request, timeout=30.0) as response:
+        with urllib.request.urlopen(request, timeout=30.0, context=_get_ssl_context()) as response:
             if response.status != 200:
                 return []
 

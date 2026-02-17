@@ -12,6 +12,7 @@ IDE_CLI_COMMANDS = [
     "cursor",
     "windsurf",
     "code",
+    "code-insiders",
 ]
 
 CONTAINER_EXTENSIONS = [

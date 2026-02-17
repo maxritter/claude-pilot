@@ -24,7 +24,7 @@ from installer.steps.settings_merge import (
     save_manifest,
 )
 
-SETTINGS_FILE = "settings.local.json"
+SETTINGS_FILE = "settings.json"
 SETTINGS_BASELINE_FILE = ".pilot-settings-baseline.json"
 PILOT_MANIFEST_FILE = ".pilot-manifest.json"
 
@@ -57,36 +57,6 @@ def process_settings(settings_content: str) -> str:
     """Process settings JSON - parse and re-serialize with consistent formatting."""
     config: dict[str, Any] = json.loads(settings_content)
     return json.dumps(config, indent=2) + "\n"
-
-
-def patch_global_settings(
-    global_settings: dict[str, Any],
-    local_settings: dict[str, Any],
-) -> dict[str, Any] | None:
-    """Remove Pilot-managed keys from global settings that exist in settings.local.json.
-
-    Returns patched dict if changes were made, None if no changes needed.
-    Never touches 'permissions' — only env vars and other top-level keys.
-    """
-    modified = False
-
-    if "env" in global_settings and "env" in local_settings:
-        for key in local_settings["env"]:
-            if key in global_settings["env"]:
-                del global_settings["env"][key]
-                modified = True
-        if not global_settings["env"]:
-            del global_settings["env"]
-
-    skip_keys = {"permissions", "env"}
-    for key in list(local_settings.keys()):
-        if key in skip_keys:
-            continue
-        if key in global_settings:
-            del global_settings[key]
-            modified = True
-
-    return global_settings if modified else None
 
 
 def _should_skip_file(file_path: str) -> bool:
@@ -255,8 +225,6 @@ class ClaudeFilesStep(BaseStep):
 
         _clear_directory_contents(home_pilot_plugin_dir)
 
-        self._cleanup_legacy_project_dirs(ctx)
-
     def _cleanup_legacy_standards_skills(self, plugin_dir: Path) -> None:
         """Remove old standards-* skill directories from plugin skills folder.
 
@@ -274,42 +242,6 @@ class ClaudeFilesStep(BaseStep):
         if skills_dir.exists() and not any(skills_dir.iterdir()):
             try:
                 skills_dir.rmdir()
-            except (OSError, IOError):
-                pass
-
-    def _cleanup_legacy_project_dirs(self, ctx: InstallContext) -> None:
-        """Remove legacy project-level directories."""
-        project_claude_dir = ctx.project_dir / ".claude"
-
-        _clear_directory_safe(project_claude_dir / "rules" / "standard")
-
-        old_commands_dir = project_claude_dir / "commands"
-        if old_commands_dir.exists():
-            standard_commands = {"spec", "sync", "plan", "implement", "verify", "learn"}
-            for cmd_file in old_commands_dir.iterdir():
-                if cmd_file.is_file() and cmd_file.suffix == ".md":
-                    if cmd_file.stem in standard_commands:
-                        try:
-                            cmd_file.unlink()
-                        except (OSError, IOError):
-                            pass
-            if old_commands_dir.exists() and not any(old_commands_dir.iterdir()):
-                try:
-                    old_commands_dir.rmdir()
-                except (OSError, IOError):
-                    pass
-
-        for old_dir_name in ["pilot", "hooks", "scripts", "plugin", "ccp"]:
-            _clear_directory_safe(project_claude_dir / old_dir_name)
-
-        old_custom_rules = project_claude_dir / "rules" / "custom"
-        if old_custom_rules.exists() and old_custom_rules.is_dir():
-            try:
-                gitkeep = old_custom_rules / ".gitkeep"
-                if gitkeep.exists():
-                    gitkeep.unlink()
-                if not any(old_custom_rules.iterdir()):
-                    old_custom_rules.rmdir()
             except (OSError, IOError):
                 pass
 
@@ -427,7 +359,7 @@ class ClaudeFilesStep(BaseStep):
             rel_path = Path(file_path).relative_to("pilot")
             return home_pilot_plugin_dir / rel_path
         elif category == "settings":
-            return ctx.project_dir / ".claude" / SETTINGS_FILE
+            return home_claude_dir / SETTINGS_FILE
         else:
             return ctx.project_dir / file_path
 
@@ -443,10 +375,8 @@ class ClaudeFilesStep(BaseStep):
             self._update_hooks_config(home_pilot_plugin_dir)
 
         self._merge_app_config()
-        self._patch_overlapping_settings(ctx)
         self._cleanup_stale_rules(ctx)
         self._save_pilot_manifest(ctx)
-        self._ensure_project_rules_dir(ctx)
 
     def _save_pilot_manifest(self, ctx: InstallContext) -> None:
         """Save manifest of Pilot-managed files in commands/ and rules/.
@@ -557,38 +487,6 @@ class ClaudeFilesStep(BaseStep):
         except (OSError, IOError):
             pass
 
-    def _patch_overlapping_settings(self, ctx: InstallContext) -> None:
-        """Patch global and project settings.json to avoid overriding settings.local.json.
-
-        Both ~/.claude/settings.json and <project>/.claude/settings.json can
-        override settings.local.json. Remove overlapping env vars and non-permission
-        top-level keys from both so settings.local.json takes clean precedence.
-        """
-        local_settings_path = ctx.project_dir / ".claude" / SETTINGS_FILE
-        if not local_settings_path.exists():
-            return
-
-        try:
-            local_settings = json.loads(local_settings_path.read_text())
-        except (json.JSONDecodeError, OSError, IOError):
-            return
-
-        paths_to_patch = [
-            Path.home() / ".claude" / "settings.json",
-            ctx.project_dir / ".claude" / "settings.json",
-        ]
-
-        for settings_path in paths_to_patch:
-            if not settings_path.exists():
-                continue
-            try:
-                target_settings = json.loads(settings_path.read_text())
-                patched = patch_global_settings(target_settings, local_settings)
-                if patched is not None:
-                    settings_path.write_text(json.dumps(patched, indent=2) + "\n")
-            except (json.JSONDecodeError, OSError, IOError):
-                continue
-
     def _cleanup_stale_rules(self, ctx: InstallContext) -> None:
         """Remove stale Pilot-managed rule files not present in this installation.
 
@@ -616,13 +514,6 @@ class ClaudeFilesStep(BaseStep):
                 except (OSError, IOError):
                     pass
 
-    def _ensure_project_rules_dir(self, ctx: InstallContext) -> None:
-        """Ensure project rules directory exists."""
-        project_rules_dir = ctx.project_dir / ".claude" / "rules"
-        if not project_rules_dir.exists():
-            project_rules_dir.mkdir(parents=True, exist_ok=True)
-            (project_rules_dir / ".gitkeep").touch()
-
     def _report_results(self, ui: Any, file_count: int, failed_files: list[str]) -> None:
         """Report installation results."""
         if not ui:
@@ -646,11 +537,11 @@ class ClaudeFilesStep(BaseStep):
         dest_path: Path,
         config: DownloadConfig,
     ) -> bool:
-        """Download, merge, and install settings file.
+        """Download, merge, and install settings to ~/.claude/settings.json.
 
         Uses three-way merge to preserve user customizations:
-        - baseline (.pilot-settings-baseline.json) = what Pilot installed last time
-        - current (settings.local.json) = what's on disk now (may have user changes)
+        - baseline (~/.claude/.pilot-settings-baseline.json) = what Pilot installed last time
+        - current (~/.claude/settings.json) = what's on disk now (may have user changes)
         - incoming (downloaded settings.json) = new Pilot settings
         """
         import tempfile

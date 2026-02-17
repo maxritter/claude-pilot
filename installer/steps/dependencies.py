@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from installer.context import InstallContext
-from installer.platform_utils import command_exists, npm_global_cmd
+from installer.platform_utils import command_exists, is_linux_arm64, npm_global_cmd
 from installer.steps.base import BaseStep
 
 MAX_RETRIES = 3
@@ -95,9 +95,9 @@ def install_python_tools() -> bool:
         return False
 
 
-def _get_forced_claude_version(project_dir: Path) -> str | None:
-    """Check project .claude/settings.local.json for FORCE_CLAUDE_VERSION in env section."""
-    settings_path = project_dir / ".claude" / "settings.local.json"
+def _get_forced_claude_version() -> str | None:
+    """Check ~/.claude/settings.json for FORCE_CLAUDE_VERSION in env section."""
+    settings_path = Path.home() / ".claude" / "settings.json"
     if settings_path.exists():
         try:
             settings = json.loads(settings_path.read_text())
@@ -150,11 +150,11 @@ def _get_installed_claude_version() -> str | None:
     return None
 
 
-def install_claude_code(project_dir: Path, ui: Any = None) -> tuple[bool, str]:
+def install_claude_code(ui: Any = None) -> tuple[bool, str]:
     """Install/upgrade Claude Code CLI via npm and configure defaults."""
     _clean_npm_stale_dirs()
 
-    forced_version = _get_forced_claude_version(project_dir)
+    forced_version = _get_forced_claude_version()
     version = forced_version if forced_version else "latest"
 
     if version != "latest":
@@ -441,6 +441,7 @@ def install_playwright_cli(ui: Any = None) -> bool:
 
     Shows verbose output during installation with download progress.
     Skips verbose output if already installed.
+    On Linux ARM64, installs chromium specifically (Chrome has no ARM64 builds).
     """
     if _is_playwright_cli_ready():
         return True
@@ -452,19 +453,21 @@ def install_playwright_cli(ui: Any = None) -> bool:
         _install_playwright_system_deps(ui)
         return True
 
+    install_cmd = ["playwright-cli", "install", "chromium"] if is_linux_arm64() else ["playwright-cli", "install"]
+
     try:
         spinner_label = "Downloading Chromium browser..."
         if ui:
             with ui.spinner(spinner_label):
                 result = subprocess.run(
-                    ["playwright-cli", "install"],
+                    install_cmd,
                     capture_output=True,
                     text=True,
                     timeout=300,
                 )
         else:
             result = subprocess.run(
-                ["playwright-cli", "install"],
+                install_cmd,
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -525,23 +528,23 @@ def _setup_pilot_memory(ui: Any) -> bool:
     return True
 
 
-def _install_claude_code_with_ui(ui: Any, project_dir: Path) -> bool:
+def _install_claude_code_with_ui(ui: Any) -> bool:
     """Install Claude Code with UI feedback."""
     if ui:
         ui.status("Installing Claude Code via npm...")
-        success, version = install_claude_code(project_dir, ui)
+        success, version = install_claude_code(ui)
         if success:
             if version != "latest":
                 ui.success(f"Claude Code installed (pinned to v{version})")
                 ui.info(f"Version {version} is the last stable release tested with Pilot")
-                ui.info("To change: edit FORCE_CLAUDE_VERSION in .claude/settings.local.json")
+                ui.info("To change: edit FORCE_CLAUDE_VERSION in ~/.claude/settings.json")
             else:
                 ui.success("Claude Code installed (latest)")
         else:
             ui.warning("Could not install Claude Code - please install manually")
         return success
     else:
-        success, _ = install_claude_code(project_dir)
+        success, _ = install_claude_code()
         return success
 
 
@@ -696,7 +699,7 @@ class DependenciesStep(BaseStep):
         if _install_with_spinner(ui, "Python tools", install_python_tools):
             installed.append("python_tools")
 
-        if _install_claude_code_with_ui(ui, ctx.project_dir):
+        if _install_claude_code_with_ui(ui):
             installed.append("claude_code")
 
         if _setup_pilot_memory(ui):

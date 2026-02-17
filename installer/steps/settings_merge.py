@@ -1,6 +1,6 @@
 """Settings merge utilities for non-destructive installer updates.
 
-Provides three-way merge logic for settings files (settings.local.json,
+Provides three-way merge logic for settings files (~/.claude/settings.json,
 ~/.claude.json) and manifest-based tracking for Pilot-managed files
 in shared directories (commands/, rules/).
 """

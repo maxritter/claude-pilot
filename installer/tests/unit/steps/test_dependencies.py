@@ -118,7 +118,7 @@ class TestClaudeCodeInstall:
         from installer.steps.dependencies import install_claude_code
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            install_claude_code(Path(tmpdir))
+            install_claude_code()
 
         mock_clean.assert_called_once()
 
@@ -129,7 +129,7 @@ class TestClaudeCodeInstall:
         from installer.steps.dependencies import install_claude_code
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            success, version = install_claude_code(Path(tmpdir))
+            success, version = install_claude_code()
 
         assert success is True
         assert version == "latest"
@@ -144,7 +144,7 @@ class TestClaudeCodeInstall:
         from installer.steps.dependencies import install_claude_code
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            success, version = install_claude_code(Path(tmpdir))
+            success, version = install_claude_code()
 
         assert success is True
         assert version == "2.1.19"
@@ -163,7 +163,7 @@ class TestClaudeCodeInstall:
         from installer.steps.dependencies import install_claude_code
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            success, version = install_claude_code(Path(tmpdir))
+            success, version = install_claude_code()
 
         assert success is True, "Should succeed when claude is already installed"
         assert version == "1.0.0", "Should return actual installed version"
@@ -184,7 +184,7 @@ class TestClaudeCodeInstall:
         ui.info = lambda message: info_calls.append(message)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = _install_claude_code_with_ui(ui, Path(tmpdir))
+            result = _install_claude_code_with_ui(ui)
 
         assert result is True
         assert any("last stable release" in call for call in info_calls)

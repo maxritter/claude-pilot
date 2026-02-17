@@ -94,6 +94,13 @@ def is_linux() -> bool:
     return platform.system() == "Linux"
 
 
+def is_linux_arm64() -> bool:
+    """Check if running on Linux ARM64 (aarch64)."""
+    import platform
+
+    return platform.system() == "Linux" and platform.machine() in ("aarch64", "arm64")
+
+
 def get_shell_config_files() -> list[Path]:
     """Get list of shell configuration files for the current user."""
     home = Path.home()

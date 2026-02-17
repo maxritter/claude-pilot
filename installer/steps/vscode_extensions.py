@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import subprocess
+import time
 
 from installer.context import InstallContext
 from installer.steps.base import BaseStep
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2
 
 IDE_CLI_COMMANDS = [
     "antigravity",
@@ -65,18 +69,24 @@ def _get_installed_extensions(cli: str) -> set[str]:
 
 def _install_extension(cli: str, extension_id: str) -> bool:
     """Install a single extension."""
-    try:
-        result = subprocess.run(
-            [cli, "--install-extension", extension_id, "--force"],
-            capture_output=True,
-            text=True,
-        )
-        output = result.stdout + result.stderr
-        if "Cannot install" in output or "not found" in output.lower():
-            return False
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
+    for attempt in range(MAX_RETRIES):
+        try:
+            result = subprocess.run(
+                [cli, "--install-extension", extension_id, "--force"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            output = result.stdout + result.stderr
+            if "Cannot install" in output or "not found" in output.lower():
+                return False
+            if result.returncode == 0:
+                return True
+        except (subprocess.SubprocessError, OSError):
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 class VSCodeExtensionsStep(BaseStep):

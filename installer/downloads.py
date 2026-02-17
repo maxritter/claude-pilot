@@ -8,12 +8,16 @@ import json
 import os
 import shutil
 import ssl
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+MAX_RETRIES = 3
+RETRY_BACKOFF = (1.0, 3.0)
 
 _ssl_context: ssl.SSLContext | None = None
 
@@ -148,28 +152,36 @@ def download_file(
             pass
 
     file_url = f"{config.repo_url}/raw/{config.repo_branch}/{repo_path}"
-    try:
-        request = urllib.request.Request(file_url)
-        with urllib.request.urlopen(request, timeout=30.0, context=_get_ssl_context()) as response:
-            if response.status != 200:
-                return False
+    for attempt in range(MAX_RETRIES):
+        try:
+            request = urllib.request.Request(file_url)
+            with urllib.request.urlopen(request, timeout=30.0, context=_get_ssl_context()) as response:
+                if response.status != 200:
+                    if attempt < MAX_RETRIES - 1:
+                        time.sleep(RETRY_BACKOFF[min(attempt, len(RETRY_BACKOFF) - 1)])
+                        continue
+                    return False
 
-            total = int(response.headers.get("content-length", 0))
-            downloaded = 0
+                total = int(response.headers.get("content-length", 0))
+                downloaded = 0
 
-            with open(dest_path, "wb") as f:
-                while True:
-                    chunk = response.read(8192)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    if progress_callback and total > 0:
-                        progress_callback(downloaded, total)
+                with open(dest_path, "wb") as f:
+                    while True:
+                        chunk = response.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if progress_callback and total > 0:
+                            progress_callback(downloaded, total)
 
-        return True
-    except (urllib.error.URLError, OSError, TimeoutError):
-        return False
+            return True
+        except (urllib.error.URLError, OSError, TimeoutError):
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BACKOFF[min(attempt, len(RETRY_BACKOFF) - 1)])
+                continue
+            return False
+    return False
 
 
 def download_files_parallel(

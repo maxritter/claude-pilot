@@ -210,6 +210,86 @@ class TestTreeCaching:
         assert files[0].sha == "abc123"
 
 
+class TestDownloadFileRetry:
+    """Test retry logic for remote file downloads."""
+
+    def test_download_file_retries_on_network_error(self):
+        """download_file retries up to MAX_RETRIES on transient network errors."""
+        from unittest.mock import MagicMock, patch
+
+        from installer.downloads import DownloadConfig, download_file
+
+        config = DownloadConfig(
+            repo_url="https://github.com/test/repo",
+            repo_branch="main",
+        )
+
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers.get.return_value = "0"
+        mock_response.read.return_value = b""
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=None)
+
+        call_count = 0
+
+        def side_effect(*_args, **_kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                raise urllib.error.URLError("Connection reset")
+            return mock_response
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dest = Path(tmpdir) / "file.txt"
+            with patch("urllib.request.urlopen", side_effect=side_effect), patch("time.sleep"):
+                result = download_file("test.txt", dest, config)
+
+        assert result is True
+        assert call_count == 3
+
+    def test_download_file_fails_after_max_retries(self):
+        """download_file returns False after exhausting all retries."""
+        from unittest.mock import patch
+
+        from installer.downloads import MAX_RETRIES, DownloadConfig, download_file
+
+        config = DownloadConfig(
+            repo_url="https://github.com/test/repo",
+            repo_branch="main",
+        )
+
+        call_count = 0
+
+        def side_effect(*_args, **_kwargs):
+            nonlocal call_count
+            call_count += 1
+            raise urllib.error.URLError("Connection refused")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dest = Path(tmpdir) / "file.txt"
+            with patch("urllib.request.urlopen", side_effect=side_effect), patch("time.sleep"):
+                result = download_file("test.txt", dest, config)
+
+        assert result is False
+        assert call_count == MAX_RETRIES
+
+    def test_download_file_no_retry_in_local_mode(self):
+        """download_file does not retry in local mode (no network involved)."""
+        from installer.downloads import DownloadConfig, download_file
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dest = Path(tmpdir) / "dest" / "missing.txt"
+            config = DownloadConfig(
+                repo_url="https://github.com/test/repo",
+                repo_branch="main",
+                local_mode=True,
+                local_repo_dir=Path(tmpdir),
+            )
+            result = download_file("nonexistent.txt", dest, config)
+            assert result is False
+
+
 class TestDownloadFilesParallel:
     """Test parallel download functionality."""
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 from pathlib import Path
 
 from installer.context import InstallContext
@@ -15,6 +16,9 @@ from installer.platform_utils import (
     is_linux,
 )
 from installer.steps.base import BaseStep
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2
 
 HOMEBREW_PACKAGES = [
     "git",
@@ -75,16 +79,21 @@ def _install_homebrew() -> bool:
 
 def _add_bun_tap() -> bool:
     """Add the bun tap to Homebrew."""
-    try:
-        result = subprocess.run(
-            ["brew", "tap", "oven-sh/bun"],
-            capture_output=True,
-            check=False,
-            timeout=60,
-        )
-        return result.returncode == 0 or b"already tapped" in result.stderr.lower()
-    except (subprocess.SubprocessError, OSError):
-        return False
+    for attempt in range(MAX_RETRIES):
+        try:
+            result = subprocess.run(
+                ["brew", "tap", "oven-sh/bun"],
+                capture_output=True,
+                check=False,
+                timeout=60,
+            )
+            if result.returncode == 0 or b"already tapped" in result.stderr.lower():
+                return True
+        except (subprocess.SubprocessError, OSError):
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 def _ensure_homebrew_in_path() -> None:
@@ -104,18 +113,22 @@ def _ensure_homebrew_in_path() -> None:
 
 def _install_homebrew_package(package: str) -> bool:
     """Install a single Homebrew package."""
-    try:
-        result = subprocess.run(
-            ["brew", "install", package],
-            capture_output=True,
-            check=False,
-            timeout=120,
-        )
-        if result.returncode == 0:
-            _ensure_homebrew_in_path()
-        return result.returncode == 0
-    except (subprocess.SubprocessError, OSError):
-        return False
+    for attempt in range(MAX_RETRIES):
+        try:
+            result = subprocess.run(
+                ["brew", "install", package],
+                capture_output=True,
+                check=False,
+                timeout=120,
+            )
+            if result.returncode == 0:
+                _ensure_homebrew_in_path()
+                return True
+        except (subprocess.SubprocessError, OSError):
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 def _get_command_for_package(package: str) -> str:
@@ -144,24 +157,29 @@ def _install_ripgrep_via_apt() -> bool:
     """
     if not is_linux() or not is_apt_available():
         return False
-    try:
-        subprocess.run(
-            ["sudo", "-n", "apt-get", "update", "-qq"],
-            capture_output=True,
-            check=False,
-            stdin=subprocess.DEVNULL,
-            timeout=60,
-        )
-        result = subprocess.run(
-            ["sudo", "-n", "apt-get", "install", "-y", "ripgrep"],
-            capture_output=True,
-            check=False,
-            stdin=subprocess.DEVNULL,
-            timeout=120,
-        )
-        return result.returncode == 0
-    except (subprocess.SubprocessError, OSError):
-        return False
+    for attempt in range(MAX_RETRIES):
+        try:
+            subprocess.run(
+                ["sudo", "-n", "apt-get", "update", "-qq"],
+                capture_output=True,
+                check=False,
+                stdin=subprocess.DEVNULL,
+                timeout=60,
+            )
+            result = subprocess.run(
+                ["sudo", "-n", "apt-get", "install", "-y", "ripgrep"],
+                capture_output=True,
+                check=False,
+                stdin=subprocess.DEVNULL,
+                timeout=120,
+            )
+            if result.returncode == 0:
+                return True
+        except (subprocess.SubprocessError, OSError):
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 class PrerequisitesStep(BaseStep):

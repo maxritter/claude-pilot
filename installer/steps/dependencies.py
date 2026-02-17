@@ -82,17 +82,11 @@ def install_python_tools() -> bool:
     """Install Python development tools."""
     tools = ["ruff", "basedpyright"]
 
-    try:
-        for tool in tools:
-            if not command_exists(tool):
-                subprocess.run(
-                    ["uv", "tool", "install", tool],
-                    check=True,
-                    capture_output=True,
-                )
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    for tool in tools:
+        if not command_exists(tool):
+            if not _run_bash_with_retry(f"uv tool install {tool}"):
+                return False
+    return True
 
 
 def _get_forced_claude_version() -> str | None:
@@ -266,24 +260,21 @@ def _setup_vexor_local_model(ui: Any = None) -> bool:
     if _is_vexor_local_model_installed():
         return True
 
-    try:
-        if ui:
-            with ui.spinner("Downloading local embedding model..."):
-                result = subprocess.run(
-                    ["vexor", "local", "--setup", "--model", "intfloat/multilingual-e5-small"],
-                    capture_output=True,
-                    text=True,
-                )
-            return result.returncode == 0
-        else:
-            result = subprocess.run(
-                ["vexor", "local", "--setup", "--model", "intfloat/multilingual-e5-small"],
-                capture_output=True,
-                text=True,
-            )
-            return result.returncode == 0
-    except Exception:
-        return False
+    cmd = ["vexor", "local", "--setup", "--model", "intfloat/multilingual-e5-small"]
+    for attempt in range(MAX_RETRIES):
+        try:
+            if ui:
+                with ui.spinner("Downloading local embedding model..."):
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            else:
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                return True
+        except Exception:
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
@@ -415,25 +406,21 @@ def _install_playwright_system_deps(ui: Any = None) -> bool:
     (libglib, libatk, etc.) needed by Chromium. Required on Linux/devcontainers,
     no-op on macOS.
     """
-    try:
-        if ui:
-            with ui.spinner("Installing browser system dependencies..."):
-                result = subprocess.run(
-                    ["npx", "-y", "playwright", "install-deps"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                )
-        else:
-            result = subprocess.run(
-                ["npx", "-y", "playwright", "install-deps"],
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-        return result.returncode == 0
-    except Exception:
-        return False
+    cmd = ["npx", "-y", "playwright", "install-deps"]
+    for attempt in range(MAX_RETRIES):
+        try:
+            if ui:
+                with ui.spinner("Installing browser system dependencies..."):
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            else:
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                return True
+        except Exception:
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+    return False
 
 
 def install_playwright_cli(ui: Any = None) -> bool:
@@ -455,26 +442,20 @@ def install_playwright_cli(ui: Any = None) -> bool:
 
     install_cmd = ["playwright-cli", "install", "chromium"] if is_linux_arm64() else ["playwright-cli", "install"]
 
-    try:
-        spinner_label = "Downloading Chromium browser..."
-        if ui:
-            with ui.spinner(spinner_label):
-                result = subprocess.run(
-                    install_cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                )
-        else:
-            result = subprocess.run(
-                install_cmd,
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-        if result.returncode != 0:
-            return False
-    except Exception:
+    for attempt in range(MAX_RETRIES):
+        try:
+            if ui:
+                with ui.spinner("Downloading Chromium browser..."):
+                    result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300)
+            else:
+                result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                break
+        except Exception:
+            pass
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAY)
+            continue
         return False
 
     _install_playwright_system_deps(ui)

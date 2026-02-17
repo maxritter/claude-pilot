@@ -1,6 +1,6 @@
 {
   "name": "pilot-console",
-  "version": "6.7.5",
+  "version": "6.7.6",
   "description": "Memory system for Claude Pilot - persistent context and observations",
   "type": "module",
   "private": true,

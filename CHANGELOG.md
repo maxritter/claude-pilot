@@ -2,6 +2,16 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.7.6] - 2026-02-17
+
+### Bug Fixes
+
+- Improve ChromaDB reliability and harden worktree lifecycle
+
+### Miscellaneous
+
+- Update bug report section in README
+
 ## [6.7.5] - 2026-02-17
 
 ### Bug Fixes

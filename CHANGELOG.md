@@ -2,6 +2,16 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.7.3] - 2026-02-17
+
+### Bug Fixes
+
+- Improve worktree isolation and multi-session reliability
+
+### Miscellaneous
+
+- Updated Installer Instructions for Local Mode
+
 ## [6.7.2] - 2026-02-17
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "claude-pilot-plugin",
-  "version": "6.7.2",
+  "version": "6.7.3",
   "private": true,
   "description": "Runtime dependencies for pilot-memory bundled hooks",
   "type": "module",

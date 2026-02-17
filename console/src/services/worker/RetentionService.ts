@@ -8,6 +8,7 @@
 import { SettingsDefaultsManager } from "../../shared/SettingsDefaultsManager.js";
 import { USER_SETTINGS_PATH } from "../../shared/paths.js";
 import { DatabaseManager } from "./DatabaseManager.js";
+import type { IVectorSync } from "../sync/IVectorSync.js";
 import { logger } from "../../utils/logger.js";
 
 export interface RetentionPolicy {
@@ -38,9 +39,20 @@ export interface RetentionResult {
 
 export class RetentionService {
   private dbManager: DatabaseManager;
+  private vectorSync: IVectorSync | null;
 
-  constructor(dbManager: DatabaseManager) {
+  constructor(dbManager: DatabaseManager, vectorSync?: IVectorSync | null) {
     this.dbManager = dbManager;
+    this.vectorSync = vectorSync ?? null;
+  }
+
+  private async deleteFromVectorDb(ids: number[], docType: "observation" | "session_summary" | "user_prompt"): Promise<void> {
+    if (!this.vectorSync || ids.length === 0) return;
+    try {
+      await this.vectorSync.deleteDocuments(ids, docType);
+    } catch (error) {
+      logger.error("RETENTION", "Vector deletion failed (non-fatal)", { ids: ids.length, docType }, error as Error);
+    }
   }
 
   /**
@@ -187,6 +199,11 @@ export class RetentionService {
           const result = db.prepare(countQuery).get(cutoffEpoch, ...p.excludeTypes) as { count: number };
           deleted += result.count;
         } else if (p.softDelete) {
+          const idsForVector = db.prepare(
+            `SELECT id FROM observations WHERE created_at_epoch < ? ${excludeCondition}`
+          ).all(cutoffEpoch, ...p.excludeTypes) as Array<{ id: number }>;
+          await this.deleteFromVectorDb(idsForVector.map((r) => r.id), "observation");
+
           const archiveQuery = `
             INSERT INTO deleted_observations (id, type, title, subtitle, text, project, prompt_number, created_at, created_at_epoch, deleted_at_epoch, deletion_reason)
             SELECT id, type, title, subtitle, text, project, prompt_number, created_at, created_at_epoch, ?, 'retention_age'
@@ -207,6 +224,11 @@ export class RetentionService {
           const result = db.prepare(deleteQuery).run(cutoffEpoch, ...p.excludeTypes);
           archived += result.changes;
         } else {
+          const idsForVector = db.prepare(
+            `SELECT id FROM observations WHERE created_at_epoch < ? ${excludeCondition}`
+          ).all(cutoffEpoch, ...p.excludeTypes) as Array<{ id: number }>;
+          await this.deleteFromVectorDb(idsForVector.map((r) => r.id), "observation");
+
           const deleteQuery = `
             DELETE FROM observations
             WHERE created_at_epoch < ? ${excludeCondition}
@@ -250,6 +272,8 @@ export class RetentionService {
             if (ids.length > 0) {
               const idList = ids.map((r) => r.id);
               const placeholders = idList.map(() => "?").join(", ");
+
+              await this.deleteFromVectorDb(idList, "observation");
 
               if (p.softDelete) {
                 const archiveQuery = `

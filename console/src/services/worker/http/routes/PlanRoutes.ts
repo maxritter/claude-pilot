@@ -33,6 +33,25 @@ import {
 
 export type { PlanInfo, GitInfo };
 
+/**
+ * Validates that a resolved file path is within an allowed plans directory:
+ * - {projectRoot}/docs/plans/ (main plans)
+ * - {projectRoot}/.worktrees/<slug>/docs/plans/ (worktree plans)
+ */
+function isValidPlanPath(projectRoot: string, resolvedPath: string): boolean {
+  if (!resolvedPath.endsWith(".md")) return false;
+  const normalizedRoot = path.resolve(projectRoot);
+  const mainPlansDir = path.join(normalizedRoot, "docs", "plans");
+  if (resolvedPath.startsWith(mainPlansDir + path.sep) || resolvedPath.startsWith(mainPlansDir + "/")) {
+    return true;
+  }
+  const worktreesDir = path.join(normalizedRoot, ".worktrees");
+  if (resolvedPath.startsWith(worktreesDir) && resolvedPath.includes("/docs/plans/")) {
+    return true;
+  }
+  return false;
+}
+
 export class PlanRoutes extends BaseRouteHandler {
   private dbManager: DatabaseManager | null;
   private sseBroadcaster: SSEBroadcaster | null;
@@ -106,7 +125,6 @@ export class PlanRoutes extends BaseRouteHandler {
   private handleGetPlanContent = this.wrapHandler((req: Request, res: Response): void => {
     const project = req.query.project as string | undefined;
     const projectRoot = resolveProjectRoot(this.dbManager, project);
-    const plansDir = path.join(projectRoot, "docs", "plans");
     const requestedPath = req.query.path as string | undefined;
 
     if (!requestedPath) {
@@ -126,10 +144,9 @@ export class PlanRoutes extends BaseRouteHandler {
     }
 
     const resolvedPath = path.resolve(projectRoot, requestedPath);
-    const normalizedPlansDir = path.resolve(plansDir);
 
-    if (!resolvedPath.startsWith(normalizedPlansDir) || !resolvedPath.endsWith(".md")) {
-      res.status(403).json({ error: "Access denied: path must be within docs/plans/" });
+    if (!isValidPlanPath(projectRoot, resolvedPath)) {
+      res.status(403).json({ error: "Access denied: path must be within docs/plans/ or .worktrees/*/docs/plans/" });
       return;
     }
 
@@ -153,7 +170,6 @@ export class PlanRoutes extends BaseRouteHandler {
 
   private handleDeletePlan = this.wrapHandler((req: Request, res: Response): void => {
     const projectRoot = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
-    const plansDir = path.join(projectRoot, "docs", "plans");
     const requestedPath = req.query.path as string | undefined;
 
     if (!requestedPath) {
@@ -162,10 +178,9 @@ export class PlanRoutes extends BaseRouteHandler {
     }
 
     const resolvedPath = path.resolve(projectRoot, requestedPath);
-    const normalizedPlansDir = path.resolve(plansDir);
 
-    if (!resolvedPath.startsWith(normalizedPlansDir) || !resolvedPath.endsWith(".md")) {
-      res.status(403).json({ error: "Access denied: path must be within docs/plans/" });
+    if (!isValidPlanPath(projectRoot, resolvedPath)) {
+      res.status(403).json({ error: "Access denied: path must be within docs/plans/ or .worktrees/*/docs/plans/" });
       return;
     }
 

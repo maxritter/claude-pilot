@@ -45,7 +45,7 @@ bun test                                      # Bun
 npm test -- --silent                          # Jest/Vitest
 ```
 
-### ⛔ Mandatory Mocking in Unit Tests
+### Mandatory Mocking in Unit Tests
 
 | Call Type | MUST Mock | Example |
 |-----------|-----------|---------|

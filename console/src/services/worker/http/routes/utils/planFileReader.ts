@@ -1,6 +1,7 @@
 /**
  * Plan file reading utilities.
- * Pure functions for reading and parsing plan files from docs/plans/ directories.
+ * Pure functions for reading and parsing plan files from docs/plans/ directories,
+ * including plans inside git worktrees (.worktrees/<slug>/docs/plans/).
  */
 
 import { readdirSync, readFileSync, statSync, existsSync } from "fs";
@@ -74,16 +75,36 @@ export function parsePlanContent(
   };
 }
 
-export function getActivePlans(projectRoot: string): PlanInfo[] {
-  const plansDir = path.join(projectRoot, "docs", "plans");
-  if (!existsSync(plansDir)) {
+/**
+ * Returns all docs/plans/ directories found in .worktrees/<slug>/docs/plans/
+ * subdirectories under the project root.
+ */
+export function getWorktreePlansDirs(projectRoot: string): string[] {
+  const worktreesDir = path.join(projectRoot, ".worktrees");
+  if (!existsSync(worktreesDir)) {
     return [];
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const activePlans: PlanInfo[] = [];
+  const dirs: string[] = [];
+  try {
+    const entries = readdirSync(worktreesDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const plansDir = path.join(worktreesDir, entry.name, "docs", "plans");
+      if (existsSync(plansDir)) {
+        dirs.push(plansDir);
+      }
+    }
+  } catch {
+  }
+  return dirs;
+}
 
+/**
+ * Scan a plans directory and return parsed PlanInfo entries.
+ */
+function scanPlansDir(plansDir: string): PlanInfo[] {
+  const plans: PlanInfo[] = [];
   try {
     const planFiles = readdirSync(plansDir)
       .filter((f) => f.endsWith(".md"))
@@ -93,61 +114,88 @@ export function getActivePlans(projectRoot: string): PlanInfo[] {
     for (const planFile of planFiles) {
       const filePath = path.join(plansDir, planFile);
       const stat = statSync(filePath);
-      const mtime = new Date(stat.mtime);
-      mtime.setHours(0, 0, 0, 0);
-
-      if (mtime.getTime() !== today.getTime()) {
-        continue;
-      }
-
       const content = readFileSync(filePath, "utf-8");
       const planInfo = parsePlanContent(content, planFile, filePath, stat.mtime);
-
-      if (planInfo && planInfo.status !== "VERIFIED") {
-        activePlans.push(planInfo);
+      if (planInfo) {
+        plans.push(planInfo);
       }
     }
   } catch (error) {
-    logger.error("HTTP", "Failed to read active plans", {}, error as Error);
+    logger.error("HTTP", "Failed to read plans from directory", { plansDir }, error as Error);
+  }
+  return plans;
+}
+
+/**
+ * Returns all plans directories to scan: main docs/plans/ plus all worktree plans dirs.
+ */
+function getAllPlansDirs(projectRoot: string): string[] {
+  const dirs: string[] = [];
+  const mainPlansDir = path.join(projectRoot, "docs", "plans");
+  if (existsSync(mainPlansDir)) {
+    dirs.push(mainPlansDir);
+  }
+  dirs.push(...getWorktreePlansDirs(projectRoot));
+  return dirs;
+}
+
+export function getActivePlans(projectRoot: string): PlanInfo[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const activePlans: PlanInfo[] = [];
+
+  for (const plansDir of getAllPlansDirs(projectRoot)) {
+    try {
+      const planFiles = readdirSync(plansDir)
+        .filter((f) => f.endsWith(".md"))
+        .sort()
+        .reverse();
+
+      for (const planFile of planFiles) {
+        const filePath = path.join(plansDir, planFile);
+        const stat = statSync(filePath);
+        const mtime = new Date(stat.mtime);
+        mtime.setHours(0, 0, 0, 0);
+
+        if (mtime.getTime() !== today.getTime()) {
+          continue;
+        }
+
+        const content = readFileSync(filePath, "utf-8");
+        const planInfo = parsePlanContent(content, planFile, filePath, stat.mtime);
+
+        if (planInfo && planInfo.status !== "VERIFIED") {
+          activePlans.push(planInfo);
+        }
+      }
+    } catch (error) {
+      logger.error("HTTP", "Failed to read active plans", { plansDir }, error as Error);
+    }
   }
 
   return activePlans;
 }
 
 export function getAllPlans(projectRoot: string): PlanInfo[] {
-  const plansDir = path.join(projectRoot, "docs", "plans");
-  if (!existsSync(plansDir)) {
-    return [];
+  const allPlans: PlanInfo[] = [];
+
+  for (const plansDir of getAllPlansDirs(projectRoot)) {
+    allPlans.push(...scanPlansDir(plansDir));
   }
 
-  const plans: PlanInfo[] = [];
-
-  try {
-    const planFiles = readdirSync(plansDir)
-      .filter((f) => f.endsWith(".md"))
-      .sort()
-      .reverse();
-
-    for (const planFile of planFiles) {
-      const filePath = path.join(plansDir, planFile);
-      const stat = statSync(filePath);
-      const content = readFileSync(filePath, "utf-8");
-      const planInfo = parsePlanContent(content, planFile, filePath, stat.mtime);
-
-      if (planInfo) {
-        plans.push(planInfo);
-      }
-    }
-  } catch (error) {
-    logger.error("HTTP", "Failed to read all plans", {}, error as Error);
-  }
-
-  return plans.slice(0, 10);
+  return allPlans
+    .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
+    .slice(0, 10);
 }
 
 export function getActiveSpecs(projectRoot: string): PlanInfo[] {
-  return getAllPlans(projectRoot)
-    .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+  const allPlans: PlanInfo[] = [];
+
+  for (const plansDir of getAllPlansDirs(projectRoot)) {
+    allPlans.push(...scanPlansDir(plansDir));
+  }
+
+  return allPlans.sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
 }
 
 export function getPlanStats(projectRoot: string): {
@@ -161,27 +209,18 @@ export function getPlanStats(projectRoot: string): {
   completionTimeline: Array<{ date: string; count: number }>;
   recentlyVerified: Array<{ name: string; verifiedAt: string }>;
 } {
-  const plansDir = path.join(projectRoot, "docs", "plans");
-  if (!existsSync(plansDir)) {
+  const allPlans: PlanInfo[] = [];
+
+  for (const plansDir of getAllPlansDirs(projectRoot)) {
+    allPlans.push(...scanPlansDir(plansDir));
+  }
+
+  if (allPlans.length === 0) {
     return {
       totalSpecs: 0, verified: 0, inProgress: 0, pending: 0,
       avgIterations: 0, totalTasksCompleted: 0, totalTasks: 0,
       completionTimeline: [], recentlyVerified: [],
     };
-  }
-
-  const allPlans: PlanInfo[] = [];
-  try {
-    const planFiles = readdirSync(plansDir).filter((f) => f.endsWith(".md"));
-    for (const planFile of planFiles) {
-      const filePath = path.join(plansDir, planFile);
-      const stat = statSync(filePath);
-      const content = readFileSync(filePath, "utf-8");
-      const info = parsePlanContent(content, planFile, filePath, stat.mtime);
-      if (info) allPlans.push(info);
-    }
-  } catch (error) {
-    logger.error("HTTP", "Failed to read plan stats", {}, error as Error);
   }
 
   const verified = allPlans.filter((p) => p.status === "VERIFIED");

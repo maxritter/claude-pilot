@@ -52,6 +52,19 @@ export class NoopVectorSync implements IVectorSync {
     };
   }
 
+  async deleteDocuments(_sqliteIds: number[], _docType: "observation" | "session_summary" | "user_prompt"): Promise<number> {
+    return 0;
+  }
+
+  async getEmbeddingCount(): Promise<number> {
+    return 0;
+  }
+
+  async vacuum(): Promise<{ deletedDocuments: number; reindexedDocuments: number }> {
+    this.logDisabled();
+    return { deletedDocuments: 0, reindexedDocuments: 0 };
+  }
+
   async close(): Promise<void> {}
 
   async isHealthy(): Promise<boolean> {

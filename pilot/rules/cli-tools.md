@@ -50,9 +50,9 @@ Add `-d` for descriptions, `-j` for JSON, `-r` for raw. Stdin for complex JSON: 
 
 ### Vexor — Semantic Code Search
 
-**⛔ MANDATORY first choice for codebase exploration.** Find files by intent, not exact text. Outperforms Explore sub-agents on large codebases — zero context cost until you read results, no token waste from sub-agent transcripts.
+First choice for codebase exploration. Find files by intent, not exact text. Outperforms Explore sub-agents on large codebases — zero context cost until you read results, no token waste from sub-agent transcripts.
 
-**⛔ ALWAYS set `timeout: 30000` on Bash. NEVER run in background.**
+Important: Set `timeout: 60000` on Bash as indexing can happen, never run in background.
 
 ```bash
 vexor "<QUERY>" [--path <ROOT>] [--mode <MODE>] [--ext .py,.md] [--exclude-pattern <PATTERN>] [--top 5]

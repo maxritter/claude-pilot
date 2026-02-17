@@ -14,7 +14,7 @@
 
 ---
 
-## ⭐ MANDATORY: Task Management
+## Task Management
 
 **ALWAYS use task management tools for non-trivial work.**
 

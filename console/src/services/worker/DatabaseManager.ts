@@ -83,6 +83,14 @@ export class DatabaseManager {
   }
 
   /**
+   * Get VectorSync instance or null if not yet initialized.
+   * Safe for use in contexts where initialization may not have completed.
+   */
+  getVectorSyncOrNull(): IVectorSync | null {
+    return this.vectorSync;
+  }
+
+  /**
    * Get ChromaSync instance (deprecated alias for backward compatibility)
    * @deprecated Use getVectorSync() instead
    */

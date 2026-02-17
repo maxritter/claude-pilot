@@ -15,7 +15,9 @@ const STARTUP_DELAY_MS = 30_000;
 let retentionInterval: ReturnType<typeof setInterval> | null = null;
 let startupTimeout: ReturnType<typeof setTimeout> | null = null;
 
-async function runRetention(retentionService: RetentionService): Promise<void> {
+async function runRetention(dbManager: DatabaseManager): Promise<void> {
+  const vectorSync = dbManager.getVectorSyncOrNull();
+  const retentionService = new RetentionService(dbManager, vectorSync);
   const policy = retentionService.getPolicy();
 
   if (!policy.enabled) {
@@ -46,18 +48,16 @@ async function runRetention(retentionService: RetentionService): Promise<void> {
 export function startRetentionScheduler(dbManager: DatabaseManager): void {
   stopRetentionScheduler();
 
-  const retentionService = new RetentionService(dbManager);
-
   startupTimeout = setTimeout(async () => {
     try {
-      await runRetention(retentionService);
+      await runRetention(dbManager);
     } catch (error) {
       logger.error("RETENTION", "Scheduled retention failed", {}, error as Error);
     }
 
     retentionInterval = setInterval(async () => {
       try {
-        await runRetention(retentionService);
+        await runRetention(dbManager);
       } catch (error) {
         logger.error("RETENTION", "Scheduled retention failed", {}, error as Error);
       }

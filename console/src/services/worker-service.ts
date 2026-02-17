@@ -716,7 +716,8 @@ async function main() {
     case "cleanup":
     case "backup":
     case "doctor":
-    case "retention": {
+    case "retention":
+    case "vacuum": {
       const { runCLI } = await import("../cli/commands.js");
       await runCLI(process.argv.slice(2));
       process.exit(0);

@@ -403,6 +403,43 @@ export async function doctorCommand(options: CLIOptions): Promise<void> {
         message: "Could not check backups",
       });
     }
+
+    try {
+      const vectorHealth = await apiRequest<{
+        directorySize: number;
+        embeddingCount: number;
+        expectedSize: number;
+        bloatRatio: number;
+        healthy: boolean;
+        available: boolean;
+      }>("/api/vector-db/health");
+
+      if (!vectorHealth.available) {
+        checks.push({
+          name: "Vector Database",
+          status: "warning",
+          message: "unavailable (Chroma not connected)",
+        });
+      } else if (vectorHealth.healthy) {
+        checks.push({
+          name: "Vector Database",
+          status: "ok",
+          message: `${formatBytes(vectorHealth.directorySize)}, ${vectorHealth.embeddingCount} embeddings`,
+        });
+      } else {
+        checks.push({
+          name: "Vector Database",
+          status: "warning",
+          message: `${formatBytes(vectorHealth.directorySize)} (${Math.round(vectorHealth.bloatRatio)}x expected size) — Run: pilot-memory vacuum`,
+        });
+      }
+    } catch {
+      checks.push({
+        name: "Vector Database",
+        status: "warning",
+        message: "unavailable (Chroma not connected)",
+      });
+    }
   }
 
   if (options.json) {
@@ -672,6 +709,41 @@ export async function cleanCommand(options: CLIOptions): Promise<void> {
   });
 }
 
+/**
+ * Vacuum vector database — rebuild HNSW index from scratch
+ */
+export async function vacuumCommand(options: CLIOptions): Promise<void> {
+  if (!(await checkWorkerRunning())) {
+    console.error("Error: Worker is not running. Start with: pilot-memory start");
+    process.exit(1);
+  }
+
+  if (!options.json) {
+    console.log("Vacuuming vector database — this will rebuild the HNSW index...");
+  }
+
+  const result = await apiRequest<{
+    success: boolean;
+    deletedDocuments: number;
+    reindexedDocuments: number;
+    error?: string;
+  }>("/api/retention/vacuum", { method: "POST" });
+
+  if (options.json) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    if (result.success) {
+      console.log("\x1b[32mVacuum complete\x1b[0m");
+      console.log(`  Reindexed: ${result.reindexedDocuments} documents`);
+    } else {
+      console.log("\x1b[33mVacuum incomplete — run again to complete backfill\x1b[0m");
+      if (result.error) {
+        console.log(`  Error: ${result.error}`);
+      }
+    }
+  }
+}
+
 export async function runCLI(args: string[]): Promise<void> {
   const command = args[0];
   const subArgs = args.slice(1);
@@ -738,6 +810,10 @@ export async function runCLI(args: string[]): Promise<void> {
         await retentionCommand(positionalArgs[0], options);
         break;
 
+      case "vacuum":
+        await vacuumCommand(options);
+        break;
+
       case "generate":
         await generateCommand(options);
         break;
@@ -762,6 +838,7 @@ export async function runCLI(args: string[]): Promise<void> {
         console.log("  retention preview   Preview cleanup");
         console.log("  retention run       Run cleanup");
         console.log("  retention archive   Show archived observations");
+        console.log("  vacuum              Rebuild vector database HNSW index");
         console.log("  generate            Generate CLAUDE.md files for project folders");
         console.log("  clean               Remove auto-generated CLAUDE.md content");
         console.log("");

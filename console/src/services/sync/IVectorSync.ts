@@ -100,7 +100,35 @@ export interface IVectorSync {
    * @param limit - Maximum number of results
    * @param whereFilter - Optional metadata filter (e.g., { doc_type: 'observation' })
    */
-  query(queryText: string, limit: number, whereFilter?: Record<string, any>): Promise<VectorQueryResult>;
+  query(queryText: string, limit: number, whereFilter?: Record<string, unknown>): Promise<VectorQueryResult>;
+
+  /**
+   * Delete vector documents for the given SQLite IDs.
+   * Generates all possible ChromaDB document IDs from the SQLite IDs and deletes them.
+   * ChromaDB silently ignores non-existent IDs, so generating a superset is safe.
+   *
+   * @param sqliteIds - SQLite row IDs to delete from vector DB
+   * @param docType - Type of records to delete
+   * @returns Number of IDs submitted for deletion (not actual deleted count)
+   */
+  deleteDocuments(
+    sqliteIds: number[],
+    docType: "observation" | "session_summary" | "user_prompt",
+  ): Promise<number>;
+
+  /**
+   * Vacuum: delete the collection, recreate it, and backfill from SQLite.
+   * This rebuilds the HNSW index from scratch, fixing index bloat.
+   * On partial failure (backfill fails after delete), returns an error message
+   * indicating the vacuum is recoverable by re-running.
+   */
+  vacuum(): Promise<{ deletedDocuments: number; reindexedDocuments: number; error?: string }>;
+
+  /**
+   * Get the number of documents in the vector database collection.
+   * Uses chroma_get_collection_info for accurate counts.
+   */
+  getEmbeddingCount(): Promise<number>;
 
   /**
    * Close connection and cleanup resources

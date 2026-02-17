@@ -9,18 +9,11 @@
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { ParsedObservation, ParsedSummary } from "../../sdk/parser.js";
 import { SessionStore } from "../sqlite/SessionStore.js";
 import { logger } from "../../utils/logger.js";
-import { SettingsDefaultsManager } from "../../shared/SettingsDefaultsManager.js";
-import { USER_SETTINGS_PATH } from "../../shared/paths.js";
-import { IVectorSync, VectorQueryResult } from "./IVectorSync.js";
-import path from "path";
-import os from "os";
-
-declare const __DEFAULT_PACKAGE_VERSION__: string;
-const packageVersion = typeof __DEFAULT_PACKAGE_VERSION__ !== "undefined" ? __DEFAULT_PACKAGE_VERSION__ : "0.0.0-dev";
+import { IVectorSync, VectorMetadata, VectorQueryResult } from "./IVectorSync.js";
+import { ChromaConnectionManager } from "./ChromaConnectionManager.js";
 
 interface ChromaDocument {
   id: string;
@@ -86,135 +79,42 @@ interface StoredUserPrompt {
 }
 
 export class ChromaSync implements IVectorSync {
-  private client: Client | null = null;
-  private transport: StdioClientTransport | null = null;
-  private connected: boolean = false;
+  private readonly connectionManager: ChromaConnectionManager;
   private project: string;
   private collectionName: string;
-  private readonly VECTOR_DB_DIR: string;
   private readonly BATCH_SIZE = 100;
 
   constructor(project: string) {
     this.project = project;
     this.collectionName = `cm__${project}`;
-    this.VECTOR_DB_DIR = path.join(os.homedir(), ".pilot/memory", "vector-db");
+    this.connectionManager = new ChromaConnectionManager(project);
   }
 
   /**
-   * Try to connect using uvx (preferred) or fall back to pip-installed chroma-mcp
-   * Returns transport options that work, or throws if neither works
+   * Get connected MCP client via ChromaConnectionManager.
+   * Handles mutex serialization, circuit breaker, and transport lifecycle.
    */
-  private async getWorkingTransportOptions(): Promise<any> {
-    const settings = SettingsDefaultsManager.loadFromFile(USER_SETTINGS_PATH);
-    const pythonVersion = settings.CLAUDE_PILOT_PYTHON_VERSION;
-    const isWindows = process.platform === "win32";
-
-    const uvxOptions: any = {
-      command: "uvx",
-      args: ["--python", pythonVersion, "chroma-mcp", "--client-type", "persistent", "--data-dir", this.VECTOR_DB_DIR],
-      stderr: "ignore",
-    };
-
-    if (isWindows) {
-      uvxOptions.windowsHide = true;
-    }
-
-    try {
-      const { spawnSync } = await import("child_process");
-      const result = spawnSync("uvx", ["--version"], {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-        timeout: 5000,
-      });
-
-      if (result.status === 0) {
-        logger.debug("CHROMA_SYNC", "Using uvx for Chroma MCP", { project: this.project });
-        return uvxOptions;
-      }
-    } catch {}
-
-    logger.info("CHROMA_SYNC", "uvx not available, trying pip fallback", { project: this.project });
-
-    const pythonCmd = isWindows ? "python" : `python${pythonVersion}`;
-    const pipOptions: any = {
-      command: pythonCmd,
-      args: ["-m", "chroma_mcp", "--client-type", "persistent", "--data-dir", this.VECTOR_DB_DIR],
-      stderr: "ignore",
-    };
-
-    if (isWindows) {
-      pipOptions.windowsHide = true;
-    }
-
-    try {
-      const { spawnSync } = await import("child_process");
-      const result = spawnSync(pythonCmd, ["-c", "import chroma_mcp"], {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-        timeout: 5000,
-      });
-
-      if (result.status === 0) {
-        logger.debug("CHROMA_SYNC", "Using pip-installed chroma-mcp", { project: this.project });
-        return pipOptions;
-      }
-    } catch {}
-
-    throw new Error("Chroma MCP not available. Install with: uvx chroma-mcp OR pip install chroma-mcp");
+  private async getClient(): Promise<Client> {
+    return this.connectionManager.getClient();
   }
 
   /**
-   * Ensure MCP client is connected to Chroma server
-   * Throws error if connection fails
+   * Invalidate current connection (e.g. after detecting a mid-use connection loss).
+   * The next getClient() call will establish a fresh connection.
    */
-  private async ensureConnection(): Promise<void> {
-    if (this.connected && this.client) {
-      return;
-    }
-
-    logger.info("CHROMA_SYNC", "Connecting to Chroma MCP server...", { project: this.project });
-
-    try {
-      const transportOptions = await this.getWorkingTransportOptions();
-
-      this.transport = new StdioClientTransport(transportOptions);
-
-      this.client = new Client(
-        {
-          name: "pilot-memory-chroma-sync",
-          version: packageVersion,
-        },
-        {
-          capabilities: {},
-        },
-      );
-
-      await this.client.connect(this.transport);
-      this.connected = true;
-
-      logger.info("CHROMA_SYNC", "Connected to Chroma MCP server", { project: this.project });
-    } catch (error) {
-      logger.error("CHROMA_SYNC", "Failed to connect to Chroma MCP server", { project: this.project }, error as Error);
-      throw new Error(`Chroma connection failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  private async invalidateConnection(): Promise<void> {
+    await this.connectionManager.close();
   }
 
   /**
    * Ensure collection exists, create if needed
    * Throws error if collection creation fails
    */
-  private async ensureCollection(): Promise<void> {
-    await this.ensureConnection();
-
-    if (!this.client) {
-      throw new Error(
-        "Chroma client not initialized. Call ensureConnection() before using client methods." +
-          ` Project: ${this.project}`,
-      );
-    }
+  private async ensureCollection(): Promise<Client> {
+    const client = await this.getClient();
 
     try {
-      await this.client.callTool({
+      await client.callTool({
         name: "chroma_get_collection_info",
         arguments: {
           collection_name: this.collectionName,
@@ -230,8 +130,7 @@ export class ChromaSync implements IVectorSync {
         errorMessage.includes("MCP error -32000");
 
       if (isConnectionError) {
-        this.connected = false;
-        this.client = null;
+        await this.invalidateConnection();
         logger.error(
           "CHROMA_SYNC",
           "Connection lost during collection check",
@@ -250,7 +149,7 @@ export class ChromaSync implements IVectorSync {
       logger.info("CHROMA_SYNC", "Creating collection", { collection: this.collectionName });
 
       try {
-        await this.client.callTool({
+        await client.callTool({
           name: "chroma_create_collection",
           arguments: {
             collection_name: this.collectionName,
@@ -271,6 +170,8 @@ export class ChromaSync implements IVectorSync {
         );
       }
     }
+
+    return client;
   }
 
   /**
@@ -411,17 +312,10 @@ export class ChromaSync implements IVectorSync {
       return;
     }
 
-    await this.ensureCollection();
-
-    if (!this.client) {
-      throw new Error(
-        "Chroma client not initialized. Call ensureConnection() before using client methods." +
-          ` Project: ${this.project}`,
-      );
-    }
+    const client = await this.ensureCollection();
 
     try {
-      await this.client.callTool({
+      await client.callTool({
         name: "chroma_add_documents",
         arguments: {
           collection_name: this.collectionName,
@@ -593,14 +487,7 @@ export class ChromaSync implements IVectorSync {
     summaries: Set<number>;
     prompts: Set<number>;
   }> {
-    await this.ensureConnection();
-
-    if (!this.client) {
-      throw new Error(
-        "Chroma client not initialized. Call ensureConnection() before using client methods." +
-          ` Project: ${this.project}`,
-      );
-    }
+    const client = await this.getClient();
 
     const observationIds = new Set<number>();
     const summaryIds = new Set<number>();
@@ -613,7 +500,7 @@ export class ChromaSync implements IVectorSync {
 
     while (true) {
       try {
-        const result = (await this.client.callTool({
+        const result = (await client.callTool({
           name: "chroma_get_documents",
           arguments: {
             collection_name: this.collectionName,
@@ -853,16 +740,9 @@ export class ChromaSync implements IVectorSync {
   async queryChroma(
     query: string,
     limit: number,
-    whereFilter?: Record<string, any>,
-  ): Promise<{ ids: number[]; distances: number[]; metadatas: any[] }> {
-    await this.ensureConnection();
-
-    if (!this.client) {
-      throw new Error(
-        "Chroma client not initialized. Call ensureConnection() before using client methods." +
-          ` Project: ${this.project}`,
-      );
-    }
+    whereFilter?: Record<string, unknown>,
+  ): Promise<{ ids: number[]; distances: number[]; metadatas: VectorMetadata[] }> {
+    const client = await this.getClient();
 
     const whereStringified = whereFilter ? JSON.stringify(whereFilter) : undefined;
 
@@ -876,7 +756,7 @@ export class ChromaSync implements IVectorSync {
 
     let result: McpToolResult;
     try {
-      result = (await this.client.callTool({
+      result = (await client.callTool({
         name: "chroma_query_documents",
         arguments: arguments_obj,
       })) as McpToolResult;
@@ -888,8 +768,7 @@ export class ChromaSync implements IVectorSync {
         errorMessage.includes("MCP error -32000");
 
       if (isConnectionError) {
-        this.connected = false;
-        this.client = null;
+        await this.invalidateConnection();
         logger.error("CHROMA_SYNC", "Connection lost during query", { project: this.project, query }, error as Error);
         throw new Error(`Chroma query failed - connection lost: ${errorMessage}`);
       }
@@ -906,7 +785,7 @@ export class ChromaSync implements IVectorSync {
         return "";
       })();
 
-    let parsed: any;
+    let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(resultText);
     } catch (error) {
@@ -915,7 +794,8 @@ export class ChromaSync implements IVectorSync {
     }
 
     const ids: number[] = [];
-    const docIds = parsed.ids?.[0] || [];
+    const rawIds = parsed.ids as string[][] | undefined;
+    const docIds = rawIds?.[0] || [];
     for (const docId of docIds) {
       const obsMatch = docId.match(/obs_(\d+)_/);
       const summaryMatch = docId.match(/summary_(\d+)_/);
@@ -935,61 +815,175 @@ export class ChromaSync implements IVectorSync {
       }
     }
 
-    const distances = parsed.distances?.[0] || [];
-    const metadatas = parsed.metadatas?.[0] || [];
+    const rawDistances = parsed.distances as number[][] | undefined;
+    const distances = rawDistances?.[0] || [];
+    const rawMetadatas = parsed.metadatas as VectorMetadata[][] | undefined;
+    const metadatas = rawMetadatas?.[0] || [];
 
     return { ids, distances, metadatas };
+  }
+
+  /**
+   * Delete vector documents for the given SQLite IDs.
+   * Generates a superset of all possible ChromaDB document IDs and deletes in batches.
+   * ChromaDB silently ignores non-existent IDs.
+   */
+  async deleteDocuments(
+    sqliteIds: number[],
+    docType: "observation" | "session_summary" | "user_prompt",
+  ): Promise<number> {
+    if (sqliteIds.length === 0) return 0;
+
+    const client = await this.getClient();
+
+    const chromaIds: string[] = [];
+    for (const id of sqliteIds) {
+      if (docType === "observation") {
+        chromaIds.push(`obs_${id}_narrative`, `obs_${id}_text`);
+        for (let f = 0; f < 200; f++) {
+          chromaIds.push(`obs_${id}_fact_${f}`);
+        }
+      } else if (docType === "session_summary") {
+        for (const field of ["request", "investigated", "learned", "completed", "next_steps", "notes"]) {
+          chromaIds.push(`summary_${id}_${field}`);
+        }
+      } else {
+        chromaIds.push(`prompt_${id}`);
+      }
+    }
+
+    let deleted = 0;
+    for (let i = 0; i < chromaIds.length; i += this.BATCH_SIZE) {
+      const batch = chromaIds.slice(i, i + this.BATCH_SIZE);
+      try {
+        await client.callTool({
+          name: "chroma_delete_documents",
+          arguments: { collection_name: this.collectionName, ids: batch },
+        });
+        deleted += batch.length;
+      } catch (error) {
+        logger.error("CHROMA_SYNC", "Failed to delete documents batch", { batchSize: batch.length }, error as Error);
+        throw error;
+      }
+    }
+
+    logger.info("CHROMA_SYNC", "Deleted vector documents", {
+      sqliteIds: sqliteIds.length,
+      docType,
+      chromaDocsDeleted: deleted,
+    });
+
+    return deleted;
+  }
+
+  /**
+   * Vacuum: delete the collection, recreate it, and backfill from SQLite.
+   * Rebuilds the HNSW index from scratch — the permanent fix for index bloat.
+   * On partial failure (backfill fails after delete+recreate), returns a result
+   * with an error message. Re-running vacuum will complete the backfill.
+   */
+  async vacuum(): Promise<{ deletedDocuments: number; reindexedDocuments: number; error?: string }> {
+    return this.connectionManager.withMutex(async (client) => {
+      const preDeleteCount = await this.getEmbeddingCount();
+
+      logger.info("CHROMA_SYNC", "Starting vacuum — deleting collection", {
+        collection: this.collectionName,
+        project: this.project,
+        existingDocuments: preDeleteCount,
+      });
+
+      await client.callTool({
+        name: "chroma_delete_collection",
+        arguments: { collection_name: this.collectionName },
+      });
+
+      logger.info("CHROMA_SYNC", "Collection deleted, recreating", {
+        collection: this.collectionName,
+      });
+
+      await client.callTool({
+        name: "chroma_create_collection",
+        arguments: {
+          collection_name: this.collectionName,
+          embedding_function_name: "default",
+        },
+      });
+
+      logger.info("CHROMA_SYNC", "Collection recreated, starting backfill", {
+        collection: this.collectionName,
+      });
+
+      try {
+        await this.ensureBackfilled();
+
+        const postBackfillCount = await this.getEmbeddingCount();
+
+        logger.info("CHROMA_SYNC", "Vacuum complete", {
+          collection: this.collectionName,
+          project: this.project,
+          deletedDocuments: preDeleteCount,
+          reindexedDocuments: postBackfillCount,
+        });
+
+        return { deletedDocuments: preDeleteCount, reindexedDocuments: postBackfillCount };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.error("CHROMA_SYNC", "Vacuum incomplete — backfill failed", {
+          collection: this.collectionName,
+          project: this.project,
+        }, error as Error);
+
+        return {
+          deletedDocuments: preDeleteCount,
+          reindexedDocuments: 0,
+          error: `Vacuum incomplete — run again to complete backfill: ${message}`,
+        };
+      }
+    });
+  }
+
+  /**
+   * Get the number of documents in the ChromaDB collection via chroma_get_collection_info.
+   */
+  async getEmbeddingCount(): Promise<number> {
+    try {
+      const client = await this.getClient();
+      const result = (await client.callTool({
+        name: "chroma_get_collection_info",
+        arguments: { collection_name: this.collectionName },
+      })) as McpToolResult;
+
+      const text = result.content[0]?.text;
+      if (!text) return 0;
+
+      const parsed = JSON.parse(text);
+      return parsed.count ?? parsed.num_documents ?? 0;
+    } catch {
+      return 0;
+    }
   }
 
   /**
    * Close the Chroma client connection and cleanup subprocess
    */
   async close(): Promise<void> {
-    if (!this.connected && !this.client && !this.transport) {
-      return;
-    }
-
-    if (this.client) {
-      await this.client.close();
-    }
-
-    if (this.transport) {
-      await this.transport.close();
-    }
-
+    await this.connectionManager.close();
     logger.info("CHROMA_SYNC", "Chroma client and subprocess closed", { project: this.project });
-
-    this.connected = false;
-    this.client = null;
-    this.transport = null;
   }
 
   /**
    * Query method (IVectorSync interface)
    * Alias for queryChroma for interface compatibility
    */
-  async query(queryText: string, limit: number, whereFilter?: Record<string, any>): Promise<VectorQueryResult> {
+  async query(queryText: string, limit: number, whereFilter?: Record<string, unknown>): Promise<VectorQueryResult> {
     return this.queryChroma(queryText, limit, whereFilter);
   }
 
   /**
-   * Check if Chroma is healthy and connected
+   * Check if Chroma is healthy and connected.
+   * Bypasses circuit breaker — safe to call in any state.
    */
   async isHealthy(): Promise<boolean> {
-    try {
-      await this.ensureConnection();
-      if (!this.client) return false;
-
-      await this.client.callTool({
-        name: "chroma_get_collection_info",
-        arguments: {
-          collection_name: this.collectionName,
-        },
-      });
-
-      return true;
-    } catch {
-      return false;
-    }
+    return this.connectionManager.isHealthy();
   }
 }

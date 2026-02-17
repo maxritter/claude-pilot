@@ -56,8 +56,11 @@ gh api repos/{owner}/{repo}/pulls/123/comments
 
 | Need | Best Tool |
 |------|-----------|
+| **Codebase exploration** | **Vexor** (semantic search — find by intent, not exact text) |
+| Exact pattern match | Grep / Glob |
 | Library/framework docs | Context7 |
 | Production code examples | grep-mcp |
-| Local codebase patterns | Vexor |
 | Web research | web-search/search |
 | GitHub operations | gh CLI |
+
+**Codebase search priority:** Vexor → Grep/Glob → Explore sub-agent. Vexor handles large codebases efficiently where Explore sub-agents waste tokens re-reading files. Use Explore only when multi-step reasoning across many files is needed.

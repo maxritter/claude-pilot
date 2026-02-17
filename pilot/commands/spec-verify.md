@@ -518,10 +518,16 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 
    **Check `stash_warning` in the response.** If non-null, the user had uncommitted changes that couldn't be cleanly restored after the merge. Report the warning so the user can run `git stash pop` manually.
 
-   If sync succeeds, clean up the worktree:
+   If sync succeeds, clean up the worktree (use `--force` since changes are already merged):
 
    ```bash
-   ~/.pilot/bin/pilot worktree cleanup --json <plan_slug>
+   ~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug>
+   ```
+
+   **⚠️ CRITICAL: After cleanup, `cd` to the `project_root` from the JSON response.** The shell CWD may have been inside the now-deleted worktree directory, which breaks all subsequent commands.
+
+   ```bash
+   cd <project_root from cleanup response>
    ```
 
    Report: "Changes synced to `<base_branch>` — N files changed, commit `<hash>`"
@@ -533,8 +539,10 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    **If "Discard all changes":**
 
    ```bash
-   ~/.pilot/bin/pilot worktree cleanup --json <plan_slug>
+   ~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug>
    ```
+
+   **⚠️ After cleanup, `cd` to the `project_root` from the JSON response** (same CWD issue as above).
 
    Report: "Worktree and branch discarded."
 

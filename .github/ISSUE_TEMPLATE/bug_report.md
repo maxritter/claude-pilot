@@ -1,46 +1,38 @@
 ---
-name: 🐛 Bug Report
+name: Bug Report
 about: Report a bug or unexpected behavior
 labels: bug, needs-triage
 ---
 
-## Current Behavior
+## Description
 
-<!-- A clear and concise description of the behavior -->
+<!-- A clear description of the bug -->
 
 ## Steps to Reproduce
 
-<!-- Provide detailed steps to reproduce the issue -->
+1. ...
+2. ...
+3. ...
 
-1. Run installation: `curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash`
-2. Configure: `...`
-3. Run command: `...`
-4. See error
+## Expected vs Actual Behavior
 
-## Expected Behavior
-
-<!-- A clear and concise description of what you expected to happen -->
+<!-- What you expected and what happened instead -->
 
 ## Environment
 
-- **OS**: <!-- e.g., macOS 14.5, Ubuntu 22.04, Windows 11 -->
-- **Shell**: <!-- e.g., zsh, bash -->
-- **Node.js version**: <!-- Run: node --version -->
-- **Claude Code version**: <!-- Run: claude --version -->
-- **Installation method**: <!-- curl script / manual -->
+- **OS**: <!-- e.g., macOS 15.3, Ubuntu 24.04 -->
+- **Claude Code version**: <!-- claude --version -->
+- **Pilot version**: <!-- pilot --version -->
+- **Tier**: <!-- Trial / Solo / Team -->
 
 ## Error Output
 
-<!-- Paste any error messages or logs -->
-
 ```
-Paste error output here
+Paste any error messages or logs here
 ```
 
-## Possible Solution
+## Checklist
 
-<!-- Optional: Suggest a fix or reason for the bug -->
-
-## Additional Context
-
-<!-- Add any other context, screenshots, or configuration files -->
+- [ ] I am using the latest version of Claude Pilot
+- [ ] I have searched existing issues to avoid duplicates
+- [ ] I can reproduce this consistently with the steps above

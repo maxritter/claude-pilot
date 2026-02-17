@@ -11,7 +11,7 @@
     },
     "web-search": {
       "command": "npx",
-      "args": ["-y", "open-websearch@latest"],
+      "args": ["-y", "open-websearch"],
       "env": {
         "MODE": "stdio",
         "DEFAULT_SEARCH_ENGINE": "duckduckgo",

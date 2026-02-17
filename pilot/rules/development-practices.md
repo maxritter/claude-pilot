@@ -4,7 +4,7 @@
 
 **File Size:** Production code under 300 lines. 500 is hard limit — stop and refactor. Test files exempt.
 
-**Dependency Check:** Before modifying any function, use `Grep` or LSP `findReferences` to find all callers. Update all affected call sites.
+**Dependency Check:** Before modifying any function, use `vexor`, `Grep`, or LSP `findReferences` to find all callers. Update all affected call sites.
 
 **Self-Correction:** Fix obvious mistakes (syntax errors, typos, missing imports) immediately without asking. Reserve communication for decisions.
 
@@ -18,7 +18,7 @@
 
 **Phase 1 — Root Cause:** Read errors completely, reproduce consistently, check recent changes (git diff), instrument at boundaries.
 
-**Phase 2 — Pattern Analysis:** Find working examples in codebase, compare against references, identify ALL differences.
+**Phase 2 — Pattern Analysis:** Use `vexor` to find working examples in codebase by intent. Compare against references, identify ALL differences.
 
 **Phase 3 — Hypothesis:** Form specific, falsifiable hypothesis ("state resets because component remounts on route change"). Test with minimal change — one variable at a time.
 

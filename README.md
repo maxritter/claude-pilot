@@ -485,10 +485,12 @@ Access the web-based Claude Pilot Console to visualize your development workflow
 
 Claude Pilot is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
 
-| Tier     | Seats | Includes                                                                  |
-| :------- | :---- | :------------------------------------------------------------------------ |
-| **Solo** | 1     | All features, continuous updates, GitHub support                          |
-| **Team** | Multi | Solo + multiple seats, dedicated email support, priority feature requests |
+| Tier     | Seats | Includes                                                                         |
+| :------- | :---- | :------------------------------------------------------------------------------- |
+| **Solo** | 1     | All features, continuous updates, bug reports via [GitHub Issues][gh-issues]      |
+| **Team** | Multi | Solo + multiple seats, priority email support, feature requests                  |
+
+[gh-issues]: https://github.com/maxritter/claude-pilot/issues
 
 Details and licensing at [claude-pilot.com](https://claude-pilot.com).
 
@@ -576,7 +578,9 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 
 **Pull Requests** — New features, improvements, and bug fixes are welcome. You can improve Pilot with Pilot — a self-improving loop where your contributions make the tool that makes contributions better.
 
-**Issues** — Found a bug or have a feature request? [Open an issue](https://github.com/maxritter/claude-pilot/issues).
+**Bug Reports** — Found a bug? [Open an issue](https://github.com/maxritter/claude-pilot/issues) on GitHub (Trial and Solo users).
+
+**Feature Requests** — Available on the [Team plan](https://claude-pilot.com/#pricing) via priority email support.
 
 ---
 

@@ -54,7 +54,7 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 
 ## Sub-Agent and Tool Usage
 
-**Prefer direct tools (vexor, Grep, Glob, Read) over sub-agents.** Sub-agents (Task/Explore) are acceptable for complex multi-file exploration when direct tools are insufficient.
+**Prefer direct tools over sub-agents.** For codebase exploration, use `vexor` first — it finds files by intent via semantic search, scales to large codebases, and costs zero context until you read the results. Fall back to Grep/Glob for exact pattern matches. Only use Task/Explore sub-agents when you need multi-step reasoning across many files that direct tools can't cover in 2-3 queries.
 
 ### /spec Verification Agents (MANDATORY)
 

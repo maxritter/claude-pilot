@@ -119,7 +119,7 @@ const PricingSection = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Continuous updates + GitHub support</span>
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Continuous updates + bug reports via GitHub</span>
               </li>
             </ul>
 
@@ -162,7 +162,7 @@ const PricingSection = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Dedicated email support</span>
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Priority email support + feature requests</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />

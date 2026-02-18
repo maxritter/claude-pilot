@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.8.2] - 2026-02-18
+
+### Bug Fixes
+
+- Global extended context toggle, compact settings UI, and hook improvements 
+
 ## [6.8.1] - 2026-02-18
 
 ### Bug Fixes

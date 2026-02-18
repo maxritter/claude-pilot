@@ -2,7 +2,7 @@
 description: "Spec verification phase - tests, execution, rules audit, code review"
 argument-hint: "<path/to/plan.md>"
 user-invocable: false
-model: opus[1m]
+model: opus
 hooks:
   Stop:
     - command: uv run python "${CLAUDE_PLUGIN_ROOT}/hooks/spec_verify_validator.py"
@@ -494,14 +494,39 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 
 3. **If no worktree is active** (`"found": false`): Skip to Step 3.12 (this is a non-worktree spec run or worktree was already synced).
 
-4. **Show diff summary:**
+4. **Pre-sync: Check working tree is clean (MANDATORY)**
+
+   The sync requires a clean working tree on the base branch. Check now and stop if dirty:
+
+   ```bash
+   git -C <project_root> status --porcelain
+   ```
+
+   **If output is non-empty (dirty working tree):**
+   - Report to user: "Cannot sync: the main branch has uncommitted changes. Please commit or `git stash` them first, then re-run `/spec <plan_path>` to resume verification."
+   - Do NOT proceed with sync. Step 3.12 will loop back to implementation.
+
+5. **Save plan file to project root (MANDATORY)**
+
+   Plan files are gitignored and live only in the worktree. Copy the plan to the project root before deleting the worktree so it persists locally for reference.
+
+   ```bash
+   # plan_path is the worktree-relative path, e.g. .worktrees/spec-slug-hash/docs/plans/2026-02-09-slug.md
+   # Compute the destination in the project root:
+   mkdir -p <project_root>/docs/plans
+   cp <worktree_plan_path> <project_root>/docs/plans/<plan_filename>
+   ```
+
+   This file is gitignored and will NOT be committed. It stays on disk for local reference only.
+
+6. **Show diff summary:**
 
    ```bash
    ~/.pilot/bin/pilot worktree diff --json <plan_slug>
    # Returns JSON with changed files list
    ```
 
-5. **Ask user for sync decision:**
+7. **Ask user for sync decision:**
 
    ```
    AskUserQuestion:
@@ -512,42 +537,37 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
        - "Discard all changes" — Remove worktree and branch without merging
    ```
 
-6. **Handle user choice:**
+8. **Handle user choice:**
 
    **If "Yes, squash merge":**
 
    ```bash
    ~/.pilot/bin/pilot worktree sync --json <plan_slug>
-   # Returns: {"success": true, "files_changed": N, "commit_hash": "...", "stash_warning": null|"..."} or {"success": false, "error": "..."}
+   # Returns: {"success": true, "files_changed": N, "commit_hash": "..."} or {"success": false, "error": "..."}
    ```
 
-   **Check `stash_warning` in the response.** If non-null, the user had uncommitted changes that couldn't be cleanly restored after the merge. Report the warning so the user can run `git stash pop` manually.
+   If sync fails (e.g. merge conflict), report the error and ask user to resolve manually.
 
-   If sync succeeds, clean up the worktree (use `--force` since changes are already merged):
+   If sync succeeds, clean up **and immediately cd back** in the SAME bash invocation. The shell CWD will be invalid after the worktree is deleted — combining them prevents the broken-shell issue:
 
    ```bash
-   ~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug>
+   PROJECT_ROOT=$(~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug> | python3 -c "import sys,json; print(json.load(sys.stdin)['project_root'])") && cd "$PROJECT_ROOT"
    ```
 
-   **⚠️ CRITICAL: After cleanup, `cd` to the `project_root` from the JSON response.** The shell CWD may have been inside the now-deleted worktree directory, which breaks all subsequent commands.
-
-   ```bash
-   cd <project_root from cleanup response>
-   ```
+   **⛔ NEVER call cleanup and cd in separate Bash tool calls.** Deleting the worktree invalidates the shell's CWD. Every subsequent Bash call will fail with exit code 1 until the session restarts.
 
    Report: "Changes synced to `<base_branch>` — N files changed, commit `<hash>`"
-   If `stash_warning` was set: also report "⚠ Your previously uncommitted changes need manual restore: `git stash pop`"
 
    **If "No, keep worktree":**
    Report: "Worktree preserved at `<worktree_path>`. You can sync later via `pilot worktree sync <plan-slug>` or discard via `pilot worktree cleanup <plan-slug>`."
 
    **If "Discard all changes":**
 
-   ```bash
-   ~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug>
-   ```
+   Combine cleanup + cd in a SINGLE bash call (same reason as above):
 
-   **⚠️ After cleanup, `cd` to the `project_root` from the JSON response** (same CWD issue as above).
+   ```bash
+   PROJECT_ROOT=$(~/.pilot/bin/pilot worktree cleanup --force --json <plan_slug> | python3 -c "import sys,json; print(json.load(sys.stdin)['project_root'])") && cd "$PROJECT_ROOT"
+   ```
 
    Report: "Worktree and branch discarded."
 

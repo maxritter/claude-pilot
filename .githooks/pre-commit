@@ -5,17 +5,14 @@
 # 2. Console unit tests  — when console/ changed
 # 3. Console typecheck + build + stage artifacts — when console/src/ changed
 
-set -e
+set -eo pipefail
 
 # --- 1. Python unit tests ---
 PYTHON_CHANGED=$(git diff --cached --name-only -- 'launcher/' 'pilot/hooks/' | head -1)
 
 if [ -n "$PYTHON_CHANGED" ]; then
   echo "[pre-commit] Python source changed — running unit tests..."
-  if ! uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -5; then
-    echo "[pre-commit] ERROR: Python unit tests failed. Fix before committing."
-    exit 1
-  fi
+  uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -5
   echo "[pre-commit] Python unit tests passed."
 fi
 
@@ -25,30 +22,22 @@ CONSOLE_CHANGED=$(git diff --cached --name-only -- 'console/src/' 'console/scrip
 if [ -n "$CONSOLE_CHANGED" ]; then
   # Verify node_modules exist
   if [ ! -d "console/node_modules" ]; then
-    echo "[pre-commit] ERROR: console/node_modules missing. Run: cd console && npm install"
+    echo "[pre-commit] ERROR: console/node_modules missing. Run: cd console && bun install"
     exit 1
   fi
 
   echo "[pre-commit] Console source changed — running unit tests..."
-  if ! (cd console && bun test 2>&1 | tail -5); then
-    echo "[pre-commit] ERROR: Console unit tests failed. Fix before committing."
-    exit 1
-  fi
+  (cd console && bun test 2>&1) | tail -5
   echo "[pre-commit] Console unit tests passed."
 
   # --- 3. Console typecheck + build + stage artifacts ---
   echo "[pre-commit] Running typecheck..."
-  if ! (cd console && bun run typecheck 2>&1 | tail -5); then
-    echo "[pre-commit] ERROR: Console typecheck failed. Fix before committing."
-    exit 1
-  fi
+  (cd console && bun run typecheck 2>&1) | tail -5
   echo "[pre-commit] Console typecheck passed."
 
   echo "[pre-commit] Rebuilding console artifacts..."
-  if ! (cd console && npm run build 2>&1 | tail -3); then
-    echo "[pre-commit] ERROR: Console build failed. Fix build errors before committing."
-    exit 1
-  fi
+  (cd console && npm run build 2>&1) | tail -3
+  echo ""
 
   # Build artifacts that must stay in sync with console source
   ARTIFACTS=(

@@ -127,6 +127,14 @@ BLOCKS: dict[str, dict] = {
         "alternative": "Use AskUserQuestion for plan approval, then Skill(skill='spec-implement', args='plan-path')",
         "example": "AskUserQuestion to confirm plan, then Skill(skill='spec-implement', args='plan-path')",
     },
+    "Task": {
+        "message": "Task(subagent_type='Plan') is blocked (project uses /spec workflow)",
+        "alternative": "Do planning work directly with Read, Grep, Glob tools. Use /spec for structured planning.",
+        "example": "Read files directly, use AskUserQuestion for decisions, write plan to file",
+        "condition": lambda data: (
+            isinstance(data.get("tool_input"), dict) and data["tool_input"].get("subagent_type") == "Plan"
+        ),
+    },
 }
 
 

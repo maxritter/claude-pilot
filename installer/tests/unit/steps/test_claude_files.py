@@ -882,6 +882,45 @@ class TestMergeSettings:
 
         assert result["env"]["MY_CUSTOM_VAR"] == "yes"
 
+    def test_pilot_removed_key_dropped_when_user_unchanged(self):
+        """Key Pilot previously managed and user didn't change is removed when Pilot drops it."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"spinnerTipsEnabled": False, "model": "sonnet"}
+        current = {"spinnerTipsEnabled": False, "model": "sonnet"}
+        incoming = {"spinnerTipsOverride": {"tips": ["tip1"], "excludeDefault": True}, "model": "sonnet"}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert "spinnerTipsEnabled" not in result
+        assert result["spinnerTipsOverride"] == {"tips": ["tip1"], "excludeDefault": True}
+
+    def test_pilot_removed_key_preserved_when_user_changed(self):
+        """Key Pilot managed but user changed is preserved even when Pilot removes it."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"spinnerTipsEnabled": False}
+        current = {"spinnerTipsEnabled": True}
+        incoming = {"spinnerTipsOverride": {"tips": ["tip1"], "excludeDefault": True}}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert result["spinnerTipsEnabled"] is True
+        assert result["spinnerTipsOverride"] == {"tips": ["tip1"], "excludeDefault": True}
+
+    def test_user_added_key_not_in_baseline_preserved_when_not_in_incoming(self):
+        """User-added keys (never in Pilot baseline) are always preserved."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"model": "sonnet"}
+        current = {"model": "sonnet", "myCustomKey": "hello"}
+        incoming = {"model": "opus"}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert result["myCustomKey"] == "hello"
+        assert result["model"] == "opus"
+
 
 class TestMergeAppConfigWithBaseline:
     """Tests for merge_app_config with baseline parameter."""

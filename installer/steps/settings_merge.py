@@ -37,7 +37,10 @@ def merge_settings(
         in_baseline = baseline is not None and key in baseline
 
         if not in_incoming:
-            result[key] = current[key]
+            if baseline is not None and in_baseline and current[key] == baseline[key]:
+                pass
+            else:
+                result[key] = current[key]
         elif not in_current:
             result[key] = incoming[key]
         elif key == "permissions":

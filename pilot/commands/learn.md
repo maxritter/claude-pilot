@@ -1,6 +1,6 @@
 ---
 description: Extract reusable knowledge into skills - online learning system
-model: sonnet
+model: sonnet[1m]
 ---
 
 # /learn - Online Learning System

@@ -2,7 +2,7 @@
 description: "Spec verification phase - tests, execution, rules audit, code review"
 argument-hint: "<path/to/plan.md>"
 user-invocable: false
-model: opus
+model: opus[1m]
 hooks:
   Stop:
     - command: uv run python "${CLAUDE_PLUGIN_ROOT}/hooks/spec_verify_validator.py"
@@ -21,15 +21,15 @@ hooks:
 
 ## ⛔ KEY CONSTRAINTS (Rules Summary)
 
-| #   | Rule                                                                                                  |
-| --- | ----------------------------------------------------------------------------------------------------- |
+| #   | Rule                                                                                                                                                                                                                                                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **NEVER SKIP verification** - Code review (Step 3.0/3.5) launches `spec-reviewer-compliance` + `spec-reviewer-quality` via the **Task tool** (`subagent_type="pilot:spec-reviewer-compliance"` and `"pilot:spec-reviewer-quality"`). Mandatory. No exceptions. |
-| 2   | **NO stopping** - Everything is automatic. Never ask "Should I fix these?"                            |
-| 3   | **Fix ALL findings automatically** - must_fix AND should_fix. No permission needed.                   |
-| 4   | **Quality over speed** - Never rush due to context pressure                                           |
-| 5   | **Plan file is source of truth** - Survives across auto-compaction cycles                                            |
-| 6   | **Code changes finish BEFORE runtime testing** - Code review and fixes happen before build/deploy/E2E |
-| 7   | **Re-verification after fixes is MANDATORY** - Fixes can introduce new bugs. Always re-verify.        |
+| 2   | **NO stopping** - Everything is automatic. Never ask "Should I fix these?"                                                                                                                                                                                     |
+| 3   | **Fix ALL findings automatically** - must_fix AND should_fix. No permission needed.                                                                                                                                                                            |
+| 4   | **Quality over speed** - Never rush due to context pressure                                                                                                                                                                                                    |
+| 5   | **Plan file is source of truth** - Survives across auto-compaction cycles                                                                                                                                                                                      |
+| 6   | **Code changes finish BEFORE runtime testing** - Code review and fixes happen before build/deploy/E2E                                                                                                                                                          |
+| 7   | **Re-verification after fixes is MANDATORY** - Fixes can introduce new bugs. Always re-verify.                                                                                                                                                                 |
 
 ---
 
@@ -91,6 +91,7 @@ echo $PILOT_SESSION_ID
 **⚠️ Validate the session ID is set.** If `$PILOT_SESSION_ID` is empty, fall back to `"default"` to avoid writing to `~/.pilot/sessions//`.
 
 Define output paths (replace `<session-id>` with the resolved value):
+
 - **Compliance findings:** `~/.pilot/sessions/<session-id>/findings-compliance.json`
 - **Quality findings:** `~/.pilot/sessions/<session-id>/findings-quality.json`
 
@@ -99,6 +100,7 @@ Define output paths (replace `<session-id>` with the resolved value):
 Spawn 2 agents in parallel using TWO Task tool calls in a SINGLE message. Set `run_in_background=true` on both.
 
 **Agent 1: spec-reviewer-compliance** (plan alignment, DoD, risk mitigations)
+
 ```
 Task(
   subagent_type="pilot:spec-reviewer-compliance",
@@ -122,6 +124,7 @@ Task(
 ```
 
 **Agent 2: spec-reviewer-quality** (code quality, security, testing, performance)
+
 ```
 Task(
   subagent_type="pilot:spec-reviewer-quality",
@@ -275,10 +278,12 @@ The two review agents (launched in Step 3.0) should be done or nearly done by no
 6. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
 
 **If a findings file is still missing after 30 retries** (agent failed to write):
+
 1. Re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
 2. If the synchronous re-launch also fails, log the failure and continue with findings from the other agent only
 
 **Expected timeline:**
+
 - Agents were launched before Step 3.1 (tests, lint, feature parity, call chain)
 - Steps 3.1-3.4 typically take 2-5 minutes
 - Agents typically complete in 3-7 minutes

@@ -1,7 +1,7 @@
 ---
 description: Manage Team Vault - share and install rules, commands, skills across your team via sx
 user-invocable: true
-model: sonnet
+model: sonnet[1m]
 ---
 
 # /vault - Team Vault Management
@@ -214,6 +214,7 @@ sx add .claude/skills/<name> --yes --type skill --name "<name>" --scope-global
 **Warning:** Do NOT use `--no-install` — it skips updating the vault lockfile, making assets invisible to `sx install` for teammates.
 
 **Note:** sx installs to all detected clients (Claude Code + Cursor). If `.cursor/` is not in `.gitignore`, add it:
+
 ```bash
 echo '.cursor/' >> .gitignore 2>/dev/null
 ```
@@ -368,13 +369,14 @@ sx uninstall --all --yes
 
 Assets can be installed at different levels:
 
-| Scope | Installs to | Use When |
-| ----- | ----------- | -------- |
-| Project (`--scope-repo`) | `project/.claude/` | **Default.** Assets stay with the project. |
-| Global (`--scope-global`) | `~/.claude/` | Personal tools needed everywhere. |
-| Path (`--scope-repo "url#path"`) | `project/path/.claude/` | Monorepo — different assets per service. |
+| Scope                            | Installs to             | Use When                                   |
+| -------------------------------- | ----------------------- | ------------------------------------------ |
+| Project (`--scope-repo`)         | `project/.claude/`      | **Default.** Assets stay with the project. |
+| Global (`--scope-global`)        | `~/.claude/`            | Personal tools needed everywhere.          |
+| Path (`--scope-repo "url#path"`) | `project/path/.claude/` | Monorepo — different assets per service.   |
 
 **Project-scoped is recommended** because:
+
 - Each project explicitly tracks which vault assets it uses
 - No global pollution from multiple projects
 - New team members get exactly the right assets when they clone the repo
@@ -391,14 +393,14 @@ To change an existing asset's scope, run `sx add <name>` again (without a path) 
 
 ## Error Handling
 
-| Error                     | Action                                                  |
-| ------------------------- | ------------------------------------------------------- |
-| "configuration not found" | Run setup flow                                          |
-| "authentication failed" / "could not read Username" | Run the **Git Authentication Fix** below |
-| "repository not found"    | Verify URL is correct and user has access               |
-| "asset already exists"    | sx will auto-increment version — this is expected       |
-| "failed to install"       | Run `sx install --repair` to fix discrepancies          |
-| Network errors            | Check internet connection, retry                        |
+| Error                                               | Action                                            |
+| --------------------------------------------------- | ------------------------------------------------- |
+| "configuration not found"                           | Run setup flow                                    |
+| "authentication failed" / "could not read Username" | Run the **Git Authentication Fix** below          |
+| "repository not found"                              | Verify URL is correct and user has access         |
+| "asset already exists"                              | sx will auto-increment version — this is expected |
+| "failed to install"                                 | Run `sx install --repair` to fix discrepancies    |
+| Network errors                                      | Check internet connection, retry                  |
 
 ### Git Authentication Fix
 

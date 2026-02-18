@@ -98,10 +98,9 @@ describe('Usage View Components', () => {
 
       expect(html).toContain('card');
       expect(html).toContain('Model Routing');
-      expect(html).toContain('Opus 4.6');
-      expect(html).toContain('Sonnet 4.5');
       expect(html).toContain('Orchestrator');
       expect(html).toContain('Review Agents');
+      expect(html).toContain('/settings');
     });
   });
 

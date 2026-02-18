@@ -210,14 +210,16 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 
 Pilot uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
 
-| Phase                 | Model  | Why                                                                                                                                               |
-| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Planning**          | Opus   | Exploring your codebase, designing architecture, and writing the spec requires deep reasoning. A good plan is the foundation of everything.       |
-| **Plan Verification** | Opus   | Catching gaps, missing edge cases, and requirement mismatches before implementation saves expensive rework.                                       |
-| **Implementation**    | Sonnet | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec.   |
-| **Code Verification** | Opus   | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
+| Phase                 | Default | Why                                                                                                                                               |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Planning**          | Opus    | Exploring your codebase, designing architecture, and writing the spec requires deep reasoning. A good plan is the foundation of everything.       |
+| **Plan Verification** | Opus    | Catching gaps, missing edge cases, and requirement mismatches before implementation saves expensive rework.                                       |
+| **Implementation**    | Sonnet  | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec.   |
+| **Code Verification** | Opus    | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
 
 **The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
+
+**Configurable:** All model assignments are configurable per-component via the Pilot Console (`localhost:41777/#/settings`). Choose between Sonnet 4.6, Sonnet 4.6 1M, Opus 4.6, and Opus 4.6 1M for the main session and each command. Sub-agents always use the base model (no 1M). **Note:** 1M context models require a compatible Anthropic subscription — not available to all users.
 
 ### Quick Mode
 

@@ -11,10 +11,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _util import (
-    COMPACTION_THRESHOLD_PCT,
     CYAN,
     NC,
     YELLOW,
+    _get_compaction_threshold_pct,
+    _get_max_context_tokens,
     get_session_cache_path,
 )
 
@@ -25,7 +26,7 @@ LEARN_THRESHOLDS = [40, 55, 65]
 
 def _to_effective(raw_pct: float) -> float:
     """Convert raw context % to effective % (where compaction threshold = 100%)."""
-    return min(raw_pct / COMPACTION_THRESHOLD_PCT * 100, 100)
+    return min(raw_pct / _get_compaction_threshold_pct() * 100, 100)
 
 
 def _get_pilot_session_id() -> str:
@@ -131,7 +132,7 @@ def _is_throttled(session_id: str) -> bool:
 
             if time.time() - timestamp < 30:
                 tokens = cache.get("tokens", 0)
-                percentage = (tokens / 200000) * 100
+                percentage = (tokens / _get_max_context_tokens()) * 100
                 if percentage < THRESHOLD_WARN:
                     return True
 
@@ -150,7 +151,7 @@ def _resolve_context(session_id: str) -> tuple[float, int, list[int], bool] | No
         return None
 
     shown_learn, shown_80_warn = get_session_flags(session_id)
-    return statusline_pct, int(statusline_pct / 100 * 200000), shown_learn, shown_80_warn
+    return statusline_pct, int(statusline_pct / 100 * _get_max_context_tokens()), shown_learn, shown_80_warn
 
 
 def run_context_monitor() -> int:

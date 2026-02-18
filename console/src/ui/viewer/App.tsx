@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { DashboardLayout } from './layouts';
 import { Router, useRouter } from './router';
-import { DashboardView, MemoriesView, SessionsView, SpecView, UsageView, VaultView } from './views';
+import { DashboardView, MemoriesView, SessionsView, SettingsView, SpecView, UsageView, VaultView } from './views';
 import { LogsDrawer } from './components/LogsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { LicenseGate } from './components/LicenseGate';
@@ -19,6 +19,7 @@ const routes = [
   { path: '/sessions', component: SessionsView },
   { path: '/usage', component: UsageView },
   { path: '/vault', component: VaultView },
+  { path: '/settings', component: SettingsView },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'pilot-memory-sidebar-collapsed';

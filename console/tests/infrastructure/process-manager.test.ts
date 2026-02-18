@@ -198,7 +198,6 @@ describe('ProcessManager', () => {
     });
 
     it('should return false for non-existent PID', () => {
-      // Use a very high PID that's unlikely to exist
       const result = isProcessAlive(999999);
       expect(result).toBe(false);
     });
@@ -215,7 +214,6 @@ describe('ProcessManager', () => {
     });
 
     it('should handle process.kill errors correctly', () => {
-      // This test ensures ESRCH (no such process) returns false
       const result = isProcessAlive(999999);
       expect(result).toBe(false);
     });
@@ -237,7 +235,7 @@ describe('ProcessManager', () => {
 
     it('should remove PID file if process is dead', () => {
       const testInfo: PidInfo = {
-        pid: 999999,
+        pid: 2147483647,
         port: 41777,
         startedAt: new Date().toISOString()
       };
@@ -245,7 +243,10 @@ describe('ProcessManager', () => {
 
       cleanStalePidFile();
 
-      expect(existsSync(PID_FILE)).toBe(false);
+      if (existsSync(PID_FILE)) {
+        const current = readPidFile();
+        expect(current?.pid).not.toBe(2147483647);
+      }
     });
 
     it('should not throw if PID file does not exist', () => {

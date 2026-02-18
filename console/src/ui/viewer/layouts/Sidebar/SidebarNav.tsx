@@ -13,6 +13,7 @@ const navItems = [
   { icon: 'lucide:history', label: 'Sessions', href: '#/sessions' },
   { icon: 'lucide:bar-chart-3', label: 'Usage', href: '#/usage' },
   { icon: 'lucide:archive', label: 'Vault', href: '#/vault' },
+  { icon: 'lucide:settings', label: 'Settings', href: '#/settings' },
 ];
 
 export function SidebarNav({ currentPath, collapsed = false }: SidebarNavProps) {

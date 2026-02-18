@@ -22,7 +22,45 @@ NC = "\033[0m"
 
 FILE_LENGTH_WARN = 300
 FILE_LENGTH_CRITICAL = 500
-COMPACTION_THRESHOLD_PCT = 83.5
+
+_AUTOCOMPACT_BUFFER_TOKENS = 33_000
+
+
+def _read_model_from_config() -> str:
+    """Read user's main model from ~/.pilot/config.json.
+
+    Intentionally standalone — hooks cannot import from launcher.
+    Returns 'sonnet' (default) on any error.
+    """
+    try:
+        config_path = Path.home() / ".pilot" / "config.json"
+        data = json.loads(config_path.read_text())
+        model = data.get("model", "sonnet")
+        if isinstance(model, str) and model in ("sonnet", "sonnet[1m]", "opus", "opus[1m]"):
+            return model
+    except Exception:
+        pass
+    return "sonnet"
+
+
+def _get_max_context_tokens() -> int:
+    """Return context window size for the user's configured model.
+
+    Returns 1_000_000 for 1M variants, 200_000 otherwise.
+    """
+    model = _read_model_from_config()
+    return 1_000_000 if "[1m]" in model else 200_000
+
+
+def _get_compaction_threshold_pct() -> float:
+    """Return compaction threshold as percentage of total context window.
+
+    Formula: (window_size - buffer) / window_size * 100
+    - 200K context: 83.5%
+    - 1M context:  96.7%
+    """
+    window = _get_max_context_tokens()
+    return (window - _AUTOCOMPACT_BUFFER_TOKENS) / window * 100
 
 
 def _sessions_base() -> Path:

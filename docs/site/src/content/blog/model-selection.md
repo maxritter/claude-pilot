@@ -172,7 +172,9 @@ This approach can reduce costs by 60-80% compared to using Opus for everything.
 
 ## [Model Configuration](#model-configuration)
 
-Claude Code gives you multiple ways to set your model, with a clear priority chain. Higher-priority settings override lower ones:
+**If you use Claude Pilot:** The easiest way to configure models is through the [Pilot Console](http://localhost:41777/#/settings) (`localhost:41777/#/settings`). You can set a different model for each `/spec` phase, slash command, and sub-agent, then restart Pilot to apply. Pilot injects your preferences into all the right places automatically — no manual file editing needed.
+
+For users without Pilot, or for temporary changes, Claude Code gives you multiple ways to set your model, with a clear priority chain. Higher-priority settings override lower ones:
 
 1. **During session** - `/model <alias|name>` switches models mid-session (highest priority)
 2. **At startup** - `claude --model <alias|name>` sets the model for that session

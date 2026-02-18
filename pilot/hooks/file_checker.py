@@ -25,20 +25,18 @@ def main() -> int:
         return 0
 
     if target_file.suffix == ".py":
-        exit_code, reason = check_python(target_file)
+        _, reason = check_python(target_file)
     elif target_file.suffix in TS_EXTENSIONS:
-        exit_code, reason = check_typescript(target_file)
+        _, reason = check_typescript(target_file)
     elif target_file.suffix == ".go":
-        exit_code, reason = check_go(target_file)
+        _, reason = check_go(target_file)
     else:
         return 0
 
     if reason:
         print(json.dumps({"decision": "block", "reason": reason}))
-    else:
-        print(json.dumps({}))
 
-    return exit_code
+    return 0
 
 
 if __name__ == "__main__":

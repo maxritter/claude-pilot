@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """TDD enforcer - reminds to use TDD when modifying implementation code.
 
-This is a NON-BLOCKING reminder (PostToolUse hook) - edits always complete,
-then a reminder is shown to encourage TDD practices when appropriate.
-Returns exit code 2 to show TDD reminders to Claude.
+This is a PostToolUse hook — edits always complete, then a structured JSON
+reminder is shown to Claude via decision:block to encourage TDD practices.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import NC, YELLOW
+from _util import post_tool_use_block
 
 EXCLUDED_EXTENSIONS = [
     ".md",
@@ -282,11 +281,10 @@ def is_trivial_edit(tool_name: str, tool_input: dict) -> bool:
 
 
 def warn(message: str, suggestion: str) -> int:
-    """Show warning and return exit code 2 (blocking)."""
-    print("", file=sys.stderr)
-    print(f"{YELLOW}TDD Reminder: {message}{NC}", file=sys.stderr)
-    print(f"{YELLOW}    {suggestion}{NC}", file=sys.stderr)
-    return 2
+    """Output JSON block decision to stdout and return 0."""
+    reason = f"TDD Reminder: {message}\n    {suggestion}"
+    print(post_tool_use_block(reason))
+    return 0
 
 
 def run_tdd_enforcer() -> int:

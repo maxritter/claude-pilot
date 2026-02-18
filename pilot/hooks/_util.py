@@ -166,30 +166,63 @@ def is_waiting_for_user_input(transcript_path: str) -> bool:
         return False
 
 
-def check_file_length(file_path: Path) -> bool:
-    """Warn if file exceeds length thresholds.
+def check_file_length(file_path: Path) -> str:
+    """Check if file exceeds length thresholds.
 
-    Returns True if warning was emitted, False otherwise.
+    Returns a plain-text warning message or empty string if OK.
     """
     try:
         line_count = len(file_path.read_text().splitlines())
     except Exception:
-        return False
+        return ""
 
     if line_count > FILE_LENGTH_CRITICAL:
-        print("", file=sys.stderr)
-        print(
-            f"{RED}🛑 FILE TOO LONG: {file_path.name} has {line_count} lines (limit: {FILE_LENGTH_CRITICAL}){NC}",
-            file=sys.stderr,
+        return (
+            f"FILE TOO LONG: {file_path.name} has {line_count} lines (limit: {FILE_LENGTH_CRITICAL}). "
+            f"Split into smaller, focused modules (<{FILE_LENGTH_WARN} lines each)."
         )
-        print(f"   Split into smaller, focused modules (<{FILE_LENGTH_WARN} lines each).", file=sys.stderr)
-        return True
     elif line_count > FILE_LENGTH_WARN:
-        print("", file=sys.stderr)
-        print(
-            f"{YELLOW}⚠️  FILE GROWING LONG: {file_path.name} has {line_count} lines (warn: {FILE_LENGTH_WARN}){NC}",
-            file=sys.stderr,
+        return (
+            f"FILE GROWING LONG: {file_path.name} has {line_count} lines (warn: {FILE_LENGTH_WARN}). "
+            f"Consider splitting before it grows further."
         )
-        print("   Consider splitting before it grows further.", file=sys.stderr)
-        return True
-    return False
+    return ""
+
+
+def post_tool_use_block(reason: str) -> str:
+    """Build PostToolUse block JSON (drops tool result, shows reason to Claude)."""
+    return json.dumps({"decision": "block", "reason": reason})
+
+
+def post_tool_use_context(context: str) -> str:
+    """Build PostToolUse additionalContext JSON (adds context without blocking)."""
+    return json.dumps(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": context,
+            }
+        }
+    )
+
+
+def pre_tool_use_deny(reason: str) -> str:
+    """Build PreToolUse deny JSON (blocks tool call)."""
+    return json.dumps({"permissionDecision": "deny", "reason": reason})
+
+
+def pre_tool_use_context(context: str) -> str:
+    """Build PreToolUse additionalContext JSON (hint without blocking)."""
+    return json.dumps(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": context,
+            }
+        }
+    )
+
+
+def stop_block(reason: str) -> str:
+    """Build Stop block JSON (prevents session stop)."""
+    return json.dumps({"decision": "block", "reason": reason})

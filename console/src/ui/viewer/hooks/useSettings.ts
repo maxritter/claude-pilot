@@ -1,40 +1,38 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 
-export const MODEL_CHOICES_FULL = ['sonnet', 'sonnet[1m]', 'opus', 'opus[1m]'] as const;
-export const MODEL_CHOICES_AGENT = ['sonnet', 'opus'] as const;
+export const MODEL_CHOICES = ["sonnet", "opus"] as const;
 
-export type ModelFull = (typeof MODEL_CHOICES_FULL)[number];
-export type ModelAgent = (typeof MODEL_CHOICES_AGENT)[number];
+export type ModelChoice = (typeof MODEL_CHOICES)[number];
 
 export const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  sonnet: 'Sonnet 4.6',
-  'sonnet[1m]': 'Sonnet 4.6 1M',
-  opus: 'Opus 4.6',
-  'opus[1m]': 'Opus 4.6 1M',
+  sonnet: "Sonnet 4.6",
+  opus: "Opus 4.6",
 };
 
 export interface ModelSettings {
   model: string;
+  extendedContext: boolean;
   commands: Record<string, string>;
   agents: Record<string, string>;
 }
 
 export const DEFAULT_SETTINGS: ModelSettings = {
-  model: 'opus',
+  model: "opus",
+  extendedContext: false,
   commands: {
-    spec: 'sonnet',
-    'spec-plan': 'opus',
-    'spec-implement': 'sonnet',
-    'spec-verify': 'opus',
-    vault: 'sonnet',
-    sync: 'sonnet',
-    learn: 'sonnet',
+    spec: "sonnet",
+    "spec-plan": "opus",
+    "spec-implement": "sonnet",
+    "spec-verify": "opus",
+    vault: "sonnet",
+    sync: "sonnet",
+    learn: "sonnet",
   },
   agents: {
-    'plan-challenger': 'sonnet',
-    'plan-verifier': 'sonnet',
-    'spec-reviewer-compliance': 'sonnet',
-    'spec-reviewer-quality': 'opus',
+    "plan-challenger": "sonnet",
+    "plan-verifier": "sonnet",
+    "spec-reviewer-compliance": "sonnet",
+    "spec-reviewer-quality": "opus",
   },
 };
 
@@ -45,6 +43,7 @@ export interface UseSettingsResult {
   isDirty: boolean;
   saved: boolean;
   updateModel: (model: string) => void;
+  updateExtendedContext: (enabled: boolean) => void;
   updateCommand: (command: string, model: string) => void;
   updateAgent: (agent: string, model: string) => void;
   save: () => Promise<void>;
@@ -58,7 +57,7 @@ export function useSettings(): UseSettingsResult {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
+    fetch("/api/settings")
       .then((r) => {
         if (!r.ok) throw new Error(`API error: ${r.status}`);
         return r.json();
@@ -68,13 +67,19 @@ export function useSettings(): UseSettingsResult {
         setIsLoading(false);
       })
       .catch((err: Error) => {
-        setError(err.message || 'Failed to load settings');
+        setError(err.message || "Failed to load settings");
         setIsLoading(false);
       });
   }, []);
 
   const updateModel = useCallback((model: string) => {
     setSettings((prev) => ({ ...prev, model }));
+    setIsDirty(true);
+    setSaved(false);
+  }, []);
+
+  const updateExtendedContext = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({ ...prev, extendedContext: enabled }));
     setIsDirty(true);
     setSaved(false);
   }, []);
@@ -98,19 +103,32 @@ export function useSettings(): UseSettingsResult {
   }, []);
 
   const save = useCallback(async () => {
-    await fetch('/api/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Save failed: ${r.status}`);
-      return r.json();
-    }).then((data: ModelSettings) => {
-      setSettings(data);
-      setIsDirty(false);
-      setSaved(true);
-    });
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Save failed: ${r.status}`);
+        return r.json();
+      })
+      .then((data: ModelSettings) => {
+        setSettings(data);
+        setIsDirty(false);
+        setSaved(true);
+      });
   }, [settings]);
 
-  return { settings, isLoading, error, isDirty, saved, updateModel, updateCommand, updateAgent, save };
+  return {
+    settings,
+    isLoading,
+    error,
+    isDirty,
+    saved,
+    updateModel,
+    updateExtendedContext,
+    updateCommand,
+    updateAgent,
+    save,
+  };
 }

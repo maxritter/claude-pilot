@@ -11,13 +11,14 @@ import * as os from 'os';
 import * as path from 'path';
 import type { Request, Response } from 'express';
 
-import { SettingsRoutes, DEFAULT_SETTINGS, MODEL_CHOICES_FULL, MODEL_CHOICES_AGENT } from '../src/services/worker/http/routes/SettingsRoutes.js';
+import { SettingsRoutes, DEFAULT_SETTINGS, MODEL_CHOICES } from '../src/services/worker/http/routes/SettingsRoutes.js';
 
 const MINIMAL_CONFIG = JSON.stringify({ auto_update: true });
 
 const FULL_CONFIG = JSON.stringify({
   auto_update: false,
   model: 'opus',
+  extendedContext: false,
   commands: {
     spec: 'opus',
     'spec-plan': 'opus',
@@ -73,19 +74,12 @@ describe('SettingsRoutes', () => {
     mock.restore();
   });
 
-  describe('MODEL_CHOICES_FULL', () => {
-    it('should contain all four model choices', () => {
-      expect(MODEL_CHOICES_FULL).toContain('sonnet');
-      expect(MODEL_CHOICES_FULL).toContain('sonnet[1m]');
-      expect(MODEL_CHOICES_FULL).toContain('opus');
-      expect(MODEL_CHOICES_FULL).toContain('opus[1m]');
-    });
-  });
-
-  describe('MODEL_CHOICES_AGENT', () => {
-    it('should not contain 1M variants', () => {
-      expect(MODEL_CHOICES_AGENT).not.toContain('sonnet[1m]');
-      expect(MODEL_CHOICES_AGENT).not.toContain('opus[1m]');
+  describe('MODEL_CHOICES', () => {
+    it('should contain only base models', () => {
+      expect(MODEL_CHOICES).toContain('sonnet');
+      expect(MODEL_CHOICES).toContain('opus');
+      expect(MODEL_CHOICES).not.toContain('sonnet[1m]');
+      expect(MODEL_CHOICES).not.toContain('opus[1m]');
     });
   });
 
@@ -94,8 +88,15 @@ describe('SettingsRoutes', () => {
       expect(DEFAULT_SETTINGS.model).toBe('opus');
     });
 
+    it('should have extendedContext disabled by default', () => {
+      expect(DEFAULT_SETTINGS.extendedContext).toBe(false);
+    });
+
     it('should have no 1M models in defaults', () => {
       for (const model of Object.values(DEFAULT_SETTINGS.commands)) {
+        expect(model).not.toContain('[1m]');
+      }
+      for (const model of Object.values(DEFAULT_SETTINGS.agents)) {
         expect(model).not.toContain('[1m]');
       }
     });
@@ -109,6 +110,7 @@ describe('SettingsRoutes', () => {
       await (routes as any).handleGet(req as Request, m.res as Response);
 
       expect(m.body.model).toBe(DEFAULT_SETTINGS.model);
+      expect(m.body.extendedContext).toBe(false);
       expect(m.body.commands).toBeDefined();
       expect(m.body.agents).toBeDefined();
     });
@@ -122,6 +124,7 @@ describe('SettingsRoutes', () => {
       await (routes as any).handleGet(req as Request, m.res as Response);
 
       expect(m.body.model).toBe(DEFAULT_SETTINGS.model);
+      expect(m.body.extendedContext).toBe(false);
       expect(m.body.commands['spec-plan']).toBe(DEFAULT_SETTINGS.commands['spec-plan']);
     });
 
@@ -134,6 +137,7 @@ describe('SettingsRoutes', () => {
       await (routes as any).handleGet(req as Request, m.res as Response);
 
       expect(m.body.model).toBe('opus');
+      expect(m.body.extendedContext).toBe(false);
     });
 
     it('should merge partial commands with defaults', async () => {
@@ -147,18 +151,53 @@ describe('SettingsRoutes', () => {
       expect(m.body.commands.spec).toBe('opus');
       expect(m.body.commands['spec-plan']).toBe(DEFAULT_SETTINGS.commands['spec-plan']);
     });
+
+    it('should strip legacy 1m model without enabling extendedContext', async () => {
+      fs.writeFileSync(configPath, JSON.stringify({ model: 'opus[1m]' }));
+
+      const m = makeMockRes();
+      const req: Partial<Request> = {};
+
+      await (routes as any).handleGet(req as Request, m.res as Response);
+
+      expect(m.body.model).toBe('opus');
+      expect(m.body.extendedContext).toBe(false);
+    });
+
+    it('should strip legacy 1m commands without enabling extendedContext', async () => {
+      fs.writeFileSync(configPath, JSON.stringify({ model: 'opus', commands: { spec: 'sonnet[1m]' } }));
+
+      const m = makeMockRes();
+      const req: Partial<Request> = {};
+
+      await (routes as any).handleGet(req as Request, m.res as Response);
+
+      expect(m.body.commands.spec).toBe('sonnet');
+      expect(m.body.extendedContext).toBe(false);
+    });
   });
 
   describe('PUT /api/settings', () => {
     it('should update main model', async () => {
       const m = makeMockRes();
-      const req: Partial<Request> = { body: { model: 'opus[1m]' } };
+      const req: Partial<Request> = { body: { model: 'sonnet' } };
 
       await (routes as any).handlePut(req as Request, m.res as Response);
 
       const saved = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      expect(saved.model).toBe('opus[1m]');
-      expect(m.body.model).toBe('opus[1m]');
+      expect(saved.model).toBe('sonnet');
+      expect(m.body.model).toBe('sonnet');
+    });
+
+    it('should update extendedContext', async () => {
+      const m = makeMockRes();
+      const req: Partial<Request> = { body: { model: 'opus', extendedContext: true } };
+
+      await (routes as any).handlePut(req as Request, m.res as Response);
+
+      const saved = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      expect(saved.extendedContext).toBe(true);
+      expect(m.body.extendedContext).toBe(true);
     });
 
     it('should preserve non-model keys when updating model', async () => {
@@ -190,14 +229,14 @@ describe('SettingsRoutes', () => {
     it('should update commands', async () => {
       const m = makeMockRes();
       const req: Partial<Request> = {
-        body: { commands: { spec: 'opus[1m]', 'spec-plan': 'opus[1m]' } },
+        body: { commands: { spec: 'opus', 'spec-plan': 'opus' } },
       };
 
       await (routes as any).handlePut(req as Request, m.res as Response);
 
       const saved = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      expect(saved.commands.spec).toBe('opus[1m]');
-      expect(saved.commands['spec-plan']).toBe('opus[1m]');
+      expect(saved.commands.spec).toBe('opus');
+      expect(saved.commands['spec-plan']).toBe('opus');
     });
 
     it('should update agents', async () => {
@@ -221,7 +260,25 @@ describe('SettingsRoutes', () => {
       expect(m.statusCode).toBe(400);
     });
 
-    it('should return 400 for 1M agent model', async () => {
+    it('should return 400 for 1m model (use extendedContext instead)', async () => {
+      const m = makeMockRes();
+      const req: Partial<Request> = { body: { model: 'opus[1m]' } };
+
+      await (routes as any).handlePut(req as Request, m.res as Response);
+
+      expect(m.statusCode).toBe(400);
+    });
+
+    it('should return 400 for invalid extendedContext type', async () => {
+      const m = makeMockRes();
+      const req: Partial<Request> = { body: { extendedContext: 'yes' } };
+
+      await (routes as any).handlePut(req as Request, m.res as Response);
+
+      expect(m.statusCode).toBe(400);
+    });
+
+    it('should return 400 for 1m agent model', async () => {
       const m = makeMockRes();
       const req: Partial<Request> = {
         body: { agents: { 'plan-verifier': 'sonnet[1m]' } },
@@ -263,11 +320,12 @@ describe('SettingsRoutes', () => {
 
     it('should return updated settings in response', async () => {
       const m = makeMockRes();
-      const req: Partial<Request> = { body: { model: 'opus[1m]' } };
+      const req: Partial<Request> = { body: { model: 'opus', extendedContext: true } };
 
       await (routes as any).handlePut(req as Request, m.res as Response);
 
-      expect(m.body.model).toBe('opus[1m]');
+      expect(m.body.model).toBe('opus');
+      expect(m.body.extendedContext).toBe(true);
     });
   });
 });

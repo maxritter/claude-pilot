@@ -18,9 +18,7 @@ class TestPostCompactRestoreHook:
     @patch("post_compact_restore.read_hook_stdin")
     @patch("post_compact_restore.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_restores_active_plan_context(
-        self, mock_plan_path, mock_stdin, capsys
-    ):
+    def test_restores_active_plan_context(self, mock_plan_path, mock_stdin, capsys):
         """Should restore active plan context with structured message."""
         from post_compact_restore import run_post_compact_restore
 
@@ -52,9 +50,7 @@ class TestPostCompactRestoreHook:
     @patch("post_compact_restore.read_hook_stdin")
     @patch("post_compact_restore.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_handles_no_active_plan(
-        self, mock_plan_path, mock_stdin, capsys
-    ):
+    def test_handles_no_active_plan(self, mock_plan_path, mock_stdin, capsys):
         """Should handle case where no active plan exists."""
         from post_compact_restore import run_post_compact_restore
 
@@ -73,9 +69,7 @@ class TestPostCompactRestoreHook:
     @patch("post_compact_restore.get_session_plan_path")
     @patch("post_compact_restore._sessions_base")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_includes_fallback_state_if_available(
-        self, mock_sessions_base, mock_plan_path, mock_stdin, capsys
-    ):
+    def test_includes_fallback_state_if_available(self, mock_sessions_base, mock_plan_path, mock_stdin, capsys):
         """Should include pre-compact fallback state if available."""
         from post_compact_restore import run_post_compact_restore
 
@@ -111,9 +105,7 @@ class TestPostCompactRestoreHook:
     @patch("post_compact_restore.read_hook_stdin")
     @patch("post_compact_restore.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123", "CLAUDE_CODE_TASK_LIST_ID": "test-tasks"})
-    def test_fast_execution(
-        self, mock_plan_path, mock_stdin
-    ):
+    def test_fast_execution(self, mock_plan_path, mock_stdin):
         """Should complete in under 2 seconds."""
         import time
 

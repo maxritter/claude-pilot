@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import NC, RED, is_waiting_for_user_input
+from _util import is_waiting_for_user_input, stop_block
 
 
 def main() -> int:
@@ -32,15 +32,15 @@ def main() -> int:
 
     today = datetime.date.today().strftime("%Y-%m-%d")
     if not plans_dir.exists():
-        print(f"{RED}⛔ Plan file not created yet{NC}", file=sys.stderr)
-        print("spec-plan must create a plan file in docs/plans/ before stopping", file=sys.stderr)
-        return 2
+        print(
+            stop_block("Plan file not created yet. spec-plan must create a plan file in docs/plans/ before stopping.")
+        )
+        return 0
 
     today_plans = list(plans_dir.glob(f"{today}-*.md"))
     if not today_plans:
-        print(f"{RED}⛔ Plan file not created yet{NC}", file=sys.stderr)
-        print(f"Expected a plan file matching: docs/plans/{today}-*.md", file=sys.stderr)
-        return 2
+        print(stop_block(f"Plan file not created yet. Expected a plan file matching: docs/plans/{today}-*.md"))
+        return 0
 
     return 0
 

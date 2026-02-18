@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import NC, RED, is_waiting_for_user_input
+from _util import is_waiting_for_user_input, stop_block
 
 
 def main() -> int:
@@ -44,10 +44,11 @@ def main() -> int:
         return 0
     if status == "COMPLETE":
         print(
-            f"{RED}⛔ Plan status was not updated{NC}\nspec-verify must update status from COMPLETE to VERIFIED or PENDING",
-            file=sys.stderr,
+            stop_block(
+                "Plan status was not updated. spec-verify must update status from COMPLETE to VERIFIED or PENDING."
+            )
         )
-        return 2
+        return 0
     return 0
 
 

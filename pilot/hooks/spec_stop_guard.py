@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import CYAN, NC, RED, YELLOW, _sessions_base, get_session_plan_path, is_waiting_for_user_input
+from _util import _sessions_base, get_session_plan_path, is_waiting_for_user_input, stop_block
 from notify import send_notification
 
 COOLDOWN_SECONDS = 60
@@ -118,66 +118,14 @@ def main() -> int:
 
     next_phase = get_next_phase(status, approved)
 
-    print(
-        f"{RED}⛔ /spec workflow active - cannot stop without user interaction{NC}",
-        file=sys.stderr,
+    reason = (
+        f"/spec workflow active — cannot stop without user interaction. "
+        f"Active plan: {plan_path} (Status: {status}). "
+        f"Stop again within 60s to force exit. "
+        f"Next: Skill(skill='{next_phase}', args='{plan_path}')"
     )
-    print(f"{YELLOW}Active plan: {plan_path} (Status: {status}){NC}", file=sys.stderr)
-    print(f"{YELLOW}💡 Stop again within 60s to force exit{NC}", file=sys.stderr)
-    print("", file=sys.stderr)
-    print("You may only stop when:", file=sys.stderr)
-    print("  • Asking user for plan approval (use AskUserQuestion)", file=sys.stderr)
-    print(
-        "  • Asking user for an important decision (use AskUserQuestion)",
-        file=sys.stderr,
-    )
-    print("", file=sys.stderr)
-
-    if status == "PENDING" and not approved:
-        print("Status is PENDING (not approved). Either:", file=sys.stderr)
-        print("  1. Ask user for plan approval with AskUserQuestion", file=sys.stderr)
-        print(
-            "  2. If blocked, ask user for decision with AskUserQuestion",
-            file=sys.stderr,
-        )
-        print("", file=sys.stderr)
-        print(
-            f"{CYAN}Next: Skill(skill='{next_phase}', args='{plan_path}'){NC}",
-            file=sys.stderr,
-        )
-    elif status == "PENDING" and approved:
-        print("Status is PENDING (approved). You must:", file=sys.stderr)
-        print("  1. Continue implementing tasks", file=sys.stderr)
-        print(
-            "  2. If blocked, ask user for decision with AskUserQuestion",
-            file=sys.stderr,
-        )
-        print("", file=sys.stderr)
-        print(
-            f"{CYAN}Next: Skill(skill='{next_phase}', args='{plan_path}'){NC}",
-            file=sys.stderr,
-        )
-    elif status == "COMPLETE":
-        print("Status is COMPLETE. You must:", file=sys.stderr)
-        print("  1. Run verification phase", file=sys.stderr)
-        print("  2. Update status to VERIFIED when done", file=sys.stderr)
-        print(
-            "  3. If issues found, fix them or ask user with AskUserQuestion",
-            file=sys.stderr,
-        )
-        print("", file=sys.stderr)
-        print(
-            f"{CYAN}Next: Skill(skill='{next_phase}', args='{plan_path}'){NC}",
-            file=sys.stderr,
-        )
-
-    print("", file=sys.stderr)
-    print(
-        "Continue the workflow or use AskUserQuestion if user input is needed.",
-        file=sys.stderr,
-    )
-
-    return 2
+    print(stop_block(reason))
+    return 0
 
 
 if __name__ == "__main__":

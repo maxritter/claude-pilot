@@ -80,3 +80,9 @@ class TestSessionEndNotifications:
 
         assert result == 0
         mock_notify.assert_not_called()
+
+    @patch("os.environ", {})
+    def test_returns_0_when_no_plugin_root(self):
+        """Should return 0 when CLAUDE_PLUGIN_ROOT is not set."""
+        result = main()
+        assert result == 0

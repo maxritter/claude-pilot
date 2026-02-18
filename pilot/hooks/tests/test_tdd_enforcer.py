@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -17,6 +18,7 @@ from tdd_enforcer import (
     is_test_file,
     is_trivial_edit,
     should_skip,
+    warn,
 )
 
 
@@ -376,31 +378,73 @@ class TestHasGoTestFile:
 
 class TestIsTrivialEdit:
     def test_import_only_edit(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "import os",
-            "new_string": "import os\nimport sys",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "import os",
+                    "new_string": "import os\nimport sys",
+                },
+            )
+            is True
+        )
 
     def test_non_edit_tool(self):
-        assert is_trivial_edit("Write", {
-            "old_string": "import os",
-            "new_string": "import sys",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Write",
+                {
+                    "old_string": "import os",
+                    "new_string": "import sys",
+                },
+            )
+            is False
+        )
 
     def test_code_removal(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "a = 1\nb = 2\nc = 3",
-            "new_string": "a = 1\nc = 3",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "a = 1\nb = 2\nc = 3",
+                    "new_string": "a = 1\nc = 3",
+                },
+            )
+            is True
+        )
 
     def test_constant_addition(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "FOO = 1",
-            "new_string": "FOO = 1\nBAR = 2",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "FOO = 1",
+                    "new_string": "FOO = 1\nBAR = 2",
+                },
+            )
+            is True
+        )
 
     def test_non_trivial_edit(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "return x + 1",
-            "new_string": "return x + 2",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "return x + 1",
+                    "new_string": "return x + 2",
+                },
+            )
+            is False
+        )
+
+
+class TestWarn:
+    def test_returns_0_and_outputs_json(self, capsys):
+        result = warn("No test file", "Create test_foo.py first.")
+        assert result == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["decision"] == "block"
+        assert "No test file" in data["reason"]
+        assert "Create test_foo.py first." in data["reason"]
+        assert captured.err == ""

@@ -219,7 +219,7 @@ Pilot uses the right model for each phase — Opus where reasoning quality matte
 
 **The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
 
-**Configurable:** All model assignments are configurable per-component via the Pilot Console (`localhost:41777/#/settings`). Choose between Sonnet 4.6, Sonnet 4.6 1M, Opus 4.6, and Opus 4.6 1M for the main session and each command. Sub-agents always use the base model (no 1M). **Note:** 1M context models require a compatible Anthropic subscription — not available to all users.
+**Configurable:** All model assignments are configurable per-component via the Pilot Console (`localhost:41777/#/settings`). Choose between Sonnet 4.6 and Opus 4.6 for the main session, each command, and sub-agents. A global "Extended Context (1M)" toggle enables the 1M token context window across all models simultaneously. **Note:** 1M context models require a Max (20x) or Enterprise subscription — not available to all users.
 
 ### Quick Mode
 

@@ -19,9 +19,7 @@ class TestPreCompactHook:
     @patch("pre_compact.read_hook_stdin")
     @patch("pre_compact.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_captures_active_plan_state(
-        self, mock_plan_path, mock_stdin, mock_urlopen, capsys
-    ):
+    def test_captures_active_plan_state(self, mock_plan_path, mock_stdin, mock_urlopen, capsys):
         """Should capture active plan state from session data."""
         from pre_compact import run_pre_compact
 
@@ -57,7 +55,7 @@ class TestPreCompactHook:
             assert "PENDING" in payload["text"]
             assert "2026-02-16-test.md" in payload["text"]
 
-            assert result == 2
+            assert result == 0
             captured = capsys.readouterr()
             assert "Compaction in progress" in captured.err
 
@@ -94,7 +92,7 @@ class TestPreCompactHook:
             state = json.loads(fallback_file.read_text())
             assert state["trigger"] == "manual"
 
-            assert result == 2
+            assert result == 0
             captured = capsys.readouterr()
             assert "local file" in captured.err
 
@@ -102,9 +100,7 @@ class TestPreCompactHook:
     @patch("pre_compact.read_hook_stdin")
     @patch("pre_compact.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_captures_trigger_type(
-        self, mock_plan_path, mock_stdin, mock_urlopen, capsys
-    ):
+    def test_captures_trigger_type(self, mock_plan_path, mock_stdin, mock_urlopen, capsys):
         """Should capture whether compaction was manual or auto."""
         from pre_compact import run_pre_compact
 
@@ -125,15 +121,13 @@ class TestPreCompactHook:
         payload = json.loads(req.data.decode())
         assert "manual" in payload["text"]
 
-        assert result == 2
+        assert result == 0
 
     @patch("pre_compact.urllib.request.urlopen")
     @patch("pre_compact.read_hook_stdin")
     @patch("pre_compact.get_session_plan_path")
     @patch("os.environ", {"PILOT_SESSION_ID": "test123"})
-    def test_handles_no_active_plan(
-        self, mock_plan_path, mock_stdin, mock_urlopen
-    ):
+    def test_handles_no_active_plan(self, mock_plan_path, mock_stdin, mock_urlopen):
         """Should handle case where no active plan exists."""
         from pre_compact import run_pre_compact
 
@@ -150,7 +144,7 @@ class TestPreCompactHook:
 
         result = run_pre_compact()
 
-        assert result == 2
+        assert result == 0
         assert mock_urlopen.called
 
 

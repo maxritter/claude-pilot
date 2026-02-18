@@ -125,7 +125,7 @@ def _save_fallback_file(state: dict, session_id: str) -> None:
 def run_pre_compact() -> int:
     """Run PreCompact hook to capture state before compaction.
 
-    Returns exit code: 2 (message visible in transcript), 0 (silent).
+    Returns exit code: 0. stderr messages visible in verbose mode only.
     """
     hook_data = read_hook_stdin()
     session_id = hook_data.get("session_id", os.environ.get("PILOT_SESSION_ID", "default"))
@@ -148,7 +148,7 @@ def run_pre_compact() -> int:
     else:
         print("🔄 Compaction in progress — Pilot state captured to local file (worker unavailable)", file=sys.stderr)
 
-    return 2
+    return 0
 
 
 if __name__ == "__main__":

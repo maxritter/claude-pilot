@@ -177,7 +177,9 @@ class TestSendNotification:
     @patch("notify.subprocess.Popen")
     @patch("notify.subprocess.run")
     @patch("notify.ThreadPoolExecutor")
-    def test_skips_afplay_on_macos_because_osascript_plays_sound(self, mock_executor, mock_run, mock_popen, mock_which, mock_platform):
+    def test_skips_afplay_on_macos_because_osascript_plays_sound(
+        self, mock_executor, mock_run, mock_popen, mock_which, mock_platform
+    ):
         """Should NOT play sound via afplay on macOS — osascript handles it."""
         mock_platform.return_value = "Darwin"
         mock_which.return_value = "/usr/bin/osascript"

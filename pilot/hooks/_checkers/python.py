@@ -6,16 +6,10 @@ import io
 import re
 import shutil
 import subprocess
-import sys
 import tokenize
 from pathlib import Path
 
-from _util import (
-    GREEN,
-    NC,
-    RED,
-    check_file_length,
-)
+from _util import check_file_length
 
 
 def strip_python_comments(file_path: Path) -> bool:
@@ -85,13 +79,13 @@ def strip_python_comments(file_path: Path) -> bool:
 
 
 def check_python(file_path: Path) -> tuple[int, str]:
-    """Check Python file with ruff. Returns (exit_code, reason)."""
+    """Check Python file with ruff. Returns (0, reason)."""
     strip_python_comments(file_path)
 
     if "test_" in file_path.name or "spec" in file_path.name:
         return 0, ""
 
-    check_file_length(file_path)
+    length_warning = check_file_length(file_path)
 
     ruff_bin = shutil.which("ruff")
     if ruff_bin:
@@ -104,63 +98,62 @@ def check_python(file_path: Path) -> tuple[int, str]:
             pass
 
     if not ruff_bin:
-        return 0, ""
+        return 0, length_warning
 
     results: dict[str, tuple] = {}
     has_issues = False
 
-    if ruff_bin:
-        try:
-            result = subprocess.run(
-                [ruff_bin, "check", "--output-format=concise", str(file_path)],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            output = result.stdout + result.stderr
-            error_pattern = re.compile(r":\d+:\d+: [A-Z]{1,3}\d+")
-            error_lines = [line for line in output.splitlines() if error_pattern.search(line)]
-            if error_lines:
-                has_issues = True
-                results["ruff"] = (len(error_lines), error_lines)
-        except Exception:
-            pass
+    try:
+        result = subprocess.run(
+            [ruff_bin, "check", "--output-format=concise", str(file_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        output = result.stdout + result.stderr
+        error_pattern = re.compile(r":\d+:\d+: [A-Z]{1,3}\d+")
+        error_lines = [line for line in output.splitlines() if error_pattern.search(line)]
+        if error_lines:
+            has_issues = True
+            results["ruff"] = (len(error_lines), error_lines)
+    except Exception:
+        pass
 
     if has_issues:
-        _print_python_issues(file_path, results)
         parts = []
         for tool_name, (count, _) in results.items():
             parts.append(f"{count} {tool_name}")
         reason = f"Python: {', '.join(parts)} in {file_path.name}"
-        return 2, reason
+        details = _format_python_issues(file_path, results)
+        if details:
+            reason = f"{reason}\n{details}"
+        if length_warning:
+            reason = f"{reason}\n{length_warning}"
+        return 0, reason
 
-    print("", file=sys.stderr)
-    print(f"{GREEN}✅ Python: All checks passed{NC}", file=sys.stderr)
-    return 2, ""
+    return 0, length_warning
 
 
-def _print_python_issues(file_path: Path, results: dict[str, tuple]) -> None:
-    """Print Python diagnostic issues to stderr."""
-    print("", file=sys.stderr)
+def _format_python_issues(file_path: Path, results: dict[str, tuple]) -> str:
+    """Format Python diagnostic issues as plain text."""
+    lines: list[str] = []
     try:
         display_path = file_path.relative_to(Path.cwd())
     except ValueError:
         display_path = file_path
-    print(f"{RED}🛑 Python Issues found in: {display_path}{NC}", file=sys.stderr)
+    lines.append(f"Python Issues found in: {display_path}")
 
     if "ruff" in results:
         count, error_lines = results["ruff"]
         plural = "issue" if count == 1 else "issues"
-        print("", file=sys.stderr)
-        print(f"🔧 Ruff: {count} {plural}", file=sys.stderr)
-        print("───────────────────────────────────────", file=sys.stderr)
+        lines.append(f"Ruff: {count} {plural}")
         for line in error_lines:
             parts = line.split(None, 1)
             if parts:
                 code = parts[0]
                 msg = parts[1] if len(parts) > 1 else ""
                 msg = msg.replace("[*] ", "")
-                print(f"  {code}: {msg}", file=sys.stderr)
-        print("", file=sys.stderr)
+                lines.append(f"  {code}: {msg}")
 
-    print(f"{RED}Fix Python issues above before continuing{NC}", file=sys.stderr)
+    lines.append("Fix Python issues above before continuing")
+    return "\n".join(lines)

@@ -236,6 +236,7 @@ playwright/
 .claude/skills/
 .claude/rules/
 .claude/.pilot-*-baseline.json
+.DS_STORE
 
 # Build artifacts
 docs/plans

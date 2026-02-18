@@ -14,17 +14,18 @@ import * as path from "path";
 import { BaseRouteHandler } from "../BaseRouteHandler.js";
 import { logger } from "../../../../utils/logger.js";
 
-export const MODEL_CHOICES_FULL: readonly string[] = ["sonnet", "sonnet[1m]", "opus", "opus[1m]"];
-export const MODEL_CHOICES_AGENT: readonly string[] = ["sonnet", "opus"];
+export const MODEL_CHOICES: readonly string[] = ["sonnet", "opus"];
 
 export interface ModelSettings {
   model: string;
+  extendedContext: boolean;
   commands: Record<string, string>;
   agents: Record<string, string>;
 }
 
 export const DEFAULT_SETTINGS: ModelSettings = {
   model: "opus",
+  extendedContext: false,
   commands: {
     spec: "sonnet",
     "spec-plan": "opus",
@@ -47,7 +48,8 @@ export class SettingsRoutes extends BaseRouteHandler {
 
   constructor(configPath?: string) {
     super();
-    this.configPath = configPath ?? path.join(os.homedir(), ".pilot", "config.json");
+    this.configPath =
+      configPath ?? path.join(os.homedir(), ".pilot", "config.json");
   }
 
   setupRoutes(app: express.Application): void {
@@ -64,39 +66,82 @@ export class SettingsRoutes extends BaseRouteHandler {
     }
   }
 
+  private static stripLegacy1m(model: string): string {
+    return model.replace("[1m]", "");
+  }
+
   private mergeWithDefaults(raw: Record<string, unknown>): ModelSettings {
-    const mainModel =
-      typeof raw.model === "string" && MODEL_CHOICES_FULL.includes(raw.model)
-        ? raw.model
+    let mainModel =
+      typeof raw.model === "string"
+        ? SettingsRoutes.stripLegacy1m(raw.model)
         : DEFAULT_SETTINGS.model;
+    if (!MODEL_CHOICES.includes(mainModel)) {
+      mainModel = DEFAULT_SETTINGS.model;
+    }
 
     const rawCommands = raw.commands;
-    const mergedCommands: Record<string, string> = { ...DEFAULT_SETTINGS.commands };
-    if (rawCommands && typeof rawCommands === "object" && !Array.isArray(rawCommands)) {
-      for (const [k, v] of Object.entries(rawCommands as Record<string, unknown>)) {
-        if (typeof v === "string" && MODEL_CHOICES_FULL.includes(v)) {
-          mergedCommands[k] = v;
+    const mergedCommands: Record<string, string> = {
+      ...DEFAULT_SETTINGS.commands,
+    };
+    if (
+      rawCommands &&
+      typeof rawCommands === "object" &&
+      !Array.isArray(rawCommands)
+    ) {
+      for (const [k, v] of Object.entries(
+        rawCommands as Record<string, unknown>,
+      )) {
+        if (typeof v === "string") {
+          const stripped = SettingsRoutes.stripLegacy1m(v);
+          if (MODEL_CHOICES.includes(stripped)) {
+            mergedCommands[k] = stripped;
+          }
         }
       }
     }
 
     const rawAgents = raw.agents;
     const mergedAgents: Record<string, string> = { ...DEFAULT_SETTINGS.agents };
-    if (rawAgents && typeof rawAgents === "object" && !Array.isArray(rawAgents)) {
-      for (const [k, v] of Object.entries(rawAgents as Record<string, unknown>)) {
-        if (typeof v === "string" && MODEL_CHOICES_AGENT.includes(v)) {
-          mergedAgents[k] = v;
+    if (
+      rawAgents &&
+      typeof rawAgents === "object" &&
+      !Array.isArray(rawAgents)
+    ) {
+      for (const [k, v] of Object.entries(
+        rawAgents as Record<string, unknown>,
+      )) {
+        if (typeof v === "string") {
+          const stripped = SettingsRoutes.stripLegacy1m(v);
+          if (MODEL_CHOICES.includes(stripped)) {
+            mergedAgents[k] = stripped;
+          }
         }
       }
     }
 
-    return { model: mainModel, commands: mergedCommands, agents: mergedAgents };
+    const extendedContext = raw.extendedContext === true;
+
+    return {
+      model: mainModel,
+      extendedContext,
+      commands: mergedCommands,
+      agents: mergedAgents,
+    };
   }
 
   private validateSettings(body: Record<string, unknown>): string | null {
     if (body.model !== undefined) {
-      if (typeof body.model !== "string" || !MODEL_CHOICES_FULL.includes(body.model)) {
-        return `Invalid model '${body.model}'; must be one of: ${MODEL_CHOICES_FULL.join(", ")}`;
+      if (
+        typeof body.model !== "string" ||
+        !MODEL_CHOICES.includes(body.model)
+      ) {
+        return `Invalid model '${body.model}'; must be one of: ${MODEL_CHOICES.join(", ")}`;
+      }
+    }
+
+    if (body.extendedContext !== undefined) {
+      if (typeof body.extendedContext !== "boolean") {
+        return "extendedContext must be a boolean";
       }
     }
 
@@ -104,9 +149,11 @@ export class SettingsRoutes extends BaseRouteHandler {
       if (typeof body.commands !== "object" || Array.isArray(body.commands)) {
         return "commands must be an object";
       }
-      for (const [cmd, model] of Object.entries(body.commands as Record<string, unknown>)) {
-        if (typeof model !== "string" || !MODEL_CHOICES_FULL.includes(model)) {
-          return `Invalid model '${model}' for command '${cmd}'; must be one of: ${MODEL_CHOICES_FULL.join(", ")}`;
+      for (const [cmd, model] of Object.entries(
+        body.commands as Record<string, unknown>,
+      )) {
+        if (typeof model !== "string" || !MODEL_CHOICES.includes(model)) {
+          return `Invalid model '${model}' for command '${cmd}'; must be one of: ${MODEL_CHOICES.join(", ")}`;
         }
       }
     }
@@ -115,9 +162,11 @@ export class SettingsRoutes extends BaseRouteHandler {
       if (typeof body.agents !== "object" || Array.isArray(body.agents)) {
         return "agents must be an object";
       }
-      for (const [agent, model] of Object.entries(body.agents as Record<string, unknown>)) {
-        if (typeof model !== "string" || !MODEL_CHOICES_AGENT.includes(model)) {
-          return `Invalid model '${model}' for agent '${agent}'; agents can only use: ${MODEL_CHOICES_AGENT.join(", ")} (no 1M context)`;
+      for (const [agent, model] of Object.entries(
+        body.agents as Record<string, unknown>,
+      )) {
+        if (typeof model !== "string" || !MODEL_CHOICES.includes(model)) {
+          return `Invalid model '${model}' for agent '${agent}'; must be one of: ${MODEL_CHOICES.join(", ")}`;
         }
       }
     }
@@ -153,13 +202,23 @@ export class SettingsRoutes extends BaseRouteHandler {
     if (body.model !== undefined) {
       existing.model = body.model;
     }
+    if (body.extendedContext !== undefined) {
+      existing.extendedContext = body.extendedContext;
+    }
     if (body.commands !== undefined) {
-      const existingCommands = (existing.commands as Record<string, unknown>) ?? {};
-      existing.commands = { ...existingCommands, ...(body.commands as Record<string, unknown>) };
+      const existingCommands =
+        (existing.commands as Record<string, unknown>) ?? {};
+      existing.commands = {
+        ...existingCommands,
+        ...(body.commands as Record<string, unknown>),
+      };
     }
     if (body.agents !== undefined) {
       const existingAgents = (existing.agents as Record<string, unknown>) ?? {};
-      existing.agents = { ...existingAgents, ...(body.agents as Record<string, unknown>) };
+      existing.agents = {
+        ...existingAgents,
+        ...(body.agents as Record<string, unknown>),
+      };
     }
 
     try {

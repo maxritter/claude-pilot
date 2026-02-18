@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """Hook to redirect built-in tools to better MCP/CLI alternatives.
 
-Two severity levels:
-- BLOCK (exit 2): Tool is broken or conflicts with project workflow.
-  WebSearch/WebFetch (truncation), EnterPlanMode/ExitPlanMode (/spec conflict).
-- HINT (exit 0): Better alternative exists but tool still works.
-  Task/Explore, Task sub-agents, Grep with semantic patterns.
+Two severity levels via JSON stdout:
+- BLOCK: permissionDecision=deny — tool is broken or conflicts with workflow.
+- HINT: additionalContext — better alternative exists but tool still works.
 
 Note: Task management tools (TaskCreate, TaskList, etc.) are ALLOWED.
 """
@@ -17,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import CYAN, NC, RED, YELLOW
+from _util import pre_tool_use_context, pre_tool_use_deny
 
 SEMANTIC_PHRASES = [
     "where is",
@@ -146,19 +144,18 @@ def _format_example(redirect_info: dict, pattern: str | None = None) -> str:
 
 
 def block(redirect_info: dict, pattern: str | None = None) -> int:
-    """Output block message and return exit code 2 (tool blocked)."""
+    """Output deny JSON to stdout and return 0."""
     example = _format_example(redirect_info, pattern)
-    print(f"{RED}⛔ {redirect_info['message']}{NC}", file=sys.stderr)
-    print(f"{YELLOW}   → {redirect_info['alternative']}{NC}", file=sys.stderr)
-    print(f"{CYAN}   Example: {example}{NC}", file=sys.stderr)
-    return 2
+    reason = f"{redirect_info['message']}\n-> {redirect_info['alternative']}\nExample: {example}"
+    print(pre_tool_use_deny(reason))
+    return 0
 
 
 def hint(redirect_info: dict, pattern: str | None = None) -> int:
-    """Output suggestion and return exit code 0 (tool allowed)."""
+    """Output additionalContext JSON to stdout and return 0."""
     example = _format_example(redirect_info, pattern)
-    print(f"{YELLOW}💡 {redirect_info['message']}{NC}", file=sys.stderr)
-    print(f"{CYAN}   Example: {example}{NC}", file=sys.stderr)
+    context = f"{redirect_info['message']}\nExample: {example}"
+    print(pre_tool_use_context(context))
     return 0
 
 

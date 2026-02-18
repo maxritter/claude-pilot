@@ -120,3 +120,99 @@ class TestGetCompactionThresholdPct:
             result = _get_compaction_threshold_pct()
 
         assert abs(result - 96.7) < 0.1
+
+
+class TestJsonHelpers:
+    """Tests for JSON response helper functions."""
+
+    def test_post_tool_use_block(self) -> None:
+        from _util import post_tool_use_block
+
+        result = json.loads(post_tool_use_block("Fix lint errors"))
+        assert result == {"decision": "block", "reason": "Fix lint errors"}
+
+    def test_post_tool_use_context(self) -> None:
+        from _util import post_tool_use_context
+
+        result = json.loads(post_tool_use_context("Context at 80%"))
+        assert result == {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": "Context at 80%",
+            }
+        }
+
+    def test_pre_tool_use_deny(self) -> None:
+        from _util import pre_tool_use_deny
+
+        result = json.loads(pre_tool_use_deny("Use MCP instead"))
+        assert result == {"permissionDecision": "deny", "reason": "Use MCP instead"}
+
+    def test_pre_tool_use_context(self) -> None:
+        from _util import pre_tool_use_context
+
+        result = json.loads(pre_tool_use_context("Try vexor first"))
+        assert result == {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": "Try vexor first",
+            }
+        }
+
+    def test_stop_block(self) -> None:
+        from _util import stop_block
+
+        result = json.loads(stop_block("Spec workflow in progress"))
+        assert result == {"decision": "block", "reason": "Spec workflow in progress"}
+
+    def test_helpers_handle_special_chars(self) -> None:
+        from _util import post_tool_use_block
+
+        msg = 'File "test.py" has\nnewlines & "quotes"'
+        result = json.loads(post_tool_use_block(msg))
+        assert result["reason"] == msg
+
+
+class TestCheckFileLength:
+    """Tests for check_file_length returning string."""
+
+    def test_returns_empty_for_normal_file(self, tmp_path: Path) -> None:
+        from _util import check_file_length
+
+        f = tmp_path / "small.py"
+        f.write_text("\n".join(f"line {i}" for i in range(100)))
+        assert check_file_length(f) == ""
+
+    def test_returns_warning_for_long_file(self, tmp_path: Path) -> None:
+        from _util import check_file_length
+
+        f = tmp_path / "growing.py"
+        f.write_text("\n".join(f"line {i}" for i in range(350)))
+        result = check_file_length(f)
+        assert "growing.py" in result
+        assert "350" in result
+        assert "300" in result
+
+    def test_returns_critical_for_very_long_file(self, tmp_path: Path) -> None:
+        from _util import check_file_length
+
+        f = tmp_path / "huge.py"
+        f.write_text("\n".join(f"line {i}" for i in range(550)))
+        result = check_file_length(f)
+        assert "huge.py" in result
+        assert "550" in result
+        assert "500" in result
+
+    def test_returns_empty_for_nonexistent_file(self, tmp_path: Path) -> None:
+        from _util import check_file_length
+
+        result = check_file_length(tmp_path / "nope.py")
+        assert result == ""
+
+    def test_no_ansi_codes_in_output(self, tmp_path: Path) -> None:
+        from _util import check_file_length
+
+        f = tmp_path / "big.py"
+        f.write_text("\n".join(f"line {i}" for i in range(550)))
+        result = check_file_length(f)
+        assert "\033[" not in result

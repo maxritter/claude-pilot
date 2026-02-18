@@ -57,14 +57,14 @@ def _is_plan_verified() -> bool:
 def main() -> int:
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
     if not plugin_root:
-        return 1
+        return 0
 
     count = _get_active_session_count()
     if count > 1:
         return 0
 
     stop_script = Path(plugin_root) / "scripts" / "worker-service.cjs"
-    result = subprocess.run(
+    subprocess.run(
         ["bun", str(stop_script), "stop"],
         capture_output=True,
         text=True,
@@ -76,7 +76,7 @@ def main() -> int:
     else:
         send_notification("Pilot", "Claude session ended")
 
-    return result.returncode
+    return 0
 
 
 if __name__ == "__main__":

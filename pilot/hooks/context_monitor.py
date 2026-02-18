@@ -11,12 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _util import (
-    CYAN,
-    NC,
-    YELLOW,
     _get_compaction_threshold_pct,
     _get_max_context_tokens,
     get_session_cache_path,
+    post_tool_use_context,
 )
 
 THRESHOLD_WARN = 65
@@ -155,7 +153,7 @@ def _resolve_context(session_id: str) -> tuple[float, int, list[int], bool] | No
 
 
 def run_context_monitor() -> int:
-    """Run context monitoring and return exit code."""
+    """Run context monitoring. Always returns 0. Uses additionalContext JSON for all messages."""
     session_id = _get_pilot_session_id()
 
     if _is_throttled(session_id):
@@ -175,31 +173,29 @@ def run_context_monitor() -> int:
         for threshold in LEARN_THRESHOLDS:
             if percentage >= threshold and threshold not in shown_learn:
                 print(
-                    f"{CYAN}💡 Context {effective:.0f}% — non-obvious discovery or reusable workflow? → Invoke Skill(learn){NC}",
-                    file=sys.stderr,
+                    post_tool_use_context(
+                        f"Context {effective:.0f}% — non-obvious discovery or reusable workflow? → Invoke Skill(learn)"
+                    )
                 )
                 new_learn_shown.append(threshold)
                 break
 
     if percentage >= THRESHOLD_AUTOCOMPACT:
         save_cache(total_tokens, session_id, new_learn_shown if new_learn_shown else None)
-        print("", file=sys.stderr)
         print(
-            f"{YELLOW}⚠️  Context at {effective:.0f}%. Auto-compact approaching — no rush, no context is lost.{NC}",
-            file=sys.stderr,
+            post_tool_use_context(
+                f"Context at {effective:.0f}%. Auto-compact approaching — no rush, no context is lost. "
+                f"Complete current task with full quality. Do NOT cut corners or skip verification."
+            )
         )
-        print(
-            f"{YELLOW}Complete current task with full quality. Do NOT cut corners or skip verification.{NC}",
-            file=sys.stderr,
-        )
-        return 2
+        return 0
 
     if percentage >= THRESHOLD_WARN and not shown_80_warn:
         save_cache(total_tokens, session_id, new_learn_shown if new_learn_shown else None, shown_80_warn=True)
-        print("", file=sys.stderr)
         print(
-            f"{CYAN}💡 Context at {effective:.0f}%. Auto-compact will handle context management automatically. No rush.{NC}",
-            file=sys.stderr,
+            post_tool_use_context(
+                f"Context at {effective:.0f}%. Auto-compact will handle context management automatically. No rush."
+            )
         )
         return 0
 

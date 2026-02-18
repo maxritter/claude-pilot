@@ -1,7 +1,7 @@
 ---
 description: Manage Team Vault - share and install rules, commands, skills across your team via sx
 user-invocable: true
-model: sonnet[1m]
+model: sonnet
 ---
 
 # /vault - Team Vault Management

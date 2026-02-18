@@ -2,7 +2,7 @@
 description: "Spec planning phase - explore codebase, design plan, get approval"
 argument-hint: "<task description> or <path/to/plan.md>"
 user-invocable: false
-model: opus[1m]
+model: opus
 hooks:
   Stop:
     - command: uv run python "${CLAUDE_PLUGIN_ROOT}/hooks/spec_plan_validator.py"

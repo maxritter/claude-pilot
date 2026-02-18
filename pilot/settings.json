@@ -1,5 +1,5 @@
 {
-  "model": "sonnet[1m]",
+  "model": "sonnet",
   "env": {
     "CLAUDE_CODE_ENABLE_TASKS": "true",
     "CLAUDE_CODE_HIDE_ACCOUNT_INFO": "true",

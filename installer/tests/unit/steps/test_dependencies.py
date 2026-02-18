@@ -31,6 +31,8 @@ class TestDependenciesStep:
             )
             assert step.check(ctx) is False
 
+    @patch("installer.steps.dependencies.install_golangci_lint", return_value=True)
+    @patch("installer.steps.dependencies.install_prettier", return_value=True)
     @patch("installer.steps.dependencies._precache_npx_mcp_servers", return_value=True)
     @patch("installer.steps.dependencies.install_vexor")
     @patch("installer.steps.dependencies._install_plugin_dependencies")
@@ -49,6 +51,8 @@ class TestDependenciesStep:
         mock_plugin_deps,
         mock_vexor,
         _mock_precache,
+        _mock_prettier,
+        _mock_golangci_lint,
     ):
         """DependenciesStep installs all dependencies including Python tools."""
         from installer.context import InstallContext
@@ -769,3 +773,110 @@ class TestVexorMlxInstall:
 
         assert result is True
         mock_mlx.assert_called_once()
+
+
+class TestInstallPrettier:
+    """Test prettier global installation."""
+
+    def test_install_prettier_exists(self):
+        """install_prettier function exists."""
+        from installer.steps.dependencies import install_prettier
+
+        assert callable(install_prettier)
+
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_prettier_skips_if_already_installed(self, _mock_cmd):
+        """install_prettier returns True without installing when prettier is in PATH."""
+        from installer.steps.dependencies import install_prettier
+
+        with patch("installer.steps.dependencies._run_bash_with_retry") as mock_run:
+            result = install_prettier()
+
+        assert result is True
+        mock_run.assert_not_called()
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies.command_exists", return_value=False)
+    def test_install_prettier_installs_via_npm(self, _mock_cmd, mock_run):
+        """install_prettier uses npm install -g prettier when not in PATH."""
+        from installer.steps.dependencies import install_prettier
+
+        result = install_prettier()
+
+        assert result is True
+        mock_run.assert_called_once()
+        assert "prettier" in mock_run.call_args[0][0]
+        assert "npm install -g" in mock_run.call_args[0][0]
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=False)
+    @patch("installer.steps.dependencies.command_exists", return_value=False)
+    def test_install_prettier_returns_false_on_failure(self, _mock_cmd, mock_run):
+        """install_prettier returns False when npm install fails."""
+        from installer.steps.dependencies import install_prettier
+
+        result = install_prettier()
+
+        assert result is False
+
+
+class TestInstallGolangciLint:
+    """Test golangci-lint installation."""
+
+    def test_install_golangci_lint_exists(self):
+        """install_golangci_lint function exists."""
+        from installer.steps.dependencies import install_golangci_lint
+
+        assert callable(install_golangci_lint)
+
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_golangci_lint_skips_if_already_installed(self, mock_cmd):
+        """install_golangci_lint returns True without installing when already in PATH."""
+        from installer.steps.dependencies import install_golangci_lint
+
+        with patch("installer.steps.dependencies._run_bash_with_retry") as mock_run:
+            result = install_golangci_lint()
+
+        assert result is True
+        mock_run.assert_not_called()
+
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_golangci_lint_skips_without_go(self, mock_cmd):
+        """install_golangci_lint returns False when go is not installed."""
+        from installer.steps.dependencies import install_golangci_lint
+
+        mock_cmd.side_effect = lambda cmd: cmd != "golangci-lint" and False
+
+        with patch("installer.steps.dependencies._run_bash_with_retry") as mock_run:
+            result = install_golangci_lint()
+
+        assert result is False
+        mock_run.assert_not_called()
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_golangci_lint_uses_official_script(self, mock_cmd, mock_run):
+        """install_golangci_lint uses the official install.sh script."""
+        from installer.steps.dependencies import install_golangci_lint
+
+        mock_cmd.side_effect = lambda cmd: cmd == "go"
+
+        result = install_golangci_lint()
+
+        assert result is True
+        mock_run.assert_called_once()
+        call_args = mock_run.call_args[0][0]
+        assert "golangci-lint" in call_args
+        assert "install.sh" in call_args
+        assert "go env GOPATH" in call_args
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=False)
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_golangci_lint_returns_false_on_failure(self, mock_cmd, mock_run):
+        """install_golangci_lint returns False when install script fails."""
+        from installer.steps.dependencies import install_golangci_lint
+
+        mock_cmd.side_effect = lambda cmd: cmd == "go"
+
+        result = install_golangci_lint()
+
+        assert result is False

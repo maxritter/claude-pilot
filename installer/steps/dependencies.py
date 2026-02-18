@@ -467,6 +467,30 @@ def install_typescript_lsp() -> bool:
     return _run_bash_with_retry(npm_global_cmd("npm install -g @vtsls/language-server typescript"))
 
 
+def install_prettier() -> bool:
+    """Install prettier code formatter globally for TypeScript/JavaScript files."""
+    if command_exists("prettier"):
+        return True
+    return _run_bash_with_retry(npm_global_cmd("npm install -g prettier"))
+
+
+def install_golangci_lint() -> bool:
+    """Install golangci-lint for comprehensive Go code linting.
+
+    Skips if Go is not installed, since golangci-lint requires it.
+    Uses the official install script to place the binary in $(go env GOPATH)/bin.
+    """
+    if command_exists("golangci-lint"):
+        return True
+    if not command_exists("go"):
+        return False
+    install_cmd = (
+        "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh"
+        " | sh -s -- -b $(go env GOPATH)/bin"
+    )
+    return _run_bash_with_retry(install_cmd, timeout=120)
+
+
 def _is_ccusage_installed() -> bool:
     """Check if ccusage is installed globally."""
     try:
@@ -817,6 +841,12 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "vtsls (TypeScript LSP server)", install_typescript_lsp):
             installed.append("typescript_lsp")
+
+        if _install_with_spinner(ui, "prettier (TypeScript formatter)", install_prettier):
+            installed.append("prettier")
+
+        if _install_with_spinner(ui, "golangci-lint (Go linter)", install_golangci_lint):
+            installed.append("golangci_lint")
 
         if _install_with_spinner(ui, "ccusage (usage tracking)", install_ccusage):
             installed.append("ccusage")

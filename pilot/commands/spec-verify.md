@@ -529,7 +529,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 7. **Notify and ask user for sync decision:**
 
    ```bash
-   ~/.pilot/bin/pilot notify plan_approval "Worktree Sync" "Approve merging worktree changes back to main" --plan-path "<plan_path>" 2>/dev/null || true
+   ~/.pilot/bin/pilot notify plan_approval "Worktree Sync" "<plan_name> — approve merging worktree changes back to main" --plan-path "<plan_path>" 2>/dev/null || true
    ```
 
    ```

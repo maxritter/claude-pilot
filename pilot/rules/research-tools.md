@@ -40,14 +40,16 @@ Parameters: `query`, `language`, `repo`, `path`, `useRegexp`, `matchCase`
 
 ### Web Search / Fetch
 
-**⛔ NEVER use built-in `WebFetch` or `WebSearch` — they are blocked by hook and will fail.** Always use MCP alternatives via `ToolSearch("web-fetch")` or `ToolSearch("web-search")` first.
+**⛔ NEVER use built-in `WebFetch` or `WebSearch` — they are blocked by hook and will fail.** Always use the MCP alternatives via `mcp-cli`.
 
 | Need | Tool |
 |------|------|
-| Web search | `web-search/search` (DuckDuckGo/Bing) |
-| GitHub README | `web-search/fetchGithubReadme` |
-| Fetch full page | `web-fetch/fetch_url` (Playwright, no truncation) |
-| Fetch multiple | `web-fetch/fetch_urls` |
+| Web search | `plugin_pilot_web-search/search` (DuckDuckGo/Bing/Exa) |
+| GitHub README | `plugin_pilot_web-search/fetchGithubReadme` |
+| Fetch full page | `plugin_pilot_web-fetch/fetch_url` (Playwright, no truncation) |
+| Fetch multiple | `plugin_pilot_web-fetch/fetch_urls` |
+
+Full MCP server reference with schemas and examples in `mcp-servers.md`.
 
 ### GitHub CLI (gh)
 

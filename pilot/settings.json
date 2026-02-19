@@ -4,7 +4,7 @@
     "CLAUDE_CODE_HIDE_ACCOUNT_INFO": "true",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "true",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "true",
-    "ENABLE_MCP_CLI": "true",
+    "ENABLE_EXPERIMENTAL_MCP_CLI": "true",
     "ENABLE_TOOL_SEARCH": "false",
     "ENABLE_LSP_TOOL": "true",
     "DISABLE_COMPACT": "false",

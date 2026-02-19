@@ -107,13 +107,13 @@ HINTS: dict[str, dict] = {
 BLOCKS: dict[str, dict] = {
     "WebSearch": {
         "message": "WebSearch is blocked (use MCP alternative)",
-        "alternative": "Use ToolSearch to load mcp__web-search__search, then call it directly",
-        "example": 'ToolSearch(query="web-search") → mcp__web-search__search(query="...")',
+        "alternative": "Use mcp-cli to call plugin_pilot_web-search/search",
+        "example": 'mcp-cli call plugin_pilot_web-search/search \'{"query": "..."}\'',
     },
     "WebFetch": {
         "message": "WebFetch is blocked (truncates at ~8KB)",
-        "alternative": "Use ToolSearch to load mcp__web-fetch__fetch_url for full page content",
-        "example": 'ToolSearch(query="web-fetch") → mcp__web-fetch__fetch_url(url="...")',
+        "alternative": "Use mcp-cli to call plugin_pilot_web-fetch/fetch_url for full page content",
+        "example": 'mcp-cli call plugin_pilot_web-fetch/fetch_url \'{"url": "..."}\'',
     },
     "EnterPlanMode": {
         "message": "EnterPlanMode is blocked (project uses /spec workflow)",

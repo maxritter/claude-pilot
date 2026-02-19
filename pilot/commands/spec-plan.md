@@ -255,10 +255,12 @@ Analyze the task description to find ambiguities that NEED resolution before pla
 
 **Then gather clarifications if needed (Question Batch 1):**
 
-If gray areas exist, **send a notification before asking** so the user sees it on the dashboard:
+If gray areas exist, **send a notification before asking** so the user sees it on the dashboard.
+
+**`<plan_name>`** = the slug from the plan filename (e.g., `add-user-authentication` from `2026-02-19-add-user-authentication.md`).
 
 ```bash
-~/.pilot/bin/pilot notify plan_approval "Input Needed" "Clarification questions about the spec" --plan-path "<plan_path>" 2>/dev/null || true
+~/.pilot/bin/pilot notify plan_approval "Input Needed" "<plan_name> — clarification questions about the spec" --plan-path "<plan_path>" 2>/dev/null || true
 ```
 
 Then use AskUserQuestion to ask focused questions per area in a single interaction. Present your interpretation as options when possible — "Should the API return paginated results (recommended for large datasets) or all results at once?" is better than "How should the API handle large result sets?"
@@ -305,7 +307,7 @@ If the task is clear and unambiguous with no meaningful gray areas, skip directl
 Summarize what you found, then **send a notification before asking:**
 
 ```bash
-~/.pilot/bin/pilot notify plan_approval "Design Decisions" "Architecture choices need your input" --plan-path "<plan_path>" 2>/dev/null || true
+~/.pilot/bin/pilot notify plan_approval "Design Decisions" "<plan_name> — architecture choices need your input" --plan-path "<plan_path>" 2>/dev/null || true
 ```
 
 Then use AskUserQuestion with all decisions at once.
@@ -640,7 +642,7 @@ Both agents persist their findings JSON to the session directory for reliable re
 0. **Send notification** so the user knows their input is needed:
 
    ```bash
-   ~/.pilot/bin/pilot notify plan_approval "Plan Ready for Review" "Your approval is needed to proceed with implementation" --plan-path "<plan_path>" 2>/dev/null || true
+   ~/.pilot/bin/pilot notify plan_approval "Plan Ready for Review" "<plan_name> — your approval is needed to proceed with implementation" --plan-path "<plan_path>" 2>/dev/null || true
    ```
 
 1. **Summarize the plan** - Provide a brief overview of:

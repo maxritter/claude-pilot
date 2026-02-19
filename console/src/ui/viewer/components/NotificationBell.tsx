@@ -120,7 +120,7 @@ export function NotificationBell({
                           <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs text-base-content/60 truncate mt-0.5">
+                      <p className="text-xs text-base-content/60 mt-0.5 line-clamp-2">
                         {n.message}
                       </p>
                       <span className="text-[10px] text-base-content/40 mt-1 block">

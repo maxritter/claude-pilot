@@ -51,7 +51,7 @@
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
-    "react-is": "^18.3.1",
+    "react-is": "^19.2.4",
     "recharts": "^3.7.0",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.3.0",

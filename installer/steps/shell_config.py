@@ -211,6 +211,7 @@ class ShellConfigStep(BaseStep):
         """
         mcp_cli_path = Path.home() / ".pilot" / "bin" / "mcp-cli"
         try:
+            mcp_cli_path.parent.mkdir(parents=True, exist_ok=True)
             mcp_cli_path.write_text(MCP_CLI_SCRIPT)
             mcp_cli_path.chmod(mcp_cli_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             if ui:

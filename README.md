@@ -98,7 +98,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Claude 
 8-step installer with progress tracking, rollback on failure, and idempotent re-runs:
 
 1. **Prerequisites** — Checks Homebrew, Node.js, Python 3.12+, uv, git
-2. **Dependencies** — Installs Vexor, playwright-cli, mcp-cli, Claude Code
+2. **Dependencies** — Installs Vexor, playwright-cli, Claude Code
 3. **Shell integration** — Auto-configures bash, fish, and zsh with `pilot` alias
 4. **Config & Claude files** — Sets up `.claude/` plugin, rules, commands, hooks, MCP servers
 5. **VS Code extensions** — Installs recommended extensions for your stack
@@ -314,14 +314,7 @@ Claude Pilot automatically installs best-practice rules, commands, and coding st
 
 ### Custom MCP Servers
 
-Add your own MCP servers in two locations:
-
-| Config File        | How It Works                                         | Best For                        |
-| ------------------ | ---------------------------------------------------- | ------------------------------- |
-| `.mcp.json`        | Instructions load into context when triggered        | Lightweight servers (few tools) |
-| `mcp_servers.json` | Called via mcp-cli; instructions never enter context | Heavy servers (many tools)      |
-
-Run `/sync` after adding servers to generate documentation.
+Add your own MCP servers in `.mcp.json`. Run `/sync` after adding servers to generate documentation.
 
 ---
 
@@ -412,7 +405,7 @@ Production-tested best practices loaded into **every session**. These aren't sug
 <summary><b>Tools (3 rules)</b></summary>
 
 - `research-tools.md` — Context7, grep-mcp, web search, GitHub CLI
-- `cli-tools.md` — Pilot CLI, MCP-CLI, Vexor semantic search
+- `cli-tools.md` — Pilot CLI, Vexor semantic search
 - `playwright-cli.md` — Browser automation for E2E UI testing
 
 </details>

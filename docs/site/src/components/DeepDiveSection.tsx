@@ -110,7 +110,7 @@ const rulesCategories = [
     category: "Tools",
     rules: [
       "Context7 + grep-mcp + web search + GitHub CLI",
-      "Pilot CLI + MCP-CLI + Vexor search",
+      "Pilot CLI + Vexor search",
       "Playwright CLI (E2E browser testing)",
     ],
   },

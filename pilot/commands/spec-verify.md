@@ -598,7 +598,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    - [Key files created/modified]
    - [Test results]
 
-   Is there anything else you'd like me to help with?
+   💡 Run /clear to free context before starting new work.
    ```
 
 **When verification FAILS (missing features, serious bugs, or unfixed rule violations):**

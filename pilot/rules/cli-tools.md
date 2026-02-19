@@ -42,28 +42,4 @@ vexor "<QUERY>" [--path <ROOT>] [--mode <MODE>] [--ext .py,.md] [--exclude-patte
 
 `vexor index` to pre-build, `vexor index --clear` to rebuild.
 
----
-
-### MCP-CLI
-
-Access custom MCP servers through the command line.
-
-| Source | Location | Context Cost |
-|--------|----------|-------------|
-| Pilot Core | `.claude/pilot/.mcp.json` | Always loaded (context7, mem-search, web-search, web-fetch, grep-mcp) |
-| Claude Code | `.mcp.json` | Tool defs enter context when triggered |
-| mcp-cli | `mcp_servers.json` | **Zero** — only CLI output enters context |
-
-**Rule of thumb:** Servers with >10 tools → `mcp_servers.json`. Lightweight → `.mcp.json`.
-
-| Command | Output |
-|---------|--------|
-| `mcp-cli` | List all servers and tools |
-| `mcp-cli <server>` | Show tools with parameters |
-| `mcp-cli <server>/<tool>` | Get JSON schema |
-| `mcp-cli <server>/<tool> '<json>'` | Call tool |
-
-Add `-d` for descriptions, `-j` for JSON, `-r` for raw. Stdin for complex JSON: `mcp-cli server/tool - <<EOF ... EOF`
-
-**Routing:** Pilot core servers → direct tool calls via ToolSearch. User servers → `mcp-cli`. Run `/sync` after adding servers.
 

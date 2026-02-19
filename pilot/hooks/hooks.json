@@ -59,10 +59,6 @@
           {
             "type": "command",
             "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/file_checker.py\""
-          },
-          {
-            "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/hooks/tdd_enforcer.py\""
           }
         ]
       },

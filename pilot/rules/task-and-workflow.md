@@ -58,7 +58,7 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 
 **Search fallback chain:** `vexor` → `Grep`/`Glob` (exact patterns only) → `Task/Explore` (multi-step reasoning, last resort)
 
-Never open an Explore sub-agent or reach for Grep/Glob until vexor has been tried and missed.
+**⛔ NEVER spawn Task/Explore agents for search.** All search goes through vexor (synchronous, `timeout: 60000`) or Grep/Glob directly. Task agents are for multi-step *reasoning*, not finding files or references.
 
 ### /spec Verification Agents (MANDATORY)
 

@@ -205,7 +205,7 @@ def _configure_vexor_defaults() -> bool:
         return False
 
 
-def _configure_vexor_local() -> bool:
+def _configure_vexor_local(*, device: str = "cpu") -> bool:
     """Configure Vexor for local embeddings (no API key needed)."""
 
     config_dir = Path.home() / ".vexor"
@@ -228,7 +228,7 @@ def _configure_vexor_local() -> bool:
                 "extract_backend": "auto",
                 "provider": "local",
                 "auto_index": True,
-                "local_cuda": False,
+                "local_device": device,
                 "rerank": "bm25",
             }
         )
@@ -296,24 +296,26 @@ def _clone_vexor_fork() -> Path | None:
 
     if vexor_dir.exists():
         try:
-            subprocess.run(
+            r1 = subprocess.run(
                 ["git", "fetch", "origin", VEXOR_MLX_BRANCH],
                 capture_output=True,
                 cwd=vexor_dir,
                 timeout=60,
             )
-            subprocess.run(
+            r2 = subprocess.run(
                 ["git", "checkout", VEXOR_MLX_BRANCH],
                 capture_output=True,
                 cwd=vexor_dir,
                 timeout=30,
             )
-            subprocess.run(
+            r3 = subprocess.run(
                 ["git", "pull", "origin", VEXOR_MLX_BRANCH],
                 capture_output=True,
                 cwd=vexor_dir,
                 timeout=60,
             )
+            if r1.returncode != 0 or r2.returncode != 0 or r3.returncode != 0:
+                return None
             return vexor_dir
         except Exception:
             return None
@@ -335,16 +337,17 @@ def _clone_vexor_fork() -> Path | None:
 
 def _install_vexor_from_local(vexor_dir: Path, extra: str = "local-mlx") -> bool:
     """Install vexor from a local clone with the specified extra."""
-    cmd = f'uv tool install "{vexor_dir}[{extra}]" --reinstall'
+    mlx_deps = " --with mlx --with mlx-embedding-models" if "mlx" in extra else ""
+    cmd = f'uv tool install "{vexor_dir}[{extra}]" --reinstall{mlx_deps}'
     return _run_bash_with_retry(cmd, timeout=300)
 
 
-def _setup_vexor_local_model(ui: Any = None) -> bool:
+def _setup_vexor_local_model(ui: Any = None, *, device: str = "auto") -> bool:
     """Download and setup the local embedding model for Vexor."""
     if _is_vexor_local_model_installed():
         return True
 
-    cmd = ["vexor", "local", "--setup", "--model", "intfloat/multilingual-e5-small"]
+    cmd = ["vexor", "local", "--setup", "--device", device, "--model", "intfloat/multilingual-e5-small"]
     for attempt in range(MAX_RETRIES):
         try:
             if ui:
@@ -390,44 +393,42 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
 def _install_vexor_mlx(ui: Any = None) -> bool:
     """Install Vexor with MLX support from fork for macOS Apple Silicon."""
     if _is_vexor_mlx_installed() and _is_vexor_local_model_installed():
-        _configure_vexor_local()
+        _configure_vexor_local(device="mlx")
         return True
 
     vexor_dir = _clone_vexor_fork()
     if vexor_dir is None:
         if ui:
             ui.warning("Could not clone MLX fork — falling back to CPU embeddings")
-        if not command_exists("vexor"):
-            if not _run_bash_with_retry("uv tool install 'vexor[local]'"):
-                return False
+        if not _run_bash_with_retry("uv tool install 'vexor[local]' --reinstall"):
+            return False
         _configure_vexor_local()
         return _setup_vexor_local_model(ui)
 
     if not _install_vexor_from_local(vexor_dir, extra="local-mlx"):
         if ui:
             ui.warning("MLX install failed — falling back to CPU embeddings")
-        if not _run_bash_with_retry("uv tool install 'vexor[local]'"):
+        if not _run_bash_with_retry("uv tool install 'vexor[local]' --reinstall"):
             return False
         _configure_vexor_local()
         return _setup_vexor_local_model(ui)
 
-    _configure_vexor_local()
-    return _setup_vexor_local_model(ui)
+    _configure_vexor_local(device="mlx")
+    return _setup_vexor_local_model(ui, device="mlx")
 
 
-def install_mcp_cli() -> bool:
-    """Install mcp-cli for MCP server interaction.
+def uninstall_mcp_cli() -> bool:
+    """Uninstall mcp-cli — now built into Claude Code.
 
-    Checks if already installed (via npm or bun) before attempting install.
-    Prefers bun for installation, falls back to npm.
+    Tries both bun and npm to ensure cleanup regardless of install method.
     """
-    if command_exists("mcp-cli"):
+    if not command_exists("mcp-cli"):
         return True
 
     if command_exists("bun"):
-        return _run_bash_with_retry("bun install -g https://github.com/philschmid/mcp-cli")
-
-    return _run_bash_with_retry(npm_global_cmd("npm install -g mcp-cli"))
+        _run_bash_with_retry("bun remove -g mcp-cli")
+    _run_bash_with_retry(npm_global_cmd("npm uninstall -g mcp-cli"))
+    return True
 
 
 def install_sx() -> bool:
@@ -894,8 +895,8 @@ class DependenciesStep(BaseStep):
         if _install_with_spinner(ui, "Plugin dependencies", _install_plugin_dependencies, ctx.project_dir, ui):
             installed.append("plugin_deps")
 
-        if _install_with_spinner(ui, "mcp-cli", install_mcp_cli):
-            installed.append("mcp_cli")
+        if _install_with_spinner(ui, "mcp-cli cleanup", uninstall_mcp_cli):
+            installed.append("mcp_cli_cleanup")
 
         if _install_with_spinner(ui, "vtsls (TypeScript LSP server)", install_typescript_lsp):
             installed.append("typescript_lsp")

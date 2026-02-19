@@ -228,7 +228,6 @@ CLAUDE.md
 .vercel
 .mcp.json
 demo
-mcp_servers.json
 .env**
 playwright/
 .claude.backup.*

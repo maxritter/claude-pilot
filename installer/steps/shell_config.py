@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import stat
 from pathlib import Path
 
 from installer.context import InstallContext
@@ -11,15 +12,18 @@ from installer.steps.base import BaseStep
 OLD_CCP_MARKER = "# Claude CodePro alias"
 CLAUDE_ALIAS_MARKER = "# Claude Pilot"
 PILOT_BIN = "$HOME/.pilot/bin/pilot"
+PILOT_BIN_DIR = "$HOME/.pilot/bin"
 BUN_BIN_PATH = "$HOME/.bun/bin"
+
+MCP_CLI_SCRIPT = '#!/usr/bin/env bash\nexec claude --mcp-cli "$@"\n'
 
 
 def get_alias_lines(shell_type: str) -> str:
     """Get pilot and ccp alias lines for the given shell type."""
     if shell_type == "fish":
-        path_line = f'set -gx PATH "{BUN_BIN_PATH}" $PATH'
+        path_line = f'set -gx PATH "{PILOT_BIN_DIR}" "{BUN_BIN_PATH}" $PATH'
     else:
-        path_line = f'export PATH="{BUN_BIN_PATH}:$PATH"'
+        path_line = f'export PATH="{PILOT_BIN_DIR}:{BUN_BIN_PATH}:$PATH"'
     return f'{CLAUDE_ALIAS_MARKER}\n{path_line}\nalias pilot="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
 
 
@@ -34,6 +38,9 @@ def alias_exists_in_file(config_file: Path) -> bool:
         or "alias ccp" in content
         or "alias claude" in content
         or "alias pilot" in content
+        or "alias mcp-cli" in content
+        or "mcp-cli()" in content
+        or "function mcp-cli" in content
     )
 
 
@@ -49,13 +56,17 @@ def remove_old_alias(config_file: Path) -> bool:
         or "alias ccp" in content
         or "alias claude" in content
         or "alias pilot" in content
+        or "alias mcp-cli" in content
         or "ccp()" in content
         or "claude()" in content
         or "pilot()" in content
+        or "mcp-cli()" in content
         or "function ccp" in content
         or "function claude" in content
         or "function pilot" in content
+        or "function mcp-cli" in content
         or 'PATH="$HOME/.bun/bin' in content
+        or 'PATH="$HOME/.pilot/bin' in content
     )
     if not has_old:
         return False
@@ -75,13 +86,20 @@ def remove_old_alias(config_file: Path) -> bool:
             stripped.startswith("alias ccp=")
             or stripped.startswith("alias claude=")
             or stripped.startswith("alias pilot=")
+            or stripped.startswith("alias mcp-cli=")
             or stripped.startswith("alias ccp ")
             or stripped.startswith("alias claude ")
             or stripped.startswith("alias pilot ")
+            or stripped.startswith("alias mcp-cli ")
         ):
             continue
 
-        if stripped == 'export PATH="$HOME/.bun/bin:$PATH"' or stripped == 'set -gx PATH "$HOME/.bun/bin" $PATH':
+        if (
+            stripped == 'export PATH="$HOME/.bun/bin:$PATH"'
+            or stripped == 'export PATH="$HOME/.pilot/bin:$HOME/.bun/bin:$PATH"'
+            or stripped == 'set -gx PATH "$HOME/.bun/bin" $PATH'
+            or stripped == 'set -gx PATH "$HOME/.pilot/bin" "$HOME/.bun/bin" $PATH'
+        ):
             continue
 
         if stripped.startswith("ccp()") or stripped == "ccp () {":
@@ -91,6 +109,9 @@ def remove_old_alias(config_file: Path) -> bool:
             inside_function = True
             brace_count = 0
         elif stripped.startswith("pilot()") or stripped == "pilot () {":
+            inside_function = True
+            brace_count = 0
+        elif stripped.startswith("mcp-cli()") or stripped == "mcp-cli () {":
             inside_function = True
             brace_count = 0
 
@@ -104,6 +125,7 @@ def remove_old_alias(config_file: Path) -> bool:
             stripped.startswith("function ccp")
             or stripped.startswith("function claude")
             or stripped.startswith("function pilot")
+            or stripped.startswith("function mcp-cli")
         ):
             inside_function = True
             continue
@@ -139,7 +161,7 @@ class ShellConfigStep(BaseStep):
         return False
 
     def run(self, ctx: InstallContext) -> None:
-        """Configure shell with claude alias."""
+        """Configure shell with claude alias and mcp-cli wrapper script."""
         ui = ctx.ui
         config_files = get_shell_config_files()
         modified_files: list[str] = []
@@ -147,6 +169,8 @@ class ShellConfigStep(BaseStep):
 
         if ui:
             ui.status("Configuring shell alias...")
+
+        self._install_mcp_cli_script(ui)
 
         for config_file in config_files:
             if not config_file.exists():
@@ -175,3 +199,28 @@ class ShellConfigStep(BaseStep):
 
         ctx.config["modified_shell_configs"] = modified_files
         ctx.config["shell_needs_reload"] = needs_reload
+
+    @staticmethod
+    def _install_mcp_cli_script(ui: object | None) -> None:
+        """Install mcp-cli wrapper script to ~/.pilot/bin/.
+
+        Claude Code's mcp-cli alias breaks in zsh when arguments contain
+        a forward slash (e.g., `mcp-cli call server/tool`). A real script
+        on PATH avoids this zsh alias expansion bug entirely.
+        See: https://github.com/anthropics/claude-code/issues/26655
+        """
+        mcp_cli_path = Path.home() / ".pilot" / "bin" / "mcp-cli"
+        try:
+            mcp_cli_path.write_text(MCP_CLI_SCRIPT)
+            mcp_cli_path.chmod(mcp_cli_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            if ui:
+                from installer.ui import Console
+
+                if isinstance(ui, Console):
+                    ui.success("Installed mcp-cli wrapper script")
+        except OSError as e:
+            if ui:
+                from installer.ui import Console
+
+                if isinstance(ui, Console):
+                    ui.warning(f"Could not install mcp-cli script: {e}")

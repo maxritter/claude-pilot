@@ -15,7 +15,6 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _dashboard_notify import send_dashboard_notification
 
 PILOT_BIN = Path.home() / ".pilot" / "bin" / "pilot"
 
@@ -46,8 +45,6 @@ def main() -> int:
     count = _get_active_session_count()
     if count > 1:
         return 0
-
-    send_dashboard_notification("attention_needed", "Session Ended", "Claude session ended")
 
     stop_script = Path(plugin_root) / "scripts" / "worker-service.cjs"
     try:

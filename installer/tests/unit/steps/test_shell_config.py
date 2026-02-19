@@ -8,8 +8,10 @@ from unittest.mock import patch
 
 from installer.steps.shell_config import (
     CLAUDE_ALIAS_MARKER,
+    MCP_CLI_SCRIPT,
     OLD_CCP_MARKER,
     PILOT_BIN,
+    PILOT_BIN_DIR,
     ShellConfigStep,
     alias_exists_in_file,
     get_alias_lines,
@@ -89,6 +91,74 @@ class TestShellConfigStep:
             assert "alias pilot=" in content
 
 
+    @patch("installer.steps.shell_config.get_shell_config_files")
+    def test_shell_config_upgrades_old_bun_only_path(self, mock_get_files):
+        """ShellConfigStep upgrades old config with only .bun/bin to include .pilot/bin."""
+        from installer.context import InstallContext
+        from installer.ui import Console
+
+        step = ShellConfigStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bashrc = Path(tmpdir) / ".bashrc"
+            bashrc.write_text(
+                "# before\n"
+                f"{CLAUDE_ALIAS_MARKER}\n"
+                'export PATH="$HOME/.bun/bin:$PATH"\n'
+                f'alias pilot="{PILOT_BIN}"\n'
+                f'alias ccp="{PILOT_BIN}"\n'
+                "# after\n"
+            )
+            mock_get_files.return_value = [bashrc]
+
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                ui=Console(non_interactive=True),
+            )
+
+            step.run(ctx)
+
+            content = bashrc.read_text()
+            assert "# before" in content
+            assert "# after" in content
+            assert PILOT_BIN_DIR in content
+            assert content.count(CLAUDE_ALIAS_MARKER) == 1
+
+            mcp_cli_script = Path.home() / ".pilot" / "bin" / "mcp-cli"
+            assert mcp_cli_script.exists()
+            import os
+            assert os.access(mcp_cli_script, os.X_OK)
+
+    @patch("installer.steps.shell_config.get_shell_config_files")
+    def test_shell_config_upgrades_old_mcp_cli_function(self, mock_get_files):
+        """ShellConfigStep upgrades old config with mcp-cli function to script."""
+        from installer.context import InstallContext
+        from installer.ui import Console
+
+        step = ShellConfigStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bashrc = Path(tmpdir) / ".bashrc"
+            bashrc.write_text(
+                f"{CLAUDE_ALIAS_MARKER}\n"
+                'export PATH="$HOME/.bun/bin:$PATH"\n'
+                f'alias pilot="{PILOT_BIN}"\n'
+                f'alias ccp="{PILOT_BIN}"\n'
+                'mcp-cli() { command claude --mcp-cli "$@"; }\n'
+            )
+            mock_get_files.return_value = [bashrc]
+
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                ui=Console(non_interactive=True),
+            )
+
+            step.run(ctx)
+
+            content = bashrc.read_text()
+            assert "mcp-cli()" not in content
+            assert PILOT_BIN_DIR in content
+            assert 'export PATH="$HOME/.bun/bin:$PATH"' not in content
+
+
 class TestAliasLines:
     """Test alias line generation."""
 
@@ -115,6 +185,123 @@ class TestAliasLines:
         assert "alias claude=" not in result
         assert PILOT_BIN in result
         assert CLAUDE_ALIAS_MARKER in result
+
+
+class TestMcpCliFunction:
+    """Test mcp-cli function generation and cleanup."""
+
+    def test_get_alias_lines_bash_includes_pilot_bin_in_path(self):
+        """Bash alias lines include ~/.pilot/bin in PATH for mcp-cli script."""
+        result = get_alias_lines("bash")
+        assert PILOT_BIN_DIR in result
+        assert "alias mcp-cli" not in result
+        assert "mcp-cli()" not in result
+
+    def test_get_alias_lines_fish_includes_pilot_bin_in_path(self):
+        """Fish alias lines include ~/.pilot/bin in PATH for mcp-cli script."""
+        result = get_alias_lines("fish")
+        assert PILOT_BIN_DIR in result
+        assert "alias mcp-cli" not in result
+        assert "function mcp-cli" not in result
+
+    def test_remove_old_alias_removes_mcp_cli_alias(self):
+        """remove_old_alias removes alias mcp-cli from Claude Code."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text(
+                "# before\n"
+                "alias mcp-cli='/path/to/claude --mcp-cli'\n"
+                "# after\n"
+            )
+            result = remove_old_alias(config)
+
+            assert result is True
+            content = config.read_text()
+            assert "alias mcp-cli" not in content
+            assert "# before" in content
+            assert "# after" in content
+
+    def test_remove_old_alias_removes_mcp_cli_function(self):
+        """remove_old_alias removes mcp-cli() function from previous Pilot install."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text(
+                '# before\n'
+                'mcp-cli() { command claude --mcp-cli "$@"; }\n'
+                '# after\n'
+            )
+            result = remove_old_alias(config)
+
+            assert result is True
+            content = config.read_text()
+            assert "mcp-cli()" not in content
+            assert "# before" in content
+            assert "# after" in content
+
+    def test_remove_old_alias_removes_fish_mcp_cli_function(self):
+        """remove_old_alias removes fish mcp-cli function definition."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / "config.fish"
+            config.write_text(
+                "# before\n"
+                "function mcp-cli\n"
+                "    command claude --mcp-cli $argv\n"
+                "end\n"
+                "# after\n"
+            )
+            result = remove_old_alias(config)
+
+            assert result is True
+            content = config.read_text()
+            assert "function mcp-cli" not in content
+            assert "# before" in content
+            assert "# after" in content
+
+    def test_alias_exists_detects_mcp_cli_alias(self):
+        """alias_exists_in_file detects mcp-cli alias from Claude Code."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text("alias mcp-cli='/path/to/claude --mcp-cli'\n")
+            assert alias_exists_in_file(config) is True
+
+    def test_alias_exists_detects_mcp_cli_function(self):
+        """alias_exists_in_file detects mcp-cli() function."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text('mcp-cli() { command claude --mcp-cli "$@"; }\n')
+            assert alias_exists_in_file(config) is True
+
+    @patch("installer.steps.shell_config.get_shell_config_files")
+    def test_shell_config_replaces_mcp_cli_alias_with_script(self, mock_get_files):
+        """ShellConfigStep removes Claude Code's mcp-cli alias and installs script."""
+        from installer.context import InstallContext
+        from installer.ui import Console
+
+        step = ShellConfigStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bashrc = Path(tmpdir) / ".bashrc"
+            bashrc.write_text(
+                "# existing config\n"
+                "alias mcp-cli='/path/to/claude --mcp-cli'\n"
+            )
+            mock_get_files.return_value = [bashrc]
+
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                ui=Console(non_interactive=True),
+            )
+
+            step.run(ctx)
+
+            content = bashrc.read_text()
+            assert "alias mcp-cli" not in content
+            assert PILOT_BIN_DIR in content
+
+            mcp_cli_script = Path.home() / ".pilot" / "bin" / "mcp-cli"
+            assert mcp_cli_script.exists()
+            assert mcp_cli_script.read_text() == MCP_CLI_SCRIPT
+            import os
+            assert os.access(mcp_cli_script, os.X_OK)
 
 
 class TestAliasDetection:

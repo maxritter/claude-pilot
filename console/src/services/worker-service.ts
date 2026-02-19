@@ -33,6 +33,7 @@ import {
   getPlatformTimeout,
   cleanupOrphanedProcesses,
   cleanupOrphanedClaudeProcesses,
+  cleanupOrphanedChromaProcesses,
   spawnDaemon,
   createSignalHandler,
 } from "./infrastructure/ProcessManager.js";
@@ -347,6 +348,7 @@ export class WorkerService {
    */
   private async initializeBackground(): Promise<void> {
     try {
+      await cleanupOrphanedChromaProcesses();
       await cleanupOrphanedProcesses();
       await cleanupOrphanedClaudeProcesses();
 
@@ -859,6 +861,15 @@ async function main() {
 
     case "--daemon":
     default: {
+      if (await waitForHealth(port, 500)) {
+        logger.info(
+          "SYSTEM",
+          "Another worker already healthy on port, exiting duplicate",
+          { port },
+        );
+        process.exit(0);
+      }
+
       process.on("unhandledRejection", (reason, promise) => {
         logger.failure(
           "SYSTEM",

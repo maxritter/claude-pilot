@@ -791,7 +791,7 @@ class TestVexorMlxInstall:
         result = _install_vexor_mlx()
 
         assert result is True
-        mock_run.assert_called_once_with("uv tool install 'vexor[local]'")
+        mock_run.assert_called_once_with("uv tool install 'vexor[local]' --reinstall")
 
     @patch("installer.steps.dependencies._install_vexor_mlx", return_value=True)
     @patch("installer.steps.dependencies.is_macos_arm64", return_value=True)

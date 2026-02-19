@@ -12,7 +12,11 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { ParsedObservation, ParsedSummary } from "../../sdk/parser.js";
 import { SessionStore } from "../sqlite/SessionStore.js";
 import { logger } from "../../utils/logger.js";
-import { IVectorSync, VectorMetadata, VectorQueryResult } from "./IVectorSync.js";
+import {
+  IVectorSync,
+  VectorMetadata,
+  VectorQueryResult,
+} from "./IVectorSync.js";
 import { ChromaConnectionManager } from "./ChromaConnectionManager.js";
 
 interface ChromaDocument {
@@ -121,15 +125,28 @@ export class ChromaSync implements IVectorSync {
         },
       });
 
-      logger.debug("CHROMA_SYNC", "Collection exists", { collection: this.collectionName });
+      logger.debug("CHROMA_SYNC", "Collection exists", {
+        collection: this.collectionName,
+      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const isConnectionError =
         errorMessage.includes("Not connected") ||
         errorMessage.includes("Connection closed") ||
         errorMessage.includes("MCP error -32000");
 
       if (isConnectionError) {
+        const recovered =
+          await this.connectionManager.recoverFromCorruptedDatabase();
+        if (recovered) {
+          logger.warn(
+            "CHROMA_SYNC",
+            "Corruption recovery triggered, retrying collection check",
+          );
+          return this.ensureCollection();
+        }
+
         await this.invalidateConnection();
         logger.error(
           "CHROMA_SYNC",
@@ -146,7 +163,9 @@ export class ChromaSync implements IVectorSync {
         { collection: this.collectionName },
         error as Error,
       );
-      logger.info("CHROMA_SYNC", "Creating collection", { collection: this.collectionName });
+      logger.info("CHROMA_SYNC", "Creating collection", {
+        collection: this.collectionName,
+      });
 
       try {
         await client.callTool({
@@ -157,7 +176,9 @@ export class ChromaSync implements IVectorSync {
           },
         });
 
-        logger.info("CHROMA_SYNC", "Collection created", { collection: this.collectionName });
+        logger.info("CHROMA_SYNC", "Collection created", {
+          collection: this.collectionName,
+        });
       } catch (createError) {
         logger.error(
           "CHROMA_SYNC",
@@ -184,7 +205,9 @@ export class ChromaSync implements IVectorSync {
     const facts = obs.facts ? JSON.parse(obs.facts) : [];
     const concepts = obs.concepts ? JSON.parse(obs.concepts) : [];
     const files_read = obs.files_read ? JSON.parse(obs.files_read) : [];
-    const files_modified = obs.files_modified ? JSON.parse(obs.files_modified) : [];
+    const files_modified = obs.files_modified
+      ? JSON.parse(obs.files_modified)
+      : [];
 
     const baseMetadata: Record<string, string | number> = {
       sqlite_id: obs.id,
@@ -339,7 +362,9 @@ export class ChromaSync implements IVectorSync {
         },
         error as Error,
       );
-      throw new Error(`Document add failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Document add failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -496,7 +521,9 @@ export class ChromaSync implements IVectorSync {
     let offset = 0;
     const limit = 1000;
 
-    logger.info("CHROMA_SYNC", "Fetching existing Chroma document IDs...", { project: this.project });
+    logger.info("CHROMA_SYNC", "Fetching existing Chroma document IDs...", {
+      project: this.project,
+    });
 
     while (true) {
       try {
@@ -543,7 +570,12 @@ export class ChromaSync implements IVectorSync {
           batchSize: metadatas.length,
         });
       } catch (error) {
-        logger.error("CHROMA_SYNC", "Failed to fetch existing IDs", { project: this.project }, error as Error);
+        logger.error(
+          "CHROMA_SYNC",
+          "Failed to fetch existing IDs",
+          { project: this.project },
+          error as Error,
+        );
         throw error;
       }
     }
@@ -555,7 +587,11 @@ export class ChromaSync implements IVectorSync {
       prompts: promptIds.size,
     });
 
-    return { observations: observationIds, summaries: summaryIds, prompts: promptIds };
+    return {
+      observations: observationIds,
+      summaries: summaryIds,
+      prompts: promptIds,
+    };
   }
 
   /**
@@ -564,7 +600,9 @@ export class ChromaSync implements IVectorSync {
    * Throws error if backfill fails
    */
   async ensureBackfilled(): Promise<void> {
-    logger.info("CHROMA_SYNC", "Starting smart backfill", { project: this.project });
+    logger.info("CHROMA_SYNC", "Starting smart backfill", {
+      project: this.project,
+    });
 
     await this.ensureCollection();
 
@@ -574,7 +612,10 @@ export class ChromaSync implements IVectorSync {
 
     try {
       const existingObsIds = Array.from(existing.observations);
-      const obsExclusionClause = existingObsIds.length > 0 ? `AND id NOT IN (${existingObsIds.join(",")})` : "";
+      const obsExclusionClause =
+        existingObsIds.length > 0
+          ? `AND id NOT IN (${existingObsIds.join(",")})`
+          : "";
 
       const observations = db.db
         .prepare(
@@ -618,7 +659,9 @@ export class ChromaSync implements IVectorSync {
 
       const existingSummaryIds = Array.from(existing.summaries);
       const summaryExclusionClause =
-        existingSummaryIds.length > 0 ? `AND id NOT IN (${existingSummaryIds.join(",")})` : "";
+        existingSummaryIds.length > 0
+          ? `AND id NOT IN (${existingSummaryIds.join(",")})`
+          : "";
 
       const summaries = db.db
         .prepare(
@@ -662,7 +705,9 @@ export class ChromaSync implements IVectorSync {
 
       const existingPromptIds = Array.from(existing.prompts);
       const promptExclusionClause =
-        existingPromptIds.length > 0 ? `AND up.id NOT IN (${existingPromptIds.join(",")})` : "";
+        existingPromptIds.length > 0
+          ? `AND up.id NOT IN (${existingPromptIds.join(",")})`
+          : "";
 
       const prompts = db.db
         .prepare(
@@ -726,8 +771,15 @@ export class ChromaSync implements IVectorSync {
         },
       });
     } catch (error) {
-      logger.error("CHROMA_SYNC", "Backfill failed", { project: this.project }, error as Error);
-      throw new Error(`Backfill failed: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        "CHROMA_SYNC",
+        "Backfill failed",
+        { project: this.project },
+        error as Error,
+      );
+      throw new Error(
+        `Backfill failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     } finally {
       db.close();
     }
@@ -741,10 +793,16 @@ export class ChromaSync implements IVectorSync {
     query: string,
     limit: number,
     whereFilter?: Record<string, unknown>,
-  ): Promise<{ ids: number[]; distances: number[]; metadatas: VectorMetadata[] }> {
+  ): Promise<{
+    ids: number[];
+    distances: number[];
+    metadatas: VectorMetadata[];
+  }> {
     const client = await this.getClient();
 
-    const whereStringified = whereFilter ? JSON.stringify(whereFilter) : undefined;
+    const whereStringified = whereFilter
+      ? JSON.stringify(whereFilter)
+      : undefined;
 
     const arguments_obj = {
       collection_name: this.collectionName,
@@ -761,7 +819,8 @@ export class ChromaSync implements IVectorSync {
         arguments: arguments_obj,
       })) as McpToolResult;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const isConnectionError =
         errorMessage.includes("Not connected") ||
         errorMessage.includes("Connection closed") ||
@@ -769,8 +828,15 @@ export class ChromaSync implements IVectorSync {
 
       if (isConnectionError) {
         await this.invalidateConnection();
-        logger.error("CHROMA_SYNC", "Connection lost during query", { project: this.project, query }, error as Error);
-        throw new Error(`Chroma query failed - connection lost: ${errorMessage}`);
+        logger.error(
+          "CHROMA_SYNC",
+          "Connection lost during query",
+          { project: this.project, query },
+          error as Error,
+        );
+        throw new Error(
+          `Chroma query failed - connection lost: ${errorMessage}`,
+        );
       }
       throw error;
     }
@@ -778,10 +844,14 @@ export class ChromaSync implements IVectorSync {
     const resultText =
       result.content[0]?.text ||
       (() => {
-        logger.error("CHROMA", "Missing text in MCP chroma_query_documents result", {
-          project: this.project,
-          query_text: query,
-        });
+        logger.error(
+          "CHROMA",
+          "Missing text in MCP chroma_query_documents result",
+          {
+            project: this.project,
+            query_text: query,
+          },
+        );
         return "";
       })();
 
@@ -789,7 +859,12 @@ export class ChromaSync implements IVectorSync {
     try {
       parsed = JSON.parse(resultText);
     } catch (error) {
-      logger.error("CHROMA_SYNC", "Failed to parse Chroma response", { project: this.project }, error as Error);
+      logger.error(
+        "CHROMA_SYNC",
+        "Failed to parse Chroma response",
+        { project: this.project },
+        error as Error,
+      );
       return { ids: [], distances: [], metadatas: [] };
     }
 
@@ -844,7 +919,14 @@ export class ChromaSync implements IVectorSync {
           chromaIds.push(`obs_${id}_fact_${f}`);
         }
       } else if (docType === "session_summary") {
-        for (const field of ["request", "investigated", "learned", "completed", "next_steps", "notes"]) {
+        for (const field of [
+          "request",
+          "investigated",
+          "learned",
+          "completed",
+          "next_steps",
+          "notes",
+        ]) {
           chromaIds.push(`summary_${id}_${field}`);
         }
       } else {
@@ -862,7 +944,12 @@ export class ChromaSync implements IVectorSync {
         });
         deleted += batch.length;
       } catch (error) {
-        logger.error("CHROMA_SYNC", "Failed to delete documents batch", { batchSize: batch.length }, error as Error);
+        logger.error(
+          "CHROMA_SYNC",
+          "Failed to delete documents batch",
+          { batchSize: batch.length },
+          error as Error,
+        );
         throw error;
       }
     }
@@ -882,7 +969,11 @@ export class ChromaSync implements IVectorSync {
    * On partial failure (backfill fails after delete+recreate), returns a result
    * with an error message. Re-running vacuum will complete the backfill.
    */
-  async vacuum(): Promise<{ deletedDocuments: number; reindexedDocuments: number; error?: string }> {
+  async vacuum(): Promise<{
+    deletedDocuments: number;
+    reindexedDocuments: number;
+    error?: string;
+  }> {
     return this.connectionManager.withMutex(async (client) => {
       const preDeleteCount = await this.getEmbeddingCount();
 
@@ -925,13 +1016,21 @@ export class ChromaSync implements IVectorSync {
           reindexedDocuments: postBackfillCount,
         });
 
-        return { deletedDocuments: preDeleteCount, reindexedDocuments: postBackfillCount };
+        return {
+          deletedDocuments: preDeleteCount,
+          reindexedDocuments: postBackfillCount,
+        };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        logger.error("CHROMA_SYNC", "Vacuum incomplete — backfill failed", {
-          collection: this.collectionName,
-          project: this.project,
-        }, error as Error);
+        logger.error(
+          "CHROMA_SYNC",
+          "Vacuum incomplete — backfill failed",
+          {
+            collection: this.collectionName,
+            project: this.project,
+          },
+          error as Error,
+        );
 
         return {
           deletedDocuments: preDeleteCount,
@@ -968,14 +1067,20 @@ export class ChromaSync implements IVectorSync {
    */
   async close(): Promise<void> {
     await this.connectionManager.close();
-    logger.info("CHROMA_SYNC", "Chroma client and subprocess closed", { project: this.project });
+    logger.info("CHROMA_SYNC", "Chroma client and subprocess closed", {
+      project: this.project,
+    });
   }
 
   /**
    * Query method (IVectorSync interface)
    * Alias for queryChroma for interface compatibility
    */
-  async query(queryText: string, limit: number, whereFilter?: Record<string, unknown>): Promise<VectorQueryResult> {
+  async query(
+    queryText: string,
+    limit: number,
+    whereFilter?: Record<string, unknown>,
+  ): Promise<VectorQueryResult> {
     return this.queryChroma(queryText, limit, whereFilter);
   }
 

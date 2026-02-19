@@ -72,7 +72,7 @@ model: sonnet
 | Issue                          | Action                                       |
 | ------------------------------ | -------------------------------------------- |
 | Vexor not installed            | Use Grep/Glob for exploration, skip indexing |
-| mcp-cli not available          | Skip MCP documentation                       |
+| No MCP servers configured      | Skip MCP documentation                       |
 | No README.md                   | Ask user for project description             |
 | No package.json/pyproject.toml | Infer tech stack from file extensions        |
 
@@ -307,14 +307,7 @@ When an error occurs in our application, we have established a consistent patter
 
 **Update MCP server documentation for user-configured servers.**
 
-MCP servers can be configured in two locations:
-
-| Config File            | How It Works                                             | Best For                        |
-| ---------------------- | -------------------------------------------------------- | ------------------------------- |
-| **`.mcp.json`**        | Lazy-loaded; instructions enter context when triggered   | Lightweight servers (few tools) |
-| **`mcp_servers.json`** | Called via mcp-cli; instructions **never** enter context | Heavy servers (many tools)      |
-
-**Key difference:** With `.mcp.json`, tool definitions load into context when used. With `mcp_servers.json`, only the CLI output enters context - zero token cost for instructions.
+MCP servers are configured in `.mcp.json`:
 
 **Pilot Core Servers (skip these - already documented in standard rules):**
 
@@ -326,28 +319,15 @@ MCP servers can be configured in two locations:
 
 #### Step 6.1: Discover All MCP Servers
 
-1. **Check `.mcp.json` (Claude Code native config):**
+1. **Check `.mcp.json`:**
 
    ```bash
    cat .mcp.json 2>/dev/null | head -50
    ```
 
-2. **Check `mcp_servers.json` (mcp-cli config):**
-
-   ```bash
-   cat mcp_servers.json 2>/dev/null | head -50
-   ```
-
-3. **List available servers via mcp-cli:**
-
-   ```bash
-   mcp-cli 2>/dev/null
-   ```
-
-4. **Build inventory of user servers:**
-   - Parse both config files
+2. **Build inventory of user servers:**
+   - Parse the config file
    - Exclude Pilot core servers: `context7`, `mem-search`, `web-search`, `web-fetch`, `grep-mcp`
-   - Note which config file each server comes from
 
 #### Step 6.2: Smoke-Test MCP Servers
 
@@ -356,15 +336,10 @@ MCP servers can be configured in two locations:
 For each user server discovered in Step 6.1:
 
 1. **Load the server's tools:**
-   - For `.mcp.json` servers: use `ToolSearch` with `+<server-name>` to load tools
-   - For `mcp_servers.json` servers: use `mcp-cli <server-name> -d` to list tools
+   - Call the server's tools directly via Claude Code's built-in MCP integration
 
 2. **Probe each tool with a minimal read-only call:**
-   - For `.mcp.json` servers: call each tool directly with minimal/empty arguments (prefer list/get operations over create/delete)
-   - For `mcp_servers.json` servers:
-     ```bash
-     mcp-cli <server-name>/<tool-name> '{}' 2>&1 | head -20
-     ```
+   - Call each tool directly with minimal/empty arguments via Claude Code's built-in MCP integration (prefer list/get operations over create/delete)
    - **Safety:** Only call read-only tools (list, get, search, describe). Skip tools that create, update, delete, or modify state. When unsure, check the tool schema first.
 
 3. **Record results per tool:**
@@ -404,10 +379,7 @@ For each user server discovered in Step 6.1:
 For each user-configured server (not Pilot core):
 
 1. **Get server tools and descriptions:**
-
-   ```bash
-   mcp-cli <server-name> -d
-   ```
+   - Use `ToolSearch` with `+<server-name>` to load and inspect tools
 
 2. **Compare against existing `mcp-servers.md`:**
    - Check if server is already documented
@@ -437,7 +409,7 @@ Custom MCP servers configured for this project.
 
 ### [server-name]
 
-**Source:** `.mcp.json` or `mcp_servers.json`
+**Source:** `.mcp.json`
 **Purpose:** [Brief description]
 **Status:** ✅ All tools working | ⚠️ Partial | ❌ Broken
 
@@ -450,9 +422,7 @@ Custom MCP servers configured for this project.
 
 **Example Usage:**
 
-```bash
-mcp-cli server-name/tool-name '{"param": "value"}'
-```
+Call tools directly via Claude Code's built-in MCP integration.
 ````
 
 ```
@@ -460,7 +430,7 @@ mcp-cli server-name/tool-name '{"param": "value"}'
 #### Step 6.5: Skip Conditions
 
 Skip MCP documentation if:
-- No `.mcp.json` AND no `mcp_servers.json` exists
+- No `.mcp.json` exists
 - Only Pilot core servers are configured (no user servers)
 - User declines documentation update
 

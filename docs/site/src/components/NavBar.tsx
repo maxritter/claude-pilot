@@ -8,6 +8,7 @@ import boxPng from "@/assets/box.png";
 const navLinks = [
   { label: "Getting Started", href: "#installation" },
   { label: "The Problem", href: "#problem" },
+  { label: "Demo", href: "#demo" },
   { label: "Usage", href: "#workflow" },
   { label: "What's Inside", href: "#features" },
   { label: "Under the Hood", href: "#deep-dive" },
@@ -29,7 +30,11 @@ const NavBar = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3">
-          <img src={boxPng} alt="Claude Pilot" className="h-8 sm:h-10 w-auto rounded-md border border-primary/20" />
+          <img
+            src={boxPng}
+            alt="Claude Pilot"
+            className="h-8 sm:h-10 w-auto rounded-md border border-primary/20"
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -85,7 +90,11 @@ const NavBar = () => {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden text-foreground p-2"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>

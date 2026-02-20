@@ -40,6 +40,24 @@ So I built Pilot. Instead of adding process on top, it bakes quality into every 
 
 ---
 
+## Demo
+
+A full-stack project — created from scratch with a single prompt, then extended with **3 features built in parallel** using `/spec`. Every line of code was planned, implemented, tested, and verified entirely by AI. Zero manual code edits, zero bug fixes by a human.
+
+<div align="center">
+
+<a href="https://youtu.be/NHw8BloZB_M">
+  <img src="https://img.youtube.com/vi/NHw8BloZB_M/maxresdefault.jpg" alt="Watch the Claude Pilot Demo" width="700">
+</a>
+
+**[Watch the full demo on YouTube](https://youtu.be/NHw8BloZB_M)** · **[Browse the demo repository](https://github.com/maxritter/claude-pilot-demo)**
+
+</div>
+
+Each `/spec` prompt one-shotted a complete feature — plan, TDD implementation, automated verification, and squash merge — all running simultaneously in isolated git worktrees.
+
+---
+
 ## Before & After
 
 | Without Pilot               | With Pilot                                                      |
@@ -260,13 +278,13 @@ The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing
 <details>
 <summary><b>Session & Context</b></summary>
 
-| Command                               | Purpose                                                          |
-| ------------------------------------- | ---------------------------------------------------------------- |
+| Command                               | Purpose                                                              |
+| ------------------------------------- | -------------------------------------------------------------------- |
 | `pilot`                               | Start Claude with Pilot enhancements, auto-update, and license check |
-| `pilot run [args...]`                 | Same as above, with optional flags (e.g., `--skip-update-check`) |
-| `pilot check-context --json`          | Get current context usage percentage                             |
-| `pilot register-plan <path> <status>` | Associate a plan file with the current session                   |
-| `pilot sessions [--json]`             | Show count of active Pilot sessions                              |
+| `pilot run [args...]`                 | Same as above, with optional flags (e.g., `--skip-update-check`)     |
+| `pilot check-context --json`          | Get current context usage percentage                                 |
+| `pilot register-plan <path> <status>` | Associate a plan file with the current session                       |
+| `pilot sessions [--json]`             | Show count of active Pilot sessions                                  |
 
 </details>
 
@@ -326,16 +344,16 @@ Add your own MCP servers in `.mcp.json`. Run `/sync` after adding servers to gen
 
 #### SessionStart (on startup, clear, or compact)
 
-| Hook                        | Type     | What it does                                                          |
-| --------------------------- | -------- | --------------------------------------------------------------------- |
-| Memory loader               | Blocking | Loads persistent context from Pilot Console memory                    |
-| `post_compact_restore.py`   | Blocking | After auto-compaction: re-injects active plan, task state, and context |
-| Session tracker             | Async    | Initializes user message tracking for the session                     |
+| Hook                      | Type     | What it does                                                           |
+| ------------------------- | -------- | ---------------------------------------------------------------------- |
+| Memory loader             | Blocking | Loads persistent context from Pilot Console memory                     |
+| `post_compact_restore.py` | Blocking | After auto-compaction: re-injects active plan, task state, and context |
+| Session tracker           | Async    | Initializes user message tracking for the session                      |
 
 #### PreToolUse (before search, web, or task tools)
 
-| Hook               | Type     | What it does                                                                                                                               |
-| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hook               | Type     | What it does                                                                                                                             |
+| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `tool_redirect.py` | Blocking | Blocks WebSearch/WebFetch (MCP alternatives exist), EnterPlanMode/ExitPlanMode (/spec conflict). Hints vexor for semantic Grep patterns. |
 
 #### PostToolUse (after every Write / Edit / MultiEdit)
@@ -351,9 +369,9 @@ After **every single file edit**, these hooks fire:
 
 #### PreCompact (before auto-compaction)
 
-| Hook              | Type     | What it does                                                                                            |
-| ----------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `pre_compact.py`  | Blocking | Captures Pilot state (active plan, task list, key context) to persistent memory before compaction fires. |
+| Hook             | Type     | What it does                                                                                             |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `pre_compact.py` | Blocking | Captures Pilot state (active plan, task list, key context) to persistent memory before compaction fires. |
 
 #### Stop (when Claude tries to finish)
 
@@ -364,9 +382,9 @@ After **every single file edit**, these hooks fire:
 
 #### SessionEnd (when the session closes)
 
-| Hook              | Type     | What it does                                                                                          |
-| ----------------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `session_end.py`  | Blocking | Stops the worker daemon when no other Pilot sessions are active. Sends real-time dashboard notification. |
+| Hook             | Type     | What it does                                                                                             |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `session_end.py` | Blocking | Stops the worker daemon when no other Pilot sessions are active. Sends real-time dashboard notification. |
 
 ### Context Preservation
 
@@ -420,13 +438,13 @@ Production-tested best practices loaded into **every session**. These aren't sug
 <details>
 <summary><b>Coding Standards (5 standards, activated by file type)</b></summary>
 
-| Standard   | Activates On                                      | Coverage                                                    |
-| ---------- | ------------------------------------------------- | ----------------------------------------------------------- |
-| Python     | `*.py`                                            | uv, pytest, ruff, basedpyright, type hints                  |
-| TypeScript | `*.ts`, `*.tsx`, `*.js`, `*.jsx`                  | npm/pnpm, Jest, ESLint, Prettier, React patterns            |
-| Go         | `*.go`                                            | Modules, testing, formatting, error handling                 |
-| Frontend   | `*.tsx`, `*.jsx`, `*.html`, `*.vue`, `*.css`      | Components, CSS, accessibility, responsive design            |
-| Backend    | `**/models/**`, `**/routes/**`, `**/api/**`, etc. | API design, data models, query optimization, migrations      |
+| Standard   | Activates On                                      | Coverage                                                |
+| ---------- | ------------------------------------------------- | ------------------------------------------------------- |
+| Python     | `*.py`                                            | uv, pytest, ruff, basedpyright, type hints              |
+| TypeScript | `*.ts`, `*.tsx`, `*.js`, `*.jsx`                  | npm/pnpm, Jest, ESLint, Prettier, React patterns        |
+| Go         | `*.go`                                            | Modules, testing, formatting, error handling            |
+| Frontend   | `*.tsx`, `*.jsx`, `*.html`, `*.vue`, `*.css`      | Components, CSS, accessibility, responsive design       |
+| Backend    | `**/models/**`, `**/routes/**`, `**/api/**`, etc. | API design, data models, query optimization, migrations |
 
 </details>
 
@@ -454,25 +472,21 @@ Real-time diagnostics and go-to-definition, auto-installed and configured:
 
 All configured via `.lsp.json` with stdio transport.
 
----
-
-## Claude Pilot Console
+### Claude Pilot Console
 
 A local web dashboard at `localhost:41777` for monitoring and managing your Pilot sessions.
 
-<img src="docs/img/console.png" alt="Claude Pilot Console" width="700">
+| View               | What it shows                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| **Dashboard**      | Workspace status, active sessions, spec progress, git info, recent activity              |
+| **Specifications** | All spec plans with task progress, phase tracking, and iteration history                 |
+| **Memories**       | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
+| **Sessions**       | Active and past sessions with observation counts and duration                            |
+| **Usage**          | Daily token costs, model routing breakdown, and usage trends                             |
+| **Vault**          | Shared team assets with version tracking                                                 |
+| **Settings**       | Model selection per command/sub-agent, extended context toggle                           |
 
-| View | What it shows |
-| ---- | ------------- |
-| **Dashboard** | Workspace status, active sessions, spec progress, git info, recent activity |
-| **Specifications** | All spec plans with task progress, phase tracking, and iteration history |
-| **Memories** | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
-| **Sessions** | Active and past sessions with observation counts and duration |
-| **Usage** | Daily token costs, model routing breakdown, and usage trends |
-| **Vault** | Shared team assets with version tracking |
-| **Settings** | Model selection per command/sub-agent, extended context toggle |
-
-**Smart Notifications** — Real-time alerts via SSE when Claude needs your input or a spec phase completes. Status transitions (COMPLETE, VERIFIED, loop-back) fire automatically from `pilot register-plan`. User-attention notifications fire before approval questions in `/spec`.
+**Smart Notifications** — Real-time alerts via SSE when Claude needs your input or a spec phase completes.
 
 ---
 
@@ -492,10 +506,10 @@ A local web dashboard at `localhost:41777` for monitoring and managing your Pilo
 
 Claude Pilot is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
 
-| Tier     | Seats | Includes                                                                         |
-| :------- | :---- | :------------------------------------------------------------------------------- |
-| **Solo** | 1     | All features, continuous updates, bug reports via [GitHub Issues][gh-issues]      |
-| **Team** | Multi | Solo + multiple seats, priority email support, feature requests                  |
+| Tier     | Seats | Includes                                                                     |
+| :------- | :---- | :--------------------------------------------------------------------------- |
+| **Solo** | 1     | All features, continuous updates, bug reports via [GitHub Issues][gh-issues] |
+| **Team** | Multi | Solo + multiple seats, priority email support, feature requests              |
 
 [gh-issues]: https://github.com/maxritter/claude-pilot/issues
 
@@ -586,6 +600,20 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 **Pull Requests** — New features, improvements, and bug fixes are welcome. You can improve Pilot with Pilot — a self-improving loop where your contributions make the tool that makes contributions better.
 
 **Bug Reports** — Found a bug? [Open an issue](https://github.com/maxritter/claude-pilot/issues) on GitHub.
+
+---
+
+## Workshops & Enterprise Adoption
+
+Claude Pilot is built by [Max Ritter](https://www.maxritter.net/), a senior IT freelancer and consultant from Germany. Max helps companies and enterprises adopt Claude Code and Claude Pilot for production-grade AI-assisted development.
+
+**What's on offer:**
+
+- **Agentic Engineering Workshops** — Hands-on training for development teams on Claude Code, Claude Pilot, and spec-driven AI development
+- **Enterprise Rollout** — Introduce Claude Pilot to your team and standardize AI-assisted development across the organization
+- **Consulting** — Architecture reviews, workflow optimization, and best practices for AI-assisted development at scale
+
+**Get in touch:** [mail@maxritter.net](mailto:mail@maxritter.net)
 
 ---
 

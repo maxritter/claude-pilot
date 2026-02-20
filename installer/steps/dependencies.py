@@ -93,14 +93,20 @@ def install_python_tools() -> bool:
 
 
 def _get_forced_claude_version() -> str | None:
-    """Check ~/.claude/settings.json for FORCE_CLAUDE_VERSION in env section."""
-    settings_path = Path.home() / ".claude" / "settings.json"
-    if settings_path.exists():
-        try:
-            settings = json.loads(settings_path.read_text())
-            return settings.get("env", {}).get("FORCE_CLAUDE_VERSION")
-        except (json.JSONDecodeError, OSError):
-            pass
+    """Check settings files for FORCE_CLAUDE_VERSION in env section."""
+    paths = [
+        Path.home() / ".claude" / "pilot" / "settings.json",
+        Path.home() / ".claude" / "settings.json",
+    ]
+    for settings_path in paths:
+        if settings_path.exists():
+            try:
+                settings = json.loads(settings_path.read_text())
+                version = settings.get("env", {}).get("FORCE_CLAUDE_VERSION")
+                if version:
+                    return version
+            except (json.JSONDecodeError, OSError):
+                pass
     return None
 
 

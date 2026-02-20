@@ -14,13 +14,13 @@ INSTALLER_CHANGED=$(git diff --cached --name-only -- 'installer/' | head -1)
 
 if [ -n "$LAUNCHER_CHANGED" ]; then
   echo "[pre-commit] Python source changed — running unit tests..."
-  uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -5
+  uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -20
   echo "[pre-commit] Python unit tests passed."
 fi
 
 if [ -n "$INSTALLER_CHANGED" ]; then
   echo "[pre-commit] Installer changed — running installer unit tests..."
-  uv run pytest installer/tests/unit/ -q --tb=short 2>&1 | tail -5
+  uv run pytest installer/tests/unit/ -q --tb=short 2>&1 | tail -20
   echo "[pre-commit] Installer unit tests passed."
 fi
 
@@ -35,12 +35,12 @@ if [ -n "$CONSOLE_CHANGED" ]; then
   fi
 
   echo "[pre-commit] Console source changed — running unit tests..."
-  (cd console && bun test 2>&1) | tail -5
+  (cd console && bun test 2>&1) | tail -20
   echo "[pre-commit] Console unit tests passed."
 
   # --- 3. Console typecheck + build + stage artifacts ---
   echo "[pre-commit] Running typecheck..."
-  (cd console && bun run typecheck 2>&1) | tail -5
+  (cd console && bun run typecheck 2>&1) | tail -20
   echo "[pre-commit] Console typecheck passed."
 
   echo "[pre-commit] Rebuilding console artifacts..."

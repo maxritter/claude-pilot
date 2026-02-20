@@ -82,101 +82,87 @@ class TestIsSemanticPattern:
         assert is_semantic_pattern("config") is False
 
 
+def _run_with_input(tool_name: str, tool_input: dict | None = None) -> int:
+    """Simulate hook invocation with the given tool name and optional input."""
+    hook_data = {"tool_name": tool_name}
+    if tool_input is not None:
+        hook_data["tool_input"] = tool_input
+    stdin = StringIO(json.dumps(hook_data))
+    with patch("sys.stdin", stdin):
+        return run_tool_redirect()
+
+
 class TestBlockedTools:
     """Tests for tools that should be blocked (exit code 2)."""
 
-    def _run_with_input(self, tool_name: str, tool_input: dict | None = None) -> int:
-        hook_data = {"tool_name": tool_name}
-        if tool_input is not None:
-            hook_data["tool_input"] = tool_input
-        stdin = StringIO(json.dumps(hook_data))
-        with patch("sys.stdin", stdin):
-            return run_tool_redirect()
-
     def test_blocks_web_search(self):
-        result = self._run_with_input("WebSearch", {"query": "python tutorial"})
+        result = _run_with_input("WebSearch", {"query": "python tutorial"})
         assert result == 2
 
     def test_blocks_web_fetch(self):
-        result = self._run_with_input("WebFetch", {"url": "https://example.com"})
+        result = _run_with_input("WebFetch", {"url": "https://example.com"})
         assert result == 2
 
     def test_blocks_enter_plan_mode(self):
-        result = self._run_with_input("EnterPlanMode")
+        result = _run_with_input("EnterPlanMode")
         assert result == 2
 
     def test_blocks_exit_plan_mode(self):
-        result = self._run_with_input("ExitPlanMode")
+        result = _run_with_input("ExitPlanMode")
         assert result == 2
 
 
 class TestHintedTools:
     """Tests for tools that get hints but are allowed (exit code 0)."""
 
-    def _run_with_input(self, tool_name: str, tool_input: dict | None = None) -> int:
-        hook_data = {"tool_name": tool_name}
-        if tool_input is not None:
-            hook_data["tool_input"] = tool_input
-        stdin = StringIO(json.dumps(hook_data))
-        with patch("sys.stdin", stdin):
-            return run_tool_redirect()
-
     def test_hints_grep_with_semantic_pattern(self):
-        result = self._run_with_input("Grep", {"pattern": "where is config loaded"})
+        result = _run_with_input("Grep", {"pattern": "where is config loaded"})
         assert result == 0
 
     def test_no_hint_grep_with_code_pattern(self):
-        result = self._run_with_input("Grep", {"pattern": "def save_config"})
+        result = _run_with_input("Grep", {"pattern": "def save_config"})
         assert result == 0
 
     def test_hints_task_explore(self):
-        result = self._run_with_input("Task", {"subagent_type": "Explore"})
+        result = _run_with_input("Task", {"subagent_type": "Explore"})
         assert result == 0
 
     def test_hints_task_generic_subagent(self):
         """Non-allowed subagent types get a hint."""
-        result = self._run_with_input("Task", {"subagent_type": "general-purpose"})
+        result = _run_with_input("Task", {"subagent_type": "general-purpose"})
         assert result == 0
 
     def test_no_hint_task_spec_reviewer(self):
         """Spec reviewer sub-agents should be allowed without hints."""
-        result = self._run_with_input("Task", {"subagent_type": "pilot:spec-reviewer-compliance"})
+        result = _run_with_input("Task", {"subagent_type": "pilot:spec-reviewer-compliance"})
         assert result == 0
 
     def test_no_hint_task_plan_verifier(self):
-        result = self._run_with_input("Task", {"subagent_type": "pilot:plan-verifier"})
+        result = _run_with_input("Task", {"subagent_type": "pilot:plan-verifier"})
         assert result == 0
 
     def test_no_hint_task_plan_challenger(self):
-        result = self._run_with_input("Task", {"subagent_type": "pilot:plan-challenger"})
+        result = _run_with_input("Task", {"subagent_type": "pilot:plan-challenger"})
         assert result == 0
 
 
 class TestAllowedTools:
     """Tests for tools that should pass through without blocks or hints."""
 
-    def _run_with_input(self, tool_name: str, tool_input: dict | None = None) -> int:
-        hook_data = {"tool_name": tool_name}
-        if tool_input is not None:
-            hook_data["tool_input"] = tool_input
-        stdin = StringIO(json.dumps(hook_data))
-        with patch("sys.stdin", stdin):
-            return run_tool_redirect()
-
     def test_allows_read(self):
-        assert self._run_with_input("Read", {"file_path": "/foo.py"}) == 0
+        assert _run_with_input("Read", {"file_path": "/foo.py"}) == 0
 
     def test_allows_write(self):
-        assert self._run_with_input("Write", {"file_path": "/foo.py"}) == 0
+        assert _run_with_input("Write", {"file_path": "/foo.py"}) == 0
 
     def test_allows_edit(self):
-        assert self._run_with_input("Edit", {"file_path": "/foo.py"}) == 0
+        assert _run_with_input("Edit", {"file_path": "/foo.py"}) == 0
 
     def test_allows_bash(self):
-        assert self._run_with_input("Bash", {"command": "ls"}) == 0
+        assert _run_with_input("Bash", {"command": "ls"}) == 0
 
     def test_allows_task_create(self):
-        assert self._run_with_input("TaskCreate", {"subject": "test"}) == 0
+        assert _run_with_input("TaskCreate", {"subject": "test"}) == 0
 
 
 class TestEdgeCases:

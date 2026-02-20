@@ -53,6 +53,7 @@ describe("Search view removal", () => {
     );
     expect(source).not.toContain("Go to Search");
     expect(source).not.toContain("navigate:/search");
+    expect(source).not.toContain('"g r"');
   });
 
   it("Dashboard renders 4 workspace cards including VexorStatus", () => {

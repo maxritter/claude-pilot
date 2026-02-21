@@ -299,6 +299,153 @@ class TestPrerequisitesHelpers:
             os.environ["PATH"] = original_path
 
 
+class TestEnsureGitInstalled:
+    """Test _ensure_git_installed function."""
+
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_returns_true_when_git_already_exists(self, mock_cmd):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.return_value = True
+        assert _ensure_git_installed() is True
+
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_returns_false_on_non_linux(self, mock_cmd, mock_linux):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.return_value = False
+        mock_linux.return_value = False
+        assert _ensure_git_installed() is False
+
+    @patch("subprocess.run")
+    @patch("installer.steps.prerequisites.is_dnf_available")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_uses_dnf_on_rhel_based(self, mock_cmd, mock_linux, mock_dnf, mock_run):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.side_effect = [False, True]
+        mock_linux.return_value = True
+        mock_dnf.return_value = True
+        mock_run.return_value = MagicMock(returncode=0)
+
+        assert _ensure_git_installed() is True
+        call_args = mock_run.call_args_list[0][0][0]
+        assert "dnf" in call_args
+        assert "git" in call_args
+        assert mock_run.call_args_list[0][1].get("stdin") == subprocess.DEVNULL
+
+    @patch("subprocess.run")
+    @patch("installer.steps.prerequisites.is_dnf_available")
+    @patch("installer.steps.prerequisites.is_yum_available")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_falls_back_to_yum(self, mock_cmd, mock_linux, mock_yum, mock_dnf, mock_run):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.side_effect = [False, True]
+        mock_linux.return_value = True
+        mock_dnf.return_value = False
+        mock_yum.return_value = True
+        mock_run.return_value = MagicMock(returncode=0)
+
+        assert _ensure_git_installed() is True
+        call_args = mock_run.call_args_list[0][0][0]
+        assert "yum" in call_args
+
+    @patch("subprocess.run")
+    @patch("installer.steps.prerequisites.is_dnf_available")
+    @patch("installer.steps.prerequisites.is_yum_available")
+    @patch("installer.steps.prerequisites.is_apt_available")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_returns_false_when_no_package_manager(
+        self, mock_cmd, mock_linux, mock_apt, mock_yum, mock_dnf, mock_run
+    ):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.return_value = False
+        mock_linux.return_value = True
+        mock_dnf.return_value = False
+        mock_yum.return_value = False
+        mock_apt.return_value = False
+
+        assert _ensure_git_installed() is False
+        mock_run.assert_not_called()
+
+    @patch("subprocess.run")
+    @patch("installer.steps.prerequisites.is_dnf_available")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.command_exists")
+    def test_returns_false_on_install_failure(self, mock_cmd, mock_linux, mock_dnf, mock_run):
+        from installer.steps.prerequisites import _ensure_git_installed
+
+        mock_cmd.return_value = False
+        mock_linux.return_value = True
+        mock_dnf.return_value = True
+        mock_run.return_value = MagicMock(returncode=1)
+
+        assert _ensure_git_installed() is False
+
+
+class TestPrerequisitesStepRunGitInstall:
+    """Test that PrerequisitesStep.run installs git before Homebrew."""
+
+    @patch("installer.steps.prerequisites._install_homebrew")
+    @patch("installer.steps.prerequisites._ensure_git_installed")
+    @patch("installer.steps.prerequisites.command_exists")
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    def test_run_installs_git_before_homebrew_when_missing(
+        self, mock_brew, mock_cmd, mock_git, mock_homebrew_install
+    ):
+        from installer.context import InstallContext
+        from installer.steps.prerequisites import PrerequisitesStep
+        from installer.ui import Console
+
+        mock_brew.return_value = False
+        mock_cmd.return_value = False
+        mock_git.return_value = True
+        mock_homebrew_install.return_value = False
+
+        step = PrerequisitesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                is_local_install=True,
+                ui=Console(non_interactive=True),
+            )
+            step.run(ctx)
+
+        mock_git.assert_called_once()
+
+    @patch("installer.steps.prerequisites._install_homebrew")
+    @patch("installer.steps.prerequisites._ensure_git_installed")
+    @patch("installer.steps.prerequisites.command_exists")
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    def test_run_skips_git_install_when_already_present(
+        self, mock_brew, mock_cmd, mock_git, mock_homebrew_install
+    ):
+        from installer.context import InstallContext
+        from installer.steps.prerequisites import PrerequisitesStep
+        from installer.ui import Console
+
+        mock_brew.return_value = False
+        mock_cmd.return_value = True
+        mock_homebrew_install.return_value = False
+
+        step = PrerequisitesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                is_local_install=True,
+                ui=Console(non_interactive=True),
+            )
+            step.run(ctx)
+
+        mock_git.assert_not_called()
+
+
 class TestInstallHomebrew:
     """Test _install_homebrew function."""
 

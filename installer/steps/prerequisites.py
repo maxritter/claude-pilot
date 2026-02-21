@@ -11,9 +11,11 @@ from installer.context import InstallContext
 from installer.platform_utils import (
     command_exists,
     is_apt_available,
+    is_dnf_available,
     is_homebrew_available,
     is_in_devcontainer,
     is_linux,
+    is_yum_available,
 )
 from installer.steps.base import BaseStep
 
@@ -43,6 +45,42 @@ def _is_nvm_installed() -> bool:
     try:
         result = subprocess.run(["brew", "list", "nvm"], capture_output=True, check=False, timeout=30)
         return result.returncode == 0
+    except (subprocess.SubprocessError, OSError):
+        return False
+
+
+def _ensure_git_installed() -> bool:
+    """Install git via system package manager if missing (required by Homebrew)."""
+    if command_exists("git"):
+        return True
+    if not is_linux():
+        return False
+
+    pkg_cmds: list[list[str]] = []
+    if is_dnf_available():
+        pkg_cmds = [["sudo", "-n", "dnf", "install", "-y", "git"]]
+    elif is_yum_available():
+        pkg_cmds = [["sudo", "-n", "yum", "install", "-y", "git"]]
+    elif is_apt_available():
+        pkg_cmds = [
+            ["sudo", "-n", "apt-get", "update", "-qq"],
+            ["sudo", "-n", "apt-get", "install", "-y", "git"],
+        ]
+    else:
+        return False
+
+    try:
+        for cmd in pkg_cmds:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                check=False,
+                stdin=subprocess.DEVNULL,
+                timeout=120,
+            )
+            if result.returncode != 0:
+                return False
+        return command_exists("git")
     except (subprocess.SubprocessError, OSError):
         return False
 
@@ -150,36 +188,27 @@ def _get_command_for_package(package: str) -> str:
 
 
 def _install_ripgrep_via_apt() -> bool:
-    """Install ripgrep via apt on Debian/Ubuntu Linux.
-
-    Uses sudo -n (non-interactive) and stdin=DEVNULL so sudo fails immediately
-    if it needs a password instead of hanging indefinitely.
-    """
+    """Install ripgrep via apt on Debian/Ubuntu Linux."""
     if not is_linux() or not is_apt_available():
         return False
-    for attempt in range(MAX_RETRIES):
-        try:
-            subprocess.run(
-                ["sudo", "-n", "apt-get", "update", "-qq"],
-                capture_output=True,
-                check=False,
-                stdin=subprocess.DEVNULL,
-                timeout=60,
-            )
-            result = subprocess.run(
-                ["sudo", "-n", "apt-get", "install", "-y", "ripgrep"],
-                capture_output=True,
-                check=False,
-                stdin=subprocess.DEVNULL,
-                timeout=120,
-            )
-            if result.returncode == 0:
-                return True
-        except (subprocess.SubprocessError, OSError):
-            pass
-        if attempt < MAX_RETRIES - 1:
-            time.sleep(RETRY_DELAY)
-    return False
+    try:
+        subprocess.run(
+            ["sudo", "-n", "apt-get", "update", "-qq"],
+            capture_output=True,
+            check=False,
+            stdin=subprocess.DEVNULL,
+            timeout=60,
+        )
+        result = subprocess.run(
+            ["sudo", "-n", "apt-get", "install", "-y", "ripgrep"],
+            capture_output=True,
+            check=False,
+            stdin=subprocess.DEVNULL,
+            timeout=120,
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, OSError):
+        return False
 
 
 class PrerequisitesStep(BaseStep):
@@ -216,6 +245,17 @@ class PrerequisitesStep(BaseStep):
         ui = ctx.ui
 
         if not is_homebrew_available():
+            if not command_exists("git"):
+                if ui:
+                    with ui.spinner("Installing git (required by Homebrew)..."):
+                        git_ok = _ensure_git_installed()
+                    if git_ok:
+                        ui.success("git installed")
+                    else:
+                        ui.warning("Could not install git - please install manually")
+                else:
+                    _ensure_git_installed()
+
             if ui:
                 ui.info("Homebrew not found, installing...")
                 with ui.spinner("Installing Homebrew..."):

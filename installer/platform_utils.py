@@ -87,6 +87,16 @@ def is_apt_available() -> bool:
     return shutil.which("apt-get") is not None
 
 
+def is_dnf_available() -> bool:
+    """Check if dnf is available (RHEL 8+/AlmaLinux/Rocky/Fedora)."""
+    return shutil.which("dnf") is not None
+
+
+def is_yum_available() -> bool:
+    """Check if yum is available (older RHEL/CentOS)."""
+    return shutil.which("yum") is not None
+
+
 def is_linux() -> bool:
     """Check if running on Linux."""
     import platform

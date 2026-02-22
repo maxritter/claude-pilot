@@ -2,6 +2,19 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.10.1] - 2026-02-22
+
+### Bug Fixes
+
+- Minimize external data to license key and fingerprint only
+- Simplify Vercel rewrite rule to fix SPA routing 404s
+
+### Miscellaneous
+
+- Improve mobile responsiveness for hero buttons, pricing cards, and workflow diagram
+- Add Vercel ignored build step to skip redundant deployments
+- Replace hero Get Started button with View on GitHub and Read Documentation
+
 ## [6.10.0] - 2026-02-22
 
 ### Features

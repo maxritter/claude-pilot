@@ -1,5 +1,5 @@
 ---
-description: Extract reusable knowledge into skills - online learning system
+description: Use after significant debugging, workarounds, or multi-step workflows worth standardizing for future sessions
 model: sonnet
 ---
 
@@ -71,9 +71,9 @@ Skills must be:
 name: descriptive-kebab-case-name
 description: |
   [CRITICAL: This determines when the skill triggers. Include:]
-  - What the skill does
+  - When to use it (trigger conditions, scenarios — NOT what the skill does)
   - Specific trigger conditions (exact error messages, symptoms)
-  - When to use it (contexts, scenarios)
+  - Contexts where it applies
 author: Claude Code
 version: 1.0.0
 ---
@@ -106,11 +106,13 @@ version: 1.0.0
 ```
 
 <details>
-<summary>Writing Effective Descriptions</summary>
+<summary>Writing Effective Descriptions (⚠️ The Description Trap)</summary>
 
-The description field is CRITICAL for skill discovery:
+The description field is CRITICAL for skill discovery. **Describe WHEN to use the skill, NEVER summarize HOW it works.**
 
-**Good:**
+**Why this matters:** If the description summarizes the workflow/process, Claude follows the short description as a shortcut instead of reading the full SKILL.md. The skill's detailed steps, examples, and nuances get ignored.
+
+**Good** (trigger conditions):
 
 ```yaml
 description: |
@@ -119,10 +121,10 @@ description: |
   not in packages, (3) symlinked dependencies cause failures.
 ```
 
-**Bad:**
+**Bad** (workflow summary — Claude will follow this instead of reading the skill):
 
 ```yaml
-description: Helps with npm problems in monorepos.
+description: Extract and organize npm monorepo fixes by analyzing symlinks and paths.
 ```
 
 </details>

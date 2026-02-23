@@ -56,13 +56,22 @@ paths:
 
 **Commit to a clear aesthetic. Every visual choice must be intentional.**
 
-1. **Purpose** — What does this communicate? 2. **Audience** — Developers? Consumers? 3. **Tone** — Minimalist, editorial, playful, etc. 4. **Differentiator** — One memorable element.
+**Before coding, answer these four questions:**
 
-- **Typography:** Display font for personality, body font for readability. Max 2 fonts. Avoid defaults (Inter, Roboto, Arial).
-- **Color:** Clear hierarchy: Primary (CTAs) → Accent → Neutral → Semantic. Dark mode: design separately, not just invert.
+1. **Purpose** — What does this interface communicate? Who uses it?
+2. **Audience** — Developers? Consumers? Internal tooling?
+3. **Tone** — Minimalist, editorial, playful, industrial, luxury, retro-futuristic, etc.
+4. **Differentiator** — What's the one thing someone will remember?
+
+Then execute that direction with precision across every detail below.
+
+- **Typography:** Display font for personality, body font for readability. Max 2 fonts. Avoid defaults (Inter, Roboto, Arial, system fonts). Distinctive, characterful choices elevate the entire interface.
+- **Color:** Clear hierarchy: Primary (CTAs) → Accent → Neutral → Semantic. Dominant colors with sharp accents outperform timid, evenly-distributed palettes. Dark mode: design separately, not just invert.
 - **Spacing:** Generous whitespace. Cramped = low quality.
-- **Motion:** Every animation has purpose. Max 500ms. Always respect `prefers-reduced-motion`.
-- **Avoid AI aesthetic:** Purple gradients on white, symmetric 3-column grids, rounded cards with shadow, gradient text everywhere.
+- **Spatial Composition:** Break out of predictable grid layouts. Use asymmetry, overlapping elements, diagonal flow, or grid-breaking accents to create visual interest. Controlled density and unexpected placement make interfaces feel designed rather than templated.
+- **Visual Depth:** Create atmosphere beyond solid backgrounds. Use gradient meshes, subtle noise textures, layered transparencies, dramatic shadows, decorative borders, or grain overlays — matched to the overall aesthetic. Flat and empty ≠ minimal; depth creates polish.
+- **Motion:** Every animation has purpose. Max 500ms. Always respect `prefers-reduced-motion`. Prefer one well-orchestrated page load with staggered reveals (`animation-delay`) over scattered micro-interactions. Use scroll-triggered animations and surprising hover states for high-impact moments. CSS-only for HTML; Motion library for React when available.
+- **Avoid AI aesthetic:** Purple gradients on white, symmetric 3-column grids, rounded cards with shadow, gradient text everywhere, overused font families (Inter, Space Grotesk), cookie-cutter component patterns.
 
 ## Checklist
 
@@ -70,4 +79,4 @@ paths:
 - [ ] CSS: project methodology, design tokens, no `!important`
 - [ ] Accessible: keyboard, labels, contrast 4.5:1, alt text
 - [ ] Responsive: mobile-first, fluid, touch targets ≥ 44px
-- [ ] Design: intentional direction, no AI anti-patterns
+- [ ] Design: intentional direction, visual depth, composition, no AI anti-patterns

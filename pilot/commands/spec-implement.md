@@ -206,14 +206,19 @@ TaskCreate: "Task 4: Add documentation"            → id=4, addBlockedBy: [2]
 6. **Run actual program** - Use the plan's Runtime Environment section to start the service/program. Show real output with sample data. Check port availability first: `lsof -i :<port>`. **If using `playwright-cli`, use session isolation:** `playwright-cli -s="${PILOT_SESSION_ID:-default}" open <url>` (see `playwright-cli.md`). Always close the session after verification.
 7. **Check diagnostics** - Must be zero errors
 8. **Validate Definition of Done** - Check all criteria from plan
-9. **Per-task commit (worktree mode only)** - If `Worktree: Yes` in the plan, commit task changes immediately:
+9. **Self-Review (Fresh Eyes)** - Before committing, re-examine your changes as if seeing them for the first time:
+   - **Completeness:** Did I miss any requirements from the task objective?
+   - **Quality:** Are names clear? Is the code readable without comments explaining what it does?
+   - **Discipline:** Did I add anything not in the task scope? (YAGNI — remove it)
+   - **Testing:** Do tests verify behavior (inputs → outputs), not implementation details (mock calls)?
+10. **Per-task commit (worktree mode only)** - If `Worktree: Yes` in the plan, commit task changes immediately:
    ```bash
    git add <task-specific-files>  # Stage only files related to this task
    git commit -m "{type}(spec): {task-name}"
    ```
    Use `feat(spec):` for new features, `fix(spec):` for bug fixes, `test(spec):` for test-only tasks, `refactor(spec):` for refactoring. Skip this step when `Worktree: No` (normal git rules apply).
-10. **Mark task as `completed`** - `TaskUpdate(taskId="<id>", status="completed")`
-11. **UPDATE PLAN FILE IMMEDIATELY** (see Step 2.4)
+11. **Mark task as `completed`** - `TaskUpdate(taskId="<id>", status="completed")`
+12. **UPDATE PLAN FILE IMMEDIATELY** (see Step 2.4)
 
 **⚠️ NEVER SKIP TASKS:**
 

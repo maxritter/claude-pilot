@@ -300,6 +300,36 @@ If the task is clear and unambiguous with no meaningful gray areas, skip directl
 3. Identify integration points and potential risks
 4. Note reusable patterns
 
+### Step 1.3b: Present Findings & Brainstorm (Scope Selection) — CONDITIONAL
+
+**Only do this step when exploration revealed multiple possible directions or the scope is ambiguous.** Skip for straightforward tasks where the scope is clear from the user's request (e.g., "fix this bug", "add a logout button", "refactor the auth module").
+
+**Triggers for this step:**
+- Task is exploratory or open-ended ("analyze X and see what we can improve", "find gaps in our system")
+- Exploration uncovered significantly more opportunities than the user likely expected
+- Multiple valid approaches exist and user preference matters for scoping
+
+**Process:**
+
+1. **Send notification** so the user knows their input is needed:
+
+   ```bash
+   ~/.pilot/bin/pilot notify plan_approval "Findings Ready" "<plan_name> — review discovered items and select what to include" --plan-path "<plan_path>" 2>/dev/null || true
+   ```
+
+2. **List ALL discovered gaps/opportunities** with a brief assessment for each (1-2 sentences: what it is, why it matters or doesn't, effort level).
+
+3. **Use AskUserQuestion with `multiSelect: true`** to let the user pick which items to include:
+
+   ```
+   Question: "Which of these items should we include in the plan?"
+   Header: "Scope"
+   multiSelect: true
+   Options: [each discovered item as an option with description]
+   ```
+
+4. **Only proceed to Step 1.4 with the user's selected scope.** Items not selected go into the plan's "Out of Scope" or "Deferred Ideas" section.
+
 ### Step 1.4: Design Decisions
 
 **Present findings and gather all design decisions (Question Batch 2).**

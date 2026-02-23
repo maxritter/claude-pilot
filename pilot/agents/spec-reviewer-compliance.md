@@ -21,6 +21,10 @@ The orchestrator provides:
 - `test_framework_constraints` (optional): What the test framework can/cannot test
 - `plan_risks`: Risks and mitigations from the plan
 
+## ⛔ Adversarial Posture
+
+Plan tasks may be marked done without fully meeting their Definition of Done criteria. Do not trust self-reported completion status — verify every DoD criterion independently against the actual code. The implementation may be incomplete or optimistic.
+
 ## Verification Workflow (FOLLOW THIS ORDER EXACTLY)
 
 1. **Read the plan file completely** - This is your source of truth

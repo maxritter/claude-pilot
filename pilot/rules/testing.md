@@ -66,9 +66,11 @@ Use `playwright-cli` to verify what the user sees. See `playwright-cli.md` for c
 ### Anti-Patterns
 
 - **Dependent tests** — each test must work independently
-- **Testing implementation, not behavior** — test outputs, not internals
-- **Incomplete mock data** — must match real API structure
+- **Testing implementation, not behavior** — assert outputs and state changes, not that specific mocks were called. `assert result == expected` not `mock.assert_called_with(...)`. If the implementation changes but behavior stays the same, tests should still pass.
+- **Incomplete mocks hiding structural assumptions** — mocks must mirror the complete real API structure, not just the fields you think you need. Partial mocks hide coupling to downstream fields and break when the real API returns additional or different data.
 - **Unnecessary mocks** — only for external deps
+- **Test-only methods in production** — never add methods, properties, or flags to production classes purely for test access. If you need internal state for testing, refactor the design so the behavior is observable through public interfaces.
+- **Mocking without understanding** — before mocking a dependency, understand what it actually does. A mock that doesn't reflect real behavior is a lie — tests pass against the lie, then fail against reality.
 
 ### Completion Checklist
 

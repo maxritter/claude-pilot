@@ -30,6 +30,43 @@
 
 **Meta-Debugging:** Treat your own code as foreign. Your mental model is a guess — the code's behavior is truth.
 
+#### Defense-in-Depth & Root-Cause Tracing
+
+**After fixing a bug, make it structurally impossible — not just patched.**
+
+When a bug is caused by invalid data flowing through multiple layers:
+
+1. **Trace backward** from symptom through the call chain to the original trigger. Use LSP `incomingCalls` or add `new Error().stack` instrumentation before the failing operation. Fix at the source — never fix just where the error appears.
+2. **Then add validation at every layer** the data passes through:
+
+| Layer | Purpose | Example |
+|-------|---------|---------|
+| Entry point | Reject invalid input at API boundary | Validate non-empty, exists, correct type |
+| Business logic | Ensure data makes sense for this operation | Validate required fields for specific context |
+| Environment guards | Prevent dangerous operations in specific contexts | Refuse destructive ops outside temp dirs in tests |
+| Debug instrumentation | Capture context for forensics | Log directory, cwd, stack trace before risky ops |
+
+**Single validation = "we fixed the bug". All four layers = "we made the bug impossible."**
+
+#### Condition-Based Waiting (Test Flakiness)
+
+**Replace arbitrary `sleep`/`setTimeout` with polling for the actual condition.**
+
+```
+# ❌ Guessing at timing (flaky)
+await sleep(500)
+result = get_result()
+
+# ✅ Wait for the condition (reliable)
+result = await wait_for(lambda: get_result() is not None, timeout=5.0)
+```
+
+**When to use:** Tests with arbitrary delays, flaky tests, waiting for async operations.
+
+**When NOT to use:** Testing actual timing behavior (debounce, throttle) — document WHY the timeout is needed.
+
+**Rules:** Poll every 10ms (not 1ms — wastes CPU). Always include timeout with clear error message. Call getter inside loop for fresh data (no stale cache).
+
 ### Git Operations
 
 **Read git state freely. NEVER execute write commands without EXPLICIT user permission.**

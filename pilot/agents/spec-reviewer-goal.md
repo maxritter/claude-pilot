@@ -39,6 +39,10 @@ Detect the project language from:
 - If changed files include `.sh`, `.bash`, `.py` hook scripts → apply Shell/Python patterns
 - Mixed projects: apply patterns per-file
 
+#### ⛔ Adversarial Posture
+
+For code changes: artifacts may exist but be stubs, disconnected, or only partially wired together. Verify that components are substantive and actually connected — not just present. For Markdown-only changes: verify content is substantive and placed correctly — wiring checks are not applicable.
+
 ### Step 1: Goal-Backward Truth Derivation
 
 Read the plan file completely. Then follow this preference order:

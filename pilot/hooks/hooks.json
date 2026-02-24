@@ -1,5 +1,5 @@
 {
-  "description": "Claude Pilot hooks - memory system and quality checks",
+  "description": "Pilot Shell hooks - memory system and quality checks",
   "hooks": {
     "SessionStart": [
       {

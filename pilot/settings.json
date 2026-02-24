@@ -134,7 +134,7 @@
       "[PILOT] Install a specific version: export VERSION=x.y.z before running the install script",
       "[PILOT] Platforms: macOS, Linux, and Windows (WSL2) are all supported",
       "[PILOT] Dev Container recommended — isolated environment, no system conflicts",
-      "[PILOT] Please star the repository: github.com/maxritter/claude-pilot",
+      "[PILOT] Please star the repository: github.com/maxritter/pilot-shell",
       "[PILOT] Fun fact: Pilot is built with Pilot — a self-improving development loop"
     ],
     "excludeDefault": true

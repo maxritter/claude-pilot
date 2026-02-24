@@ -963,4 +963,4 @@ class TestResolveRepoUrl:
         step = ClaudeFilesStep()
         result = step._resolve_repo_url("v5.0.0")
 
-        assert result == "https://github.com/maxritter/claude-pilot"
+        assert result == "https://github.com/maxritter/pilot-shell"

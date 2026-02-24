@@ -1,12 +1,12 @@
 {
-  "name": "claude-pilot-plugin",
-  "version": "6.11.0",
-  "description": "Claude Pilot Plugin",
+  "name": "pilot-shell-plugin",
+  "version": "6.10.3",
+  "description": "Pilot Shell Plugin",
   "author": {
     "name": "Max Ritter",
     "email": "mail@maxritter.net"
   },
-  "repository": "https://github.com/maxritter/claude-pilot",
+  "repository": "https://github.com/maxritter/pilot-shell",
   "license": "Proprietary",
-  "keywords": ["pilot", "claude-pilot"]
+  "keywords": ["pilot", "pilot-shell"]
 }

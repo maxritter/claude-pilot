@@ -28,7 +28,7 @@ SETTINGS_FILE = "settings.json"
 SETTINGS_BASELINE_FILE = ".pilot-settings-baseline.json"
 PILOT_MANIFEST_FILE = ".pilot-manifest.json"
 
-REPO_URL = "https://github.com/maxritter/claude-pilot"
+REPO_URL = "https://github.com/maxritter/pilot-shell"
 
 SKIP_PATTERNS = (
     "__pycache__",

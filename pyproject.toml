@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 include = ["launcher*", "installer*"]
 
 [project]
-name = "claude-pilot"
+name = "pilot-shell"
 version = "1.0.0"
-description = "Claude Pilot"
+description = "Pilot Shell"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [

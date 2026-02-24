@@ -126,53 +126,6 @@ wheels = [
 ]
 
 [[package]]
-name = "claude-pilot"
-version = "1.0.0"
-source = { editable = "." }
-dependencies = [
-    { name = "cryptography" },
-    { name = "cython" },
-    { name = "platformdirs" },
-    { name = "rich" },
-    { name = "setuptools" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "basedpyright" },
-    { name = "build" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-    { name = "tox" },
-    { name = "vexor" },
-    { name = "vulture" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cryptography", specifier = ">=44.0.0" },
-    { name = "cython", specifier = ">=3.0.0" },
-    { name = "platformdirs", specifier = ">=4.3.6" },
-    { name = "rich", specifier = ">=14.0.0" },
-    { name = "setuptools", specifier = ">=61.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "basedpyright", specifier = ">=1.32.1" },
-    { name = "build", specifier = ">=1.3.0" },
-    { name = "pytest", specifier = ">=8.3.3" },
-    { name = "pytest-asyncio", specifier = ">=0.24.0" },
-    { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "ruff", specifier = ">=0.12.3" },
-    { name = "tox", specifier = ">=4.28.4" },
-    { name = "vexor", specifier = ">=0.22.0" },
-    { name = "vulture", specifier = ">=2.14" },
-]
-
-[[package]]
 name = "click"
 version = "8.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -612,6 +565,53 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/c8/993d4b7ab2e341fe02ceef9576afcf5830cdec640be2ac5bee1820d693d4/pillow-12.1.0-cp312-cp312-win32.whl", hash = "sha256:aa0c9cc0b82b14766a99fbe6084409972266e82f459821cd26997a488a7261a7", size = 6328770, upload-time = "2026-01-02T09:11:25.661Z" },
     { url = "https://files.pythonhosted.org/packages/a7/87/90b358775a3f02765d87655237229ba64a997b87efa8ccaca7dd3e36e7a7/pillow-12.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:d70534cea9e7966169ad29a903b99fc507e932069a881d0965a1a84bb57f6c6d", size = 7033406, upload-time = "2026-01-02T09:11:27.474Z" },
     { url = "https://files.pythonhosted.org/packages/5d/cf/881b457eccacac9e5b2ddd97d5071fb6d668307c57cbf4e3b5278e06e536/pillow-12.1.0-cp312-cp312-win_arm64.whl", hash = "sha256:65b80c1ee7e14a87d6a068dd3b0aea268ffcabfe0498d38661b00c5b4b22e74c", size = 2452612, upload-time = "2026-01-02T09:11:29.309Z" },
+]
+
+[[package]]
+name = "pilot-shell"
+version = "1.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "cryptography" },
+    { name = "cython" },
+    { name = "platformdirs" },
+    { name = "rich" },
+    { name = "setuptools" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "basedpyright" },
+    { name = "build" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+    { name = "tox" },
+    { name = "vexor" },
+    { name = "vulture" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cryptography", specifier = ">=44.0.0" },
+    { name = "cython", specifier = ">=3.0.0" },
+    { name = "platformdirs", specifier = ">=4.3.6" },
+    { name = "rich", specifier = ">=14.0.0" },
+    { name = "setuptools", specifier = ">=61.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "basedpyright", specifier = ">=1.32.1" },
+    { name = "build", specifier = ">=1.3.0" },
+    { name = "pytest", specifier = ">=8.3.3" },
+    { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "ruff", specifier = ">=0.12.3" },
+    { name = "tox", specifier = ">=4.28.4" },
+    { name = "vexor", specifier = ">=0.22.0" },
+    { name = "vulture", specifier = ">=2.14" },
 ]
 
 [[package]]

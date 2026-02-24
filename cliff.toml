@@ -1,4 +1,4 @@
-# git-cliff configuration for Claude Pilot
+# git-cliff configuration for Pilot Shell
 # https://git-cliff.org/docs/configuration
 
 [changelog]
@@ -6,7 +6,7 @@
 header = """
 # Changelog
 
-All notable changes to Claude Pilot will be documented in this file.
+All notable changes to Pilot Shell will be documented in this file.
 
 """
 # Body template - Keep a Changelog format

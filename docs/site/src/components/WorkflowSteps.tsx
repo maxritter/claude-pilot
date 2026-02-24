@@ -121,7 +121,7 @@ const WorkflowSteps = () => {
                   </code>
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  For features and complex changes
+                  For features, bug fixes, and complex changes
                 </p>
               </div>
             </div>
@@ -143,14 +143,14 @@ const WorkflowSteps = () => {
                   Quick Mode
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  For bug fixes and small tasks
+                  For small tasks and quick questions
                 </p>
               </div>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Just chat — no plan file, no approval gate. All quality hooks and
-              TDD enforcement still apply. Great for quick fixes, questions, and
-              exploration.
+              TDD enforcement still apply. Great for small changes, questions,
+              and exploration.
             </p>
           </div>
         </div>
@@ -319,8 +319,9 @@ const WorkflowSteps = () => {
                 <code className="text-sm font-medium text-primary">/spec</code>
               </div>
               <p className="text-xs text-muted-foreground">
-                Spec-Driven Development — plan, approve, implement, verify. The
-                full structured workflow for features and complex changes.
+                Spec-Driven Development — plan, approve, implement, verify.
+                Features and bug fixes. Auto-detects bugfix intent from the task
+                description.
               </p>
             </div>
             <div className="rounded-xl p-4 border border-border/40 bg-background/30">

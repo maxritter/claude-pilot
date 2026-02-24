@@ -9,6 +9,7 @@ interface PlanInfo {
   iterations: number;
   approved: boolean;
   worktree: boolean;
+  specType?: "Feature" | "Bugfix";
   filePath?: string;
 }
 
@@ -38,6 +39,11 @@ function PlanRow({ plan }: { plan: PlanInfo }) {
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium text-sm truncate" title={plan.name}>
           {plan.name}
+          {plan.specType === "Bugfix" && (
+            <span className="ml-1.5 text-xs text-warning font-normal">
+              bugfix
+            </span>
+          )}
         </span>
         <div className="flex items-center gap-2 shrink-0">
           <Badge

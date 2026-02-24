@@ -543,6 +543,34 @@ def install_ccusage() -> bool:
     return _run_bash_with_retry(npm_global_cmd("npm install -g ccusage@latest"))
 
 
+def _is_fast_check_installed() -> bool:
+    """Check if fast-check is installed globally via npm."""
+    try:
+        result = subprocess.run(
+            ["npm", "list", "-g", "fast-check", "--depth=0"],
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0 and "fast-check" in result.stdout
+    except Exception:
+        return False
+
+
+def install_pbt_tools() -> bool:
+    """Install property-based testing packages: hypothesis (Python) and fast-check (TypeScript).
+
+    Go PBT is handled by the built-in 'go test -fuzz' (Go 1.18+) — no install needed.
+    Both packages are best-effort: failure does not block installation.
+    """
+    if not command_exists("hypothesis"):
+        _run_bash_with_retry("uv tool install hypothesis")
+
+    if not _is_fast_check_installed():
+        _run_bash_with_retry(npm_global_cmd("npm install -g fast-check"))
+
+    return True
+
+
 def _get_playwright_cache_dirs() -> list[Path]:
     """Get possible Playwright cache directories for the current platform."""
     import platform
@@ -902,6 +930,9 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "golangci-lint (Go linter)", install_golangci_lint):
             installed.append("golangci_lint")
+
+        if _install_with_spinner(ui, "PBT tools (hypothesis, fast-check)", install_pbt_tools):
+            installed.append("pbt_tools")
 
         if _install_with_spinner(ui, "ccusage (usage tracking)", install_ccusage):
             installed.append("ccusage")

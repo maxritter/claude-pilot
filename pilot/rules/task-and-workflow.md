@@ -72,8 +72,10 @@ The Task tool spawns verification sub-agents at two points:
 
 | Phase | Agents (parallel, run in background) | `subagent_type` |
 |-------|--------------------------------------|-----------------|
-| `spec-plan` Step 1.7 | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
+| `spec-plan` Step 1.7 (features only) | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
 | `spec-verify` Step 3.0, 3.7 | spec-reviewer-compliance + spec-reviewer-quality + spec-reviewer-goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
+
+**Note:** `spec-bugfix-plan` skips plan verification agents — bugfix plans are tight enough (fixed task structure, behavior contract) that the user approval gate is sufficient.
 
 All verification agents have `background: true` in their agent definitions, so they run in the background automatically. **As a fallback**, also pass `run_in_background=true` in the Task() call.
 
@@ -115,20 +117,38 @@ Call after creating plan header, reading existing plan, and after status changes
 **⛔ When `/spec` is invoked, the structured workflow is MANDATORY.** Everything after `/spec` is the task description.
 
 ```
-/spec → Dispatcher
-          ├→ Skill('spec-plan')      → Plan, verify, approve
-          ├→ Skill('spec-implement') → TDD loop for each task
-          └→ Skill('spec-verify')    → Tests, execution, code review
+/spec → Dispatcher → Detect type (LLM intent) → Feature: Skill('spec-plan') → Plan, verify, approve
+                                                → Bugfix:  Skill('spec-bugfix-plan') → Bug analysis, verify, approve
+                   → Skill('spec-implement')   → TDD loop for each task (both types)
+                   → Skill('spec-verify')      → Tests, execution, code review (both types)
 ```
+
+### ⛔ Dispatcher Integrity
+
+**The `/spec` dispatcher is a thin router, not a thinking step.** Its only permitted tool calls are:
+
+1. `AskUserQuestion` (worktree choice + type confirmation when ambiguous, new plans only)
+2. `Skill()` invocation
+
+**Any other tool use in the dispatcher — Read (except plan files), Bash, Grep, Glob, WebFetch, Task, or ANY research/exploration tool — is a workflow violation.** All substantive work (research, brainstorming, exploration, web fetches, file reads) happens inside the invoked Skill phase, never in the dispatcher.
+
+**Why this matters:** If the dispatcher does substantive work instead of invoking a Skill, no plan file is created, no stop guard fires, and the entire spec workflow silently disappears. The user typed `/spec` expecting a structured workflow, and gets freeform chat instead.
 
 ### Phase Dispatch
 
-| Status | Approved | Skill Invoked |
-|--------|----------|---------------|
-| PENDING | No | `Skill(skill='spec-plan', args='<plan-path>')` |
-| PENDING | Yes | `Skill(skill='spec-implement', args='<plan-path>')` |
-| COMPLETE | * | `Skill(skill='spec-verify', args='<plan-path>')` |
-| VERIFIED | * | Report completion, done |
+**For new tasks (no `.md` path):** Dispatcher infers spec type from the task description using LLM judgment. Clearly a bugfix → `spec-bugfix-plan`. Clearly a feature → `spec-plan`. Ambiguous → ask user (bundled with worktree question in a single AskUserQuestion).
+
+**For existing plans (`.md` path):** Dispatcher reads `Type:` header for PENDING+unapproved routing.
+
+| Status | Approved | Type | Skill Invoked |
+|--------|----------|------|---------------|
+| PENDING | No | Feature (or absent) | `Skill(skill='spec-plan', args='<plan-path>')` |
+| PENDING | No | Bugfix | `Skill(skill='spec-bugfix-plan', args='<plan-path>')` |
+| PENDING | Yes | * | `Skill(skill='spec-implement', args='<plan-path>')` |
+| COMPLETE | * | * | `Skill(skill='spec-verify', args='<plan-path>')` |
+| VERIFIED | * | * | Report completion, done |
+
+**`spec-implement` and `spec-verify` work identically for both plan types** — the plan file is the interface.
 
 ### Feedback Loop
 
@@ -138,8 +158,8 @@ spec-verify finds issues → Status: PENDING → spec-implement fixes → COMPLE
 
 ### ⛔ Only THREE User Interaction Points
 
-1. **Worktree Choice** (new plans only, in dispatcher)
-2. **Plan Approval** (in spec-plan)
+1. **Worktree Choice + Type Confirmation** (new plans only, in dispatcher — type only asked when ambiguous)
+2. **Plan Approval** (in spec-plan or spec-bugfix-plan)
 3. **Worktree Sync Approval** (in spec-verify, only when `Worktree: Yes`)
 
 Everything else is automatic. **NEVER ask "Should I fix these findings?"** — verification fixes are part of the approved plan.
@@ -164,4 +184,4 @@ Update plan file after EACH task: `[ ]` → `[x]`, increment Done, decrement Lef
 
 ## No Stopping — Automatic Continuation
 
-The ONLY user interaction points are worktree choice, plan approval, and worktree sync approval.
+The ONLY user interaction points are worktree choice (+ type confirmation when ambiguous), plan approval, and worktree sync approval.

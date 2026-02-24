@@ -31,6 +31,7 @@ class TestDependenciesStep:
             )
             assert step.check(ctx) is False
 
+    @patch("installer.steps.dependencies.install_pbt_tools", return_value=True)
     @patch("installer.steps.dependencies.install_golangci_lint", return_value=True)
     @patch("installer.steps.dependencies.install_prettier", return_value=True)
     @patch("installer.steps.dependencies._precache_npx_mcp_servers", return_value=True)
@@ -53,6 +54,7 @@ class TestDependenciesStep:
         _mock_precache,
         _mock_prettier,
         _mock_golangci_lint,
+        _mock_pbt_tools,
     ):
         """DependenciesStep installs all dependencies including Python tools."""
         from installer.context import InstallContext
@@ -970,3 +972,66 @@ class TestInstallGolangciLint:
         result = install_golangci_lint()
 
         assert result is False
+
+
+class TestInstallPbtTools:
+    """Tests for install_pbt_tools() — property-based testing packages."""
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies._is_fast_check_installed", return_value=False)
+    @patch("installer.steps.dependencies.command_exists", return_value=False)
+    def test_install_pbt_tools_installs_hypothesis_when_missing(self, _mock_cmd, _mock_fc, mock_run):
+        """install_pbt_tools installs hypothesis when not already installed."""
+        from installer.steps.dependencies import install_pbt_tools
+
+        install_pbt_tools()
+
+        calls = [str(c) for c in mock_run.call_args_list]
+        assert any("hypothesis" in c for c in calls)
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies._is_fast_check_installed", return_value=False)
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_pbt_tools_skips_hypothesis_when_present(self, _mock_cmd, _mock_fc, mock_run):
+        """install_pbt_tools skips hypothesis install when already present."""
+        from installer.steps.dependencies import install_pbt_tools
+
+        install_pbt_tools()
+
+        calls = [str(c) for c in mock_run.call_args_list]
+        assert not any("hypothesis" in c for c in calls)
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies._is_fast_check_installed", return_value=False)
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_pbt_tools_installs_fast_check_when_missing(self, _mock_cmd, _mock_fc, mock_run):
+        """install_pbt_tools installs fast-check when not already installed."""
+        from installer.steps.dependencies import install_pbt_tools
+
+        install_pbt_tools()
+
+        calls = [str(c) for c in mock_run.call_args_list]
+        assert any("fast-check" in c for c in calls)
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies._is_fast_check_installed", return_value=True)
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_pbt_tools_skips_fast_check_when_present(self, _mock_cmd, _mock_fc, mock_run):
+        """install_pbt_tools skips fast-check install when already present."""
+        from installer.steps.dependencies import install_pbt_tools
+
+        install_pbt_tools()
+
+        calls = [str(c) for c in mock_run.call_args_list]
+        assert not any("fast-check" in c for c in calls)
+
+    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
+    @patch("installer.steps.dependencies._is_fast_check_installed", return_value=True)
+    @patch("installer.steps.dependencies.command_exists", return_value=True)
+    def test_install_pbt_tools_returns_true_when_all_present(self, _mock_cmd, _mock_fc, _mock_run):
+        """install_pbt_tools returns True when all packages already installed."""
+        from installer.steps.dependencies import install_pbt_tools
+
+        result = install_pbt_tools()
+
+        assert result is True

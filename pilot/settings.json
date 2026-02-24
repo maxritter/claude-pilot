@@ -74,8 +74,8 @@
   "spinnerTipsOverride": {
     "tips": [
       "[PILOT] Run /sync after installation to sync rules and skills with your codebase",
-      "[PILOT] Use /spec for complex features — creates a plan you can review before implementation",
-      "[PILOT] Quick Mode: Just chat for bug fixes and small changes (all quality hooks still apply)",
+      "[PILOT] Use /spec for features AND bug fixes — structured planning, TDD, and code review for both",
+      "[PILOT] Quick Mode: Just chat for small changes and exploration (all quality hooks still apply)",
       "[PILOT] Press Ctrl+R to search command history | Ctrl+C to cancel current operation",
       "[PILOT] Press Escape twice to cancel a running operation",
       "[PILOT] Check /help for all available commands and shortcuts",

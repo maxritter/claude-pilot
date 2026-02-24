@@ -17,6 +17,7 @@ export interface PlanInfo {
   iterations: number;
   approved: boolean;
   worktree: boolean;
+  specType?: "Feature" | "Bugfix";
   filePath: string;
   modifiedAt: string;
 }
@@ -39,13 +40,21 @@ export function parsePlanContent(
   const total = completedTasks + remainingTasks;
 
   const approvedMatch = content.match(/^Approved:\s*(\w+)/m);
-  const approved = approvedMatch ? approvedMatch[1].toLowerCase() === "yes" : false;
+  const approved = approvedMatch
+    ? approvedMatch[1].toLowerCase() === "yes"
+    : false;
 
   const iterMatch = content.match(/^Iterations:\s*(\d+)/m);
   const iterations = iterMatch ? parseInt(iterMatch[1], 10) : 0;
 
   const worktreeMatch = content.match(/^Worktree:\s*(\w+)/m);
-  const worktree = worktreeMatch ? worktreeMatch[1].toLowerCase() !== "no" : true;
+  const worktree = worktreeMatch
+    ? worktreeMatch[1].toLowerCase() !== "no"
+    : true;
+
+  const typeMatch = content.match(/^Type:\s*(\w+)/m);
+  const specType =
+    typeMatch?.[1] === "Bugfix" ? ("Bugfix" as const) : undefined;
 
   let phase: "plan" | "implement" | "verify";
   if (status === "PENDING" && !approved) {
@@ -70,6 +79,7 @@ export function parsePlanContent(
     iterations,
     approved,
     worktree,
+    ...(specType && { specType }),
     filePath,
     modifiedAt: modifiedAt.toISOString(),
   };
@@ -95,8 +105,7 @@ export function getWorktreePlansDirs(projectRoot: string): string[] {
         dirs.push(plansDir);
       }
     }
-  } catch {
-  }
+  } catch {}
   return dirs;
 }
 
@@ -115,13 +124,23 @@ function scanPlansDir(plansDir: string): PlanInfo[] {
       const filePath = path.join(plansDir, planFile);
       const stat = statSync(filePath);
       const content = readFileSync(filePath, "utf-8");
-      const planInfo = parsePlanContent(content, planFile, filePath, stat.mtime);
+      const planInfo = parsePlanContent(
+        content,
+        planFile,
+        filePath,
+        stat.mtime,
+      );
       if (planInfo) {
         plans.push(planInfo);
       }
     }
   } catch (error) {
-    logger.error("HTTP", "Failed to read plans from directory", { plansDir }, error as Error);
+    logger.error(
+      "HTTP",
+      "Failed to read plans from directory",
+      { plansDir },
+      error as Error,
+    );
   }
   return plans;
 }
@@ -162,14 +181,24 @@ export function getActivePlans(projectRoot: string): PlanInfo[] {
         }
 
         const content = readFileSync(filePath, "utf-8");
-        const planInfo = parsePlanContent(content, planFile, filePath, stat.mtime);
+        const planInfo = parsePlanContent(
+          content,
+          planFile,
+          filePath,
+          stat.mtime,
+        );
 
         if (planInfo && planInfo.status !== "VERIFIED") {
           activePlans.push(planInfo);
         }
       }
     } catch (error) {
-      logger.error("HTTP", "Failed to read active plans", { plansDir }, error as Error);
+      logger.error(
+        "HTTP",
+        "Failed to read active plans",
+        { plansDir },
+        error as Error,
+      );
     }
   }
 
@@ -184,7 +213,10 @@ export function getAllPlans(projectRoot: string): PlanInfo[] {
   }
 
   return allPlans
-    .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime(),
+    )
     .slice(0, 10);
 }
 
@@ -195,7 +227,10 @@ export function getActiveSpecs(projectRoot: string): PlanInfo[] {
     allPlans.push(...scanPlansDir(plansDir));
   }
 
-  return allPlans.sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+  return allPlans.sort(
+    (a, b) =>
+      new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime(),
+  );
 }
 
 export function getPlanStats(projectRoot: string): {
@@ -217,14 +252,22 @@ export function getPlanStats(projectRoot: string): {
 
   if (allPlans.length === 0) {
     return {
-      totalSpecs: 0, verified: 0, inProgress: 0, pending: 0,
-      avgIterations: 0, totalTasksCompleted: 0, totalTasks: 0,
-      completionTimeline: [], recentlyVerified: [],
+      totalSpecs: 0,
+      verified: 0,
+      inProgress: 0,
+      pending: 0,
+      avgIterations: 0,
+      totalTasksCompleted: 0,
+      totalTasks: 0,
+      completionTimeline: [],
+      recentlyVerified: [],
     };
   }
 
   const verified = allPlans.filter((p) => p.status === "VERIFIED");
-  const inProgress = allPlans.filter((p) => (p.status === "PENDING" && p.approved) || p.status === "COMPLETE");
+  const inProgress = allPlans.filter(
+    (p) => (p.status === "PENDING" && p.approved) || p.status === "COMPLETE",
+  );
   const pending = allPlans.filter((p) => p.status === "PENDING" && !p.approved);
   const verifiedIter = verified.reduce((sum, p) => sum + p.iterations, 0);
   const totalTasksCompleted = allPlans.reduce((sum, p) => sum + p.completed, 0);
@@ -240,7 +283,10 @@ export function getPlanStats(projectRoot: string): {
     .map(([date, count]) => ({ date, count }));
 
   const recentlyVerified = verified
-    .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime(),
+    )
     .slice(0, 5)
     .map((p) => ({ name: p.name, verifiedAt: p.modifiedAt }));
 
@@ -249,7 +295,10 @@ export function getPlanStats(projectRoot: string): {
     verified: verified.length,
     inProgress: inProgress.length,
     pending: pending.length,
-    avgIterations: verified.length > 0 ? Math.round((verifiedIter / verified.length) * 10) / 10 : 0,
+    avgIterations:
+      verified.length > 0
+        ? Math.round((verifiedIter / verified.length) * 10) / 10
+        : 0,
     totalTasksCompleted,
     totalTasks,
     completionTimeline,

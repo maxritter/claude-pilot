@@ -57,6 +57,7 @@ interface PlanInfo {
   iterations: number;
   approved: boolean;
   worktree: boolean;
+  specType?: "Feature" | "Bugfix";
   filePath?: string;
 }
 

@@ -5,6 +5,8 @@ import {
   Code2,
   Shield,
   ArrowRight,
+  Wrench,
+  Zap,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
@@ -106,8 +108,13 @@ const SpecSection = () => {
             API to GraphQL"
           </div>
           <div className="pl-2">
-            <span className="text-primary">&gt;</span> /spec "Refactor the order
-            processing pipeline for parallel execution"
+            <span className="text-primary">&gt;</span>{" "}
+            <span className="text-amber-400">
+              /spec "Fix the crash when deleting nodes with two children"
+            </span>
+            <span className="text-muted-foreground/60 text-xs ml-2">
+              {/* bugfix auto-detected */}
+            </span>
           </div>
         </div>
 
@@ -137,6 +144,74 @@ const SpecSection = () => {
             Everything else runs automatically. The Verify → Implement feedback
             loop repeats until all checks pass, then prompts for squash merge.
           </p>
+        </div>
+
+        {/* Spec Types */}
+        <div className="grid sm:grid-cols-2 gap-4 mb-6">
+          <div className="rounded-xl p-4 border border-sky-400/30 bg-card/30">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 bg-sky-400/10 rounded-lg flex items-center justify-center">
+                <Zap className="h-3.5 w-3.5 text-sky-400" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">
+                Feature Spec
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Full exploration workflow for new functionality, refactoring, or
+              any work where architecture decisions matter.
+            </p>
+            <div className="space-y-1.5">
+              {[
+                "Codebase exploration with Vexor semantic search",
+                "Architecture design decisions via Q&A",
+                "Full plan with scope, risks, and DoD",
+                "Three verification agents (compliance, quality, goal)",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-2 text-xs text-muted-foreground"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-sky-400 flex-shrink-0 mt-0.5" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl p-4 border border-amber-400/30 bg-card/30">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 bg-amber-400/10 rounded-lg flex items-center justify-center">
+                <Wrench className="h-3.5 w-3.5 text-amber-400" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">
+                Bugfix Spec{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  auto-detected
+                </span>
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Lighter, property-aware flow for targeted fixes. Defines the bug
+              precisely before touching any code.
+            </p>
+            <div className="space-y-1.5">
+              {[
+                "Bug Condition (C): exact broken state description",
+                "Postcondition (P): what must be true after the fix",
+                "Behavior Contract: Must Change / Must NOT Change",
+                "Test-before-fix: bug test FAILS → preservation tests PASS → fix",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-2 text-xs text-muted-foreground"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Three phases */}

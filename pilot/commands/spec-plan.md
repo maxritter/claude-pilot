@@ -199,6 +199,7 @@ hooks:
    Approved: No
    Iterations: 0
    Worktree: [Yes|No - from dispatcher's --worktree flag]
+   Type: Feature
 
    > Planning in progress...
 
@@ -446,6 +447,7 @@ Status: PENDING
 Approved: No
 Iterations: 0
 Worktree: No
+Type: Feature
 
 > **Status Lifecycle:** PENDING → COMPLETE → VERIFIED
 > **Iterations:** Tracks implement→verify cycles (incremented by verify phase)
@@ -456,6 +458,7 @@ Worktree: No
 >
 > **Approval Gate:** Implementation CANNOT proceed until `Approved: Yes`
 > **Worktree:** Set at plan creation (from dispatcher). `Yes` uses git worktree isolation; `No` works directly on current branch (default)
+> **Type:** `Feature` or `Bugfix` — set at planning time, used by dispatcher for routing
 
 ## Summary
 

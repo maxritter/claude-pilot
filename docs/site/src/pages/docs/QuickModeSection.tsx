@@ -44,20 +44,20 @@ const QuickModeSection = () => {
             <span className="text-primary">$</span> pilot
           </div>
           <div className="pl-2">
-            <span className="text-primary">&gt;</span> Fix the null pointer bug
-            in user.py
-          </div>
-          <div className="pl-2">
-            <span className="text-primary">&gt;</span> Add pagination to the
-            products API
-          </div>
-          <div className="pl-2">
-            <span className="text-primary">&gt;</span> Refactor the auth
-            middleware to use JWT
+            <span className="text-primary">&gt;</span> Add a loading spinner to
+            the submit button
           </div>
           <div className="pl-2">
             <span className="text-primary">&gt;</span> Write tests for the
             OrderService class
+          </div>
+          <div className="pl-2">
+            <span className="text-primary">&gt;</span> Explain how the auth
+            middleware works
+          </div>
+          <div className="pl-2">
+            <span className="text-primary">&gt;</span> Rename the
+            &quot;products&quot; table to &quot;items&quot; across the codebase
           </div>
         </div>
 
@@ -87,10 +87,9 @@ const QuickModeSection = () => {
             <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">
               /spec
             </code>{" "}
-            when the task is complex enough that you want to review a plan
-            before implementation begins, when multiple developers need
-            visibility into what's being built, or when you're tackling a
-            refactor with many interdependent changes.
+            for bug fixes (structured bug analysis with Behavior Contract and
+            test-before-fix), complex features that need a plan before
+            implementation, or refactors with many interdependent changes.
           </p>
         </div>
       </div>

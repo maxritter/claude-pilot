@@ -116,7 +116,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Claude 
 8-step installer with progress tracking, rollback on failure, and idempotent re-runs:
 
 1. **Prerequisites** — Checks Homebrew, Node.js, Python 3.12+, uv, git
-2. **Dependencies** — Installs Vexor, playwright-cli, Claude Code
+2. **Dependencies** — Installs Vexor, playwright-cli, Claude Code, property-based testing tools
 3. **Shell integration** — Auto-configures bash, fish, and zsh with `pilot` alias
 4. **Config & Claude files** — Sets up `.claude/` plugin, rules, commands, hooks, MCP servers
 5. **VS Code extensions** — Installs recommended extensions for your stack
@@ -179,11 +179,12 @@ pilot
 
 ### /spec — Spec-Driven Development
 
-Best for complex features, refactoring, or when you want to review a plan before implementation:
+Best for features, bug fixes, refactoring, or when you want to review a plan before implementation. Auto-detects whether the task is a feature or bug fix and adapts the planning flow accordingly.
 
 ```bash
 pilot
 > /spec "Add user authentication with OAuth and JWT tokens"
+> /spec "Fix the crash when deleting nodes with two children"
 ```
 
 ```
@@ -251,11 +252,11 @@ Pilot uses the right model for each phase — Opus where reasoning quality matte
 
 ### Quick Mode
 
-Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement still apply.
+Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement still apply. Best for small tasks, exploration, and quick questions.
 
 ```bash
 pilot
-> Fix the null pointer bug in user.py
+> Add a loading spinner to the submit button
 ```
 
 ### /learn — Online Learning

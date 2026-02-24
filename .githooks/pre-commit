@@ -8,6 +8,12 @@
 
 set -eo pipefail
 
+# --- Skip in worktrees (spec workflow commits are squash-merged later) ---
+if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ] && \
+   [ "$(git rev-parse --git-dir)" != ".git" ]; then
+  exit 0
+fi
+
 # --- 1. Python unit tests ---
 LAUNCHER_CHANGED=$(git diff --cached --name-only -- 'launcher/' 'pilot/hooks/' | head -1)
 INSTALLER_CHANGED=$(git diff --cached --name-only -- 'installer/' | head -1)

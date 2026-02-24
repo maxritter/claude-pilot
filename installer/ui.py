@@ -117,7 +117,7 @@ class Console:
         return self._quiet
 
     def banner(self, license_info: dict[str, Any] | None = None) -> None:
-        """Print the Claude Pilot banner with feature highlights.
+        """Print the Pilot Shell banner with feature highlights.
 
         Args:
             license_info: Current license info dict (tier, email, etc.) or None if not yet checked.
@@ -126,12 +126,12 @@ class Console:
             return
 
         logo = """
-[bold blue]   ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗    ██████╗ ██╗██╗      ██████╗ ████████╗[/bold blue]
-[bold blue]  ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝    ██╔══██╗██║██║     ██╔═══██╗╚══██╔══╝[/bold blue]
-[bold blue]  ██║     ██║     ███████║██║   ██║██║  ██║█████╗      ██████╔╝██║██║     ██║   ██║   ██║[/bold blue]
-[bold blue]  ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝      ██╔═══╝ ██║██║     ██║   ██║   ██║[/bold blue]
-[bold blue]  ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ██║     ██║███████╗╚██████╔╝   ██║[/bold blue]
-[bold blue]   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝    ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝[/bold blue]
+[bold blue]  ██████╗ ██╗██╗      ██████╗ ████████╗    ███████╗██╗  ██╗███████╗██╗     ██╗     [/bold blue]
+[bold blue]  ██╔══██╗██║██║     ██╔═══██╗╚══██╔══╝    ██╔════╝██║  ██║██╔════╝██║     ██║     [/bold blue]
+[bold blue]  ██████╔╝██║██║     ██║   ██║   ██║       ███████╗███████║█████╗  ██║     ██║     [/bold blue]
+[bold blue]  ██╔═══╝ ██║██║     ██║   ██║   ██║       ╚════██║██╔══██║██╔══╝  ██║     ██║     [/bold blue]
+[bold blue]  ██║     ██║███████╗╚██████╔╝   ██║       ███████║██║  ██║███████╗███████╗███████╗[/bold blue]
+[bold blue]  ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝       ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝[/bold blue]
 """
         self._console.print(logo)
 
@@ -178,14 +178,14 @@ class Console:
                 license_text.append("  ⚠ ", style="red")
                 license_text.append("Trial Expired", style="bold red")
                 license_text.append(" — Subscribe: ", style="dim white")
-                license_text.append("https://claude-pilot.com", style="cyan")
+                license_text.append("https://pilot-shell.com", style="cyan")
             else:
                 expires_at = license_info.get("expires_at") if license_info else None
                 time_str = _get_trial_time_str(days, expires_at)
                 license_text.append("  ⏳ ", style="yellow")
                 license_text.append(f"Trial ({time_str} remaining)", style="bold yellow")
                 license_text.append(" — Subscribe: ", style="dim white")
-                license_text.append("https://claude-pilot.com", style="cyan")
+                license_text.append("https://pilot-shell.com", style="cyan")
             self._console.print(license_text)
             self._console.print()
 

@@ -157,7 +157,7 @@ Claude Code passes context to hooks via environment variables:
 
 ## How Pilot Uses Hooks
 
-Claude Pilot installs several hooks automatically:
+Pilot Shell installs several hooks automatically:
 
 - **TDD Enforcer** (PostToolUse): Reminds Claude to write tests before production code
 - **Context Monitor** (PostToolUse): Tracks context usage and warns at ~80% and ~90%+ as compaction approaches

@@ -74,23 +74,23 @@ const BlogPage = () => {
   const blogStructuredData = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    "name": "Claude Pilot Blog",
+    "name": "Pilot Shell Blog",
     "description": "Guides and insights on Claude Code, AI-powered development workflows, TDD enforcement, and quality automation",
-    "url": "https://claude-pilot.com/blog",
+    "url": "https://pilot-shell.com/blog",
     "publisher": {
       "@type": "Organization",
-      "name": "Claude Pilot",
-      "url": "https://claude-pilot.com"
+      "name": "Pilot Shell",
+      "url": "https://pilot-shell.com"
     }
   };
 
   return (
     <>
       <SEO
-        title="Blog - Claude Pilot"
+        title="Blog - Pilot Shell"
         description="Learn how to master Claude Code with our in-depth guides on TDD enforcement, context management, and custom rules configuration."
         keywords="Claude Code blog, AI development guides, TDD enforcement, Claude Code tutorials, context management, custom rules"
-        canonicalUrl="https://claude-pilot.com/blog"
+        canonicalUrl="https://pilot-shell.com/blog"
         structuredData={blogStructuredData}
       />
       <NavBar />
@@ -99,7 +99,7 @@ const BlogPage = () => {
           {/* Hero Section */}
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span>Claude Pilot </span>
+              <span>Pilot Shell </span>
               <span className="relative inline-block">
                 <span
                   className={`inline-block bg-primary/20 text-primary px-4 py-1 rounded-lg transition-all duration-200 ${fadeClass}`}

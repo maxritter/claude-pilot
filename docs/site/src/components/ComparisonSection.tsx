@@ -45,7 +45,7 @@ const ComparisonSection = () => {
           ref={cardsRef}
           className={`grid md:grid-cols-2 gap-6 sm:gap-8 stagger-children ${cardsInView ? "in-view" : ""}`}
         >
-          {/* Without Claude Pilot */}
+          {/* Without Pilot Shell */}
           <div className="glass rounded-2xl p-5 sm:p-6 relative border-slate-500/20 hover:border-slate-500/30 transition-colors">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-slate-500/20 text-slate-400 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
               Without Structure
@@ -105,10 +105,10 @@ const ComparisonSection = () => {
             </div>
           </div>
 
-          {/* With Claude Pilot */}
+          {/* With Pilot Shell */}
           <div className="glass rounded-2xl p-5 sm:p-6 relative border-primary/20 hover:border-primary/30 transition-colors">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-primary/20 text-primary px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
-              With Claude Pilot
+              With Pilot Shell
             </div>
 
             {/* Terminal window */}

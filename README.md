@@ -1,30 +1,30 @@
 <div align="center">
 
-<img src="docs/img/logo.png" alt="Claude Pilot" width="400">
+<img src="docs/img/logo.png" alt="Pilot Shell" width="400">
 
 ### Claude Code is powerful. Pilot makes it reliable.
 
 Start a task, grab a coffee, come back to production-grade code.</br>
 **Tests enforced. Context preserved. Quality automated.**
 
-[![Stars](https://img.shields.io/github/stars/maxritter/claude-pilot?style=flat&color=F59E0B)](https://github.com/maxritter/claude-pilot/stargazers)
-[![Star History](https://img.shields.io/badge/Star_History-chart-8B5CF6)](https://star-history.com/#maxritter/claude-pilot&Date)
-[![Downloads](https://img.shields.io/github/downloads/maxritter/claude-pilot/total?color=3B82F6)](https://github.com/maxritter/claude-pilot/releases)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981.svg)](https://github.com/maxritter/claude-pilot/pulls)
+[![Stars](https://img.shields.io/github/stars/maxritter/pilot-shell?style=flat&color=F59E0B)](https://github.com/maxritter/pilot-shell/stargazers)
+[![Star History](https://img.shields.io/badge/Star_History-chart-8B5CF6)](https://star-history.com/#maxritter/pilot-shell&Date)
+[![Downloads](https://img.shields.io/github/downloads/maxritter/pilot-shell/total?color=3B82F6)](https://github.com/maxritter/pilot-shell/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981.svg)](https://github.com/maxritter/pilot-shell/pulls)
 
-⭐ [Star this repo](https://github.com/maxritter/claude-pilot) · 🌐 [Website](https://claude-pilot.com) · 🔔 [Follow for updates](https://www.linkedin.com/in/rittermax/) · 📋 [Changelog](https://pilot.openchangelog.com/) · 📄 [License](LICENSE)
+⭐ [Star this repo](https://github.com/maxritter/pilot-shell) · 🌐 [Website](https://pilot-shell.com) · 🔔 [Follow for updates](https://www.linkedin.com/in/rittermax/) · 📋 [Changelog](https://pilot.openchangelog.com/) · 📄 [License](LICENSE)
 
 <br>
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 
 **Works on macOS, Linux, and Windows (WSL2).**
 
 <br>
 
-<img src="docs/img/demo.gif" alt="Claude Pilot Demo" width="800">
+<img src="docs/img/demo.gif" alt="Pilot Shell Demo" width="800">
 
 </div>
 
@@ -47,10 +47,10 @@ A full-stack project — created from scratch with a single prompt, then extende
 <div align="center">
 
 <a href="https://youtu.be/S7faAK931NU">
-  <img src="https://img.youtube.com/vi/S7faAK931NU/maxresdefault.jpg" alt="Watch the Claude Pilot Demo" width="700">
+  <img src="https://img.youtube.com/vi/S7faAK931NU/maxresdefault.jpg" alt="Watch the Pilot Shell Demo" width="700">
 </a>
 
-**[Watch the full demo on YouTube](https://youtu.be/S7faAK931NU)** · **[Browse the demo repository](https://github.com/maxritter/claude-pilot-demo)**
+**[Watch the full demo on YouTube](https://youtu.be/S7faAK931NU)** · **[Browse the demo repository](https://github.com/maxritter/pilot-shell-demo)**
 
 </div>
 
@@ -100,7 +100,7 @@ The system stays fast because it stays simple. Quick mode is direct execution wi
 **Works with any existing project.** Pilot doesn't scaffold or restructure your code — it installs alongside your project and adapts to your conventions. `cd` into your project folder, then run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 
 **Choose your environment:**
@@ -108,7 +108,7 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install
 - **Local Installation** — Install directly on your system using Homebrew. Works on macOS, Linux, and Windows (WSL2).
 - **Dev Container** — Pre-configured, isolated environment with all tools ready. No system conflicts and works on any OS.
 
-After installation, run `pilot` or `ccp` in your project folder to start Claude Pilot.
+After installation, run `pilot` or `ccp` in your project folder to start Pilot Shell.
 
 <details>
 <summary><b>What the installer does</b></summary>
@@ -128,19 +128,19 @@ After installation, run `pilot` or `ccp` in your project folder to start Claude 
 
 ### Installing a Specific Version
 
-If the current version has issues, you can install a specific stable version (see [releases](https://github.com/maxritter/claude-pilot/releases)):
+If the current version has issues, you can install a specific stable version (see [releases](https://github.com/maxritter/pilot-shell/releases)):
 
 ```bash
-export VERSION=6.11.0
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
+export VERSION=6.10.3
+curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 
 ### Uninstalling
 
-To completely remove Claude Pilot:
+To completely remove Pilot Shell:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/uninstall.sh | bash
 ```
 
 This removes the Pilot binary, plugin files, managed commands/rules, settings and shell aliases.
@@ -339,7 +339,7 @@ Create your own in your project's `.claude/` folder:
 | **Commands** | On demand via `/command`                     | Specific workflows or multi-step tasks |
 | **Skills**   | On demand, created via `/learn`              | Reusable knowledge from past sessions  |
 
-Claude Pilot automatically installs best-practice rules, commands, and coding standards. Standards rules use `paths` frontmatter to activate only when you're working with matching file types (e.g., Python standards load only when editing `.py` files). Custom skills are created by `/learn` when it detects non-obvious discoveries, workarounds, or reusable workflows — and can be shared across your team via `/vault`.
+Pilot Shell automatically installs best-practice rules, commands, and coding standards. Standards rules use `paths` frontmatter to activate only when you're working with matching file types (e.g., Python standards load only when editing `.py` files). Custom skills are created by `/learn` when it detects non-obvious discoveries, workarounds, or reusable workflows — and can be shared across your team via `/vault`.
 
 ### Custom MCP Servers
 
@@ -483,7 +483,7 @@ Real-time diagnostics and go-to-definition, auto-installed and configured:
 
 All configured via `.lsp.json` with stdio transport.
 
-### Claude Pilot Console
+### Pilot Shell Console
 
 A local web dashboard at `localhost:41777` for monitoring and managing your Pilot sessions.
 
@@ -515,16 +515,16 @@ A local web dashboard at `localhost:41777` for monitoring and managing your Pilo
 
 ## License
 
-Claude Pilot is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
+Pilot Shell is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
 
 | Tier     | Seats | Includes                                                                     |
 | :------- | :---- | :--------------------------------------------------------------------------- |
 | **Solo** | 1     | All features, continuous updates, bug reports via [GitHub Issues][gh-issues] |
 | **Team** | Multi | Solo + multiple seats, priority email support, feature requests              |
 
-[gh-issues]: https://github.com/maxritter/claude-pilot/issues
+[gh-issues]: https://github.com/maxritter/pilot-shell/issues
 
-Details and licensing at [claude-pilot.com](https://claude-pilot.com).
+Details and licensing at [pilot-shell.com](https://pilot-shell.com).
 
 ---
 
@@ -541,7 +541,7 @@ Pilot makes external calls **only for licensing**. Here is the complete list:
 | --------------------------------- | ------------------ | ---------------------------------- |
 | License validation (once per 24h) | `api.polar.sh`     | License key, organization ID       |
 | License activation (once)         | `api.polar.sh`     | License key, machine fingerprint   |
-| Trial start (once)                | `claude-pilot.com` | Hashed hardware fingerprint        |
+| Trial start (once)                | `pilot-shell.com` | Hashed hardware fingerprint        |
 
 That's it — three calls total, each sent at most once (validation re-checks daily). No OS, no architecture, no Python version, no locale, no analytics, no heartbeats. The validation result is cached locally, and Pilot works fully offline for up to 7 days between checks. Beyond these licensing calls, the only external communication is between Claude Code and Anthropic's API — using your own subscription or API key.
 
@@ -608,7 +608,7 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 
 **Pull Requests** — New features, improvements, and bug fixes are welcome. You can improve Pilot with Pilot — a self-improving loop where your contributions make the tool that makes contributions better.
 
-**Bug Reports** — Found a bug? [Open an issue](https://github.com/maxritter/claude-pilot/issues) on GitHub.
+**Bug Reports** — Found a bug? [Open an issue](https://github.com/maxritter/pilot-shell/issues) on GitHub.
 
 ---
 

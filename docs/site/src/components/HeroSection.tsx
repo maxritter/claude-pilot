@@ -136,7 +136,7 @@ const HeroSection = () => {
             className="w-full sm:w-auto text-sm xs:text-base"
           >
             <a
-              href="https://github.com/maxritter/claude-pilot"
+              href="https://github.com/maxritter/pilot-shell"
               target="_blank"
               rel="noopener noreferrer"
             >

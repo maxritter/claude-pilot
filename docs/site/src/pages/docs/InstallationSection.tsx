@@ -54,10 +54,10 @@ const installerSteps = [
 ];
 
 const INSTALL_CMD =
-  "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash";
+  "curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash";
 
 const UNINSTALL_CMD =
-  "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/uninstall.sh | bash";
+  "curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/uninstall.sh | bash";
 
 const InstallationSection = () => {
   const [ref, inView] = useInView<HTMLDivElement>();
@@ -186,7 +186,7 @@ const InstallationSection = () => {
             <p className="text-xs text-muted-foreground mt-2">
               See{" "}
               <a
-                href="https://github.com/maxritter/claude-pilot/releases"
+                href="https://github.com/maxritter/pilot-shell/releases"
                 className="text-primary hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"

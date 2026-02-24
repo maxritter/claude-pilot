@@ -11,11 +11,11 @@ interface SEOProps {
 }
 
 const SEO = ({
-  title = "Claude Pilot - Claude Code is powerful. Pilot makes it reliable.",
+  title = "Pilot Shell - Claude Code is powerful. Pilot makes it reliable.",
   description = "Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated.",
-  keywords = "Claude Pilot, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
-  canonicalUrl = "https://claude-pilot.com",
-  ogImage = "https://claude-pilot.com/logo.png",
+  keywords = "Pilot Shell, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
+  canonicalUrl = "https://pilot-shell.com",
+  ogImage = "https://pilot-shell.com/logo.png",
   type = "website",
   structuredData
 }: SEOProps) => {
@@ -38,7 +38,7 @@ const SEO = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content="Claude Pilot" />
+      <meta property="og:site_name" content="Pilot Shell" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

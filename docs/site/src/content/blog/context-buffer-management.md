@@ -33,7 +33,7 @@ The buffer exists for legitimate reasons. But understanding exactly how it works
 
 Claude Code monitors your context usage continuously. When usage hits approximately 83.5% of the raw context window (up from the previous ~77-78%), auto-compaction triggers.
 
-> **Note:** Claude Pilot's status bar rescales this to an effective 0–100% range, where 83.5% raw = 100% effective. This means the bar fills completely right before compaction fires — no hidden buffer confusion.
+> **Note:** Pilot Shell's status bar rescales this to an effective 0–100% range, where 83.5% raw = 100% effective. This means the bar fills completely right before compaction fires — no hidden buffer confusion.
 
 Here's what happens:
 

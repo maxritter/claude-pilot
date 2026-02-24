@@ -73,7 +73,7 @@ The threshold: if the task touches more than 5 files or requires architectural d
 
 ## How Pilot Automates This
 
-Claude Pilot's `/spec` command orchestrates the entire workflow:
+Pilot Shell's `/spec` command orchestrates the entire workflow:
 
 ```
 /spec Add password reset with email verification

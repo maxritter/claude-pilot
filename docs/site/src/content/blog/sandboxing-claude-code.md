@@ -91,13 +91,13 @@ pilot
 
 Everything Claude does — file edits, shell commands, test runs — happens inside the container. Your host filesystem is untouched.
 
-## Claude Pilot + Dev Containers
+## Pilot Shell + Dev Containers
 
 Pilot's installer detects dev containers automatically. Run the installer inside the container and it sets up everything:
 
 ```bash
 # Inside the dev container
-curl -fsSL https://claude-pilot.com/install | bash
+curl -fsSL https://pilot-shell.com/install | bash
 ```
 
 Pilot installs its hooks, rules, and tools into the container environment. When you rebuild the container, run the installer again (add it to `postCreateCommand` for automation).
@@ -118,7 +118,7 @@ RUN apt-get update && apt-get install -y \
 RUN npm install -g @anthropic-ai/claude-code
 
 # Install Pilot
-RUN curl -fsSL https://claude-pilot.com/install | bash
+RUN curl -fsSL https://pilot-shell.com/install | bash
 ```
 
 Reference it in `devcontainer.json`:

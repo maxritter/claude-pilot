@@ -95,7 +95,7 @@ What's needed is a way to make sessions **continuous** — to preserve the accum
 
 ## Context Preservation: Automatic Continuity
 
-This is the problem that Claude Pilot's context management was designed to solve. Instead of treating the context limit as a hard wall that destroys your progress, auto-compaction turns it into a seamless checkpoint.
+This is the problem that Pilot Shell's context management was designed to solve. Instead of treating the context limit as a hard wall that destroys your progress, auto-compaction turns it into a seamless checkpoint.
 
 Here's how it works:
 
@@ -173,4 +173,4 @@ The developers who get the most out of Claude Code aren't the ones who write the
 
 ---
 
-*Claude Pilot provides intelligent context management with auto-compaction, persistent memory across sessions, and context monitoring hooks. [Get started with Claude Pilot](https://claude-pilot.com/#installation) to make your Claude Code sessions flow without interruption.*
+*Pilot Shell provides intelligent context management with auto-compaction, persistent memory across sessions, and context monitoring hooks. [Get started with Pilot Shell](https://pilot-shell.com/#installation) to make your Claude Code sessions flow without interruption.*

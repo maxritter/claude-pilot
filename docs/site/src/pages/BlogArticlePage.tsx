@@ -27,16 +27,16 @@ const BlogArticlePage = () => {
     },
     "publisher": {
       "@type": "Organization",
-      "name": "Claude Pilot",
-      "url": "https://claude-pilot.com",
+      "name": "Pilot Shell",
+      "url": "https://pilot-shell.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://claude-pilot.com/logo.png"
+        "url": "https://pilot-shell.com/logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://claude-pilot.com/blog/${article.slug}`
+      "@id": `https://pilot-shell.com/blog/${article.slug}`
     },
     "keywords": article.keywords
   };
@@ -44,10 +44,10 @@ const BlogArticlePage = () => {
   return (
     <>
       <SEO
-        title={`${article.title} - Claude Pilot Blog`}
+        title={`${article.title} - Pilot Shell Blog`}
         description={article.description}
         keywords={article.keywords}
-        canonicalUrl={`https://claude-pilot.com/blog/${article.slug}`}
+        canonicalUrl={`https://pilot-shell.com/blog/${article.slug}`}
         type="article"
         structuredData={blogPostingStructuredData}
       />

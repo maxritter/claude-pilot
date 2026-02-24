@@ -13,9 +13,9 @@ OF THIS LICENSE AGREEMENT. IF YOU DO NOT AGREE, DO NOT USE THE SOFTWARE.
 1. DEFINITIONS
 
 "Licensor" means Max Ritter (@maxritter), the sole copyright holder and
-developer of Claude Pilot.
+developer of Pilot Shell.
 
-"Software" means Claude Pilot in its entirety, including but not limited to all
+"Software" means Pilot Shell in its entirety, including but not limited to all
 source code, object code, compiled binaries, scripts, configuration files,
 rules, skills, commands, hooks, plugins, documentation, assets, user interface
 components, and any updates, patches, or modifications provided by the Licensor.
@@ -31,7 +31,7 @@ to the Cython-compiled launcher binary.
 this Agreement.
 
 "Subscription" means an active, paid license purchased from the Licensor through
-the official channels at https://claude-pilot.com, or a valid trial
+the official channels at https://pilot-shell.com, or a valid trial
 period that has not expired.
 
 "Output" means any code, artifacts, configurations, files, extensions, or other
@@ -166,7 +166,7 @@ beyond those expressly stated in Section 2 of this Agreement.
 
   (a) USE OF THE SOFTWARE BEYOND THE TRIAL PERIOD REQUIRES AN ACTIVE
       SUBSCRIPTION. Subscription terms, pricing, and payment terms are as
-      published at https://claude-pilot.com and may be updated by the
+      published at https://pilot-shell.com and may be updated by the
       Licensor from time to time.
 
   (b) FAILURE TO MAINTAIN an active Subscription terminates Your rights under
@@ -266,12 +266,12 @@ CLAIM.
 
   (h) NOTICES. All notices required or permitted under this Agreement shall be
       directed to the Licensor through the official channels published at
-      https://claude-pilot.com.
+      https://pilot-shell.com.
 
 ================================================================================
 
-For licensing inquiries: https://claude-pilot.com
-For bug reports (Trial & Solo): https://github.com/maxritter/claude-pilot/issues
+For licensing inquiries: https://pilot-shell.com
+For bug reports (Trial & Solo): https://github.com/maxritter/pilot-shell/issues
 For priority support & feature requests (Team): mail@maxritter.net
 
 ================================================================================

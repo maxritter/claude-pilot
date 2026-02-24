@@ -61,7 +61,7 @@ const DemoSection = () => {
               <iframe
                 className="absolute inset-0 w-full h-full"
                 src="https://www.youtube-nocookie.com/embed/S7faAK931NU?rel=0"
-                title="Claude Pilot Demo — Full-Stack Project Built by AI"
+                title="Pilot Shell Demo — Full-Stack Project Built by AI"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
@@ -72,7 +72,7 @@ const DemoSection = () => {
           <div className="mt-4 text-center">
             <Button variant="outline" size="sm" asChild>
               <a
-                href="https://github.com/maxritter/claude-pilot-demo"
+                href="https://github.com/maxritter/pilot-shell-demo"
                 target="_blank"
                 rel="noopener noreferrer"
               >

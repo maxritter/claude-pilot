@@ -32,7 +32,7 @@ const NavBar = () => {
         <Link to="/" className="flex items-center gap-2 sm:gap-3">
           <img
             src={boxPng}
-            alt="Claude Pilot"
+            alt="Pilot Shell"
             className="h-8 sm:h-10 w-auto rounded-md border border-primary/20"
           />
         </Link>
@@ -79,7 +79,7 @@ const NavBar = () => {
             <ScrollText className="h-5 w-5" />
           </a>
           <a
-            href="https://github.com/maxritter/claude-pilot"
+            href="https://github.com/maxritter/pilot-shell"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors"

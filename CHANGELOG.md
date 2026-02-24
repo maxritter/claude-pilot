@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Claude Pilot will be documented in this file.
+All notable changes to Pilot Shell will be documented in this file.
 
 ## [6.11.0] - 2026-02-24
 
@@ -434,7 +434,7 @@ All notable changes to Claude Pilot will be documented in this file.
 - Rebuild console assets with latest changes
 - Address code review findings
 - Stale session cleanup, context hook, install docs, and CI pipeline
-- Continue reworking towards Claude Pilot Console
+- Continue reworking towards Pilot Shell Console
 
 ### Features
 
@@ -543,13 +543,13 @@ All notable changes to Claude Pilot will be documented in this file.
 
 ### BREAKING CHANGES
 
-- Major workflow changes for Claude Pilot v6.0
-- Project renamed from Claude CodePro to Claude Pilot
+- Major workflow changes for Pilot Shell v6.0
+- Project renamed from Claude CodePro to Pilot Shell
 
 ### Features
 
 - Add multi-pass plan verification and installer auto-version
-- Renamed Project to Claude Pilot
+- Renamed Project to Pilot Shell
 
 ### Bug Fixes
 

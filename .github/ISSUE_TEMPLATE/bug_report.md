@@ -33,6 +33,6 @@ Paste any error messages or logs here
 
 ## Checklist
 
-- [ ] I am using the latest version of Claude Pilot
+- [ ] I am using the latest version of Pilot Shell
 - [ ] I have searched existing issues to avoid duplicates
 - [ ] I can reproduce this consistently with the steps above

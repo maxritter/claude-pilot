@@ -21,19 +21,19 @@ const Index = () => {
   const websiteStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Claude Pilot",
-    url: "https://claude-pilot.com",
+    name: "Pilot Shell",
+    url: "https://pilot-shell.com",
     description:
       "Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated.",
     publisher: {
       "@type": "Organization",
-      name: "Claude Pilot",
-      url: "https://claude-pilot.com",
+      name: "Pilot Shell",
+      url: "https://pilot-shell.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://claude-pilot.com/logo.png",
+        url: "https://pilot-shell.com/logo.png",
       },
-      sameAs: ["https://github.com/maxritter/claude-pilot"],
+      sameAs: ["https://github.com/maxritter/pilot-shell"],
     },
   };
 
@@ -45,7 +45,7 @@ const Index = () => {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://claude-pilot.com",
+        item: "https://pilot-shell.com",
       },
     ],
   };
@@ -53,7 +53,7 @@ const Index = () => {
   const softwareStructuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Claude Pilot",
+    name: "Pilot Shell",
     description:
       "Start a task, grab a coffee, come back to production-grade code. Rules, automated hooks, coding standards, language servers, and MCP servers.",
     applicationCategory: "DeveloperApplication",
@@ -68,15 +68,15 @@ const Index = () => {
       name: "Max Ritter",
       url: "https://maxritter.net/",
     },
-    license: "https://github.com/maxritter/claude-pilot/blob/main/LICENSE",
-    url: "https://github.com/maxritter/claude-pilot",
-    downloadUrl: "https://github.com/maxritter/claude-pilot",
+    license: "https://github.com/maxritter/pilot-shell/blob/main/LICENSE",
+    url: "https://github.com/maxritter/pilot-shell",
+    downloadUrl: "https://github.com/maxritter/pilot-shell",
   };
 
   return (
     <>
       <SEO
-        title="Claude Pilot - Claude Code is powerful. Pilot makes it reliable."
+        title="Pilot Shell - Claude Code is powerful. Pilot makes it reliable."
         description="Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated."
         structuredData={[
           websiteStructuredData,

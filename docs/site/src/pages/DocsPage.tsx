@@ -53,10 +53,10 @@ const sectionIds = tocItems.map((item) => item.id);
 const docsStructuredData = {
   "@context": "https://schema.org",
   "@type": "TechArticle",
-  name: "Claude Pilot Documentation",
+  name: "Pilot Shell Documentation",
   description:
-    "Complete technical reference for Claude Pilot — installation, commands, hooks pipeline, MCP servers, language servers, and the Pilot Console.",
-  url: "https://claude-pilot.com/docs",
+    "Complete technical reference for Pilot Shell — installation, commands, hooks pipeline, MCP servers, language servers, and the Pilot Console.",
+  url: "https://pilot-shell.com/docs",
   author: {
     "@type": "Person",
     name: "Max Ritter",
@@ -64,8 +64,8 @@ const docsStructuredData = {
   },
   publisher: {
     "@type": "Organization",
-    name: "Claude Pilot",
-    url: "https://claude-pilot.com",
+    name: "Pilot Shell",
+    url: "https://pilot-shell.com",
   },
 };
 
@@ -107,10 +107,10 @@ const DocsPage = () => {
   return (
     <>
       <SEO
-        title="Documentation - Claude Pilot"
-        description="Complete technical reference for Claude Pilot — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Console, and CLI commands."
-        keywords="Claude Pilot documentation, install Claude Pilot, spec-driven development, hooks pipeline, MCP servers, language servers, Pilot Console, Claude Code enhancement"
-        canonicalUrl="https://claude-pilot.com/docs"
+        title="Documentation - Pilot Shell"
+        description="Complete technical reference for Pilot Shell — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Console, and CLI commands."
+        keywords="Pilot Shell documentation, install Pilot Shell, spec-driven development, hooks pipeline, MCP servers, language servers, Pilot Console, Claude Code enhancement"
+        canonicalUrl="https://pilot-shell.com/docs"
         structuredData={docsStructuredData}
       />
       <NavBar />
@@ -134,7 +134,7 @@ const DocsPage = () => {
                   Documentation
                 </h1>
                 <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
-                  Complete technical reference for Claude Pilot. Everything from
+                  Complete technical reference for Pilot Shell. Everything from
                   installation to hooks, MCP servers, and the full CLI.
                 </p>
               </div>

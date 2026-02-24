@@ -145,7 +145,7 @@ Register it in `.mcp.json`:
 
 ## How Pilot Extends MCP
 
-Claude Pilot ships with pre-configured MCP servers that integrate into its workflow:
+Pilot Shell ships with pre-configured MCP servers that integrate into its workflow:
 
 - **Persistent Memory** — Stores observations across sessions so Claude remembers past work, decisions, and learnings
 - **Web Search & Fetch** — Search the web and fetch full page content without API keys

@@ -9,7 +9,7 @@ const InstallSection = () => {
   const [headerRef, headerInView] = useInView<HTMLDivElement>();
   const [codeRef, codeInView] = useInView<HTMLDivElement>();
   const installCommand =
-    "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash";
+    "curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash";
 
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(installCommand);
@@ -99,7 +99,7 @@ const InstallSection = () => {
           <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
             <ImageModal
               src="/demo.gif"
-              alt="Claude Pilot Demo"
+              alt="Pilot Shell Demo"
               className="w-full rounded-xl"
             />
             <p className="text-xs text-muted-foreground text-center mt-2 mb-1">Click to enlarge</p>

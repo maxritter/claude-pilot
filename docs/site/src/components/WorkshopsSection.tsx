@@ -7,13 +7,13 @@ const offerings = [
     icon: GraduationCap,
     title: "Agentic Engineering Workshops",
     description:
-      "Hands-on training for development teams on Claude Code, Claude Pilot, and spec-driven AI development.",
+      "Hands-on training for development teams on Claude Code, Pilot Shell, and spec-driven AI development.",
   },
   {
     icon: Building2,
     title: "Enterprise Rollout",
     description:
-      "Introduce Claude Pilot to your team and standardize AI-assisted development across the organization.",
+      "Introduce Pilot Shell to your team and standardize AI-assisted development across the organization.",
   },
   {
     icon: Lightbulb,
@@ -41,7 +41,7 @@ const WorkshopsSection = () => {
             Workshops & Enterprise Adoption
           </h2>
           <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
-            Claude Pilot is built by{" "}
+            Pilot Shell is built by{" "}
             <a
               href="https://www.maxritter.net/"
               target="_blank"
@@ -51,7 +51,7 @@ const WorkshopsSection = () => {
               Max Ritter
             </a>
             , a senior IT freelancer and consultant from Germany. Max helps
-            companies and enterprises adopt Claude Code and Claude Pilot for
+            companies and enterprises adopt Claude Code and Pilot Shell for
             production-grade AI-assisted development.
           </p>
         </div>

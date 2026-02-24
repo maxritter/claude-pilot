@@ -10,7 +10,7 @@ import { type Plugin } from "vite";
 import fs from "fs";
 import path from "path";
 
-const SITE_URL = "https://claude-pilot.com";
+const SITE_URL = "https://pilot-shell.com";
 
 interface ArticleMeta {
   slug: string;

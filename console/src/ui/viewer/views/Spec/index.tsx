@@ -85,6 +85,34 @@ export function SpecView() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const headerCardRef = useRef<HTMLDivElement>(null);
+  const [showBackToTasks, setShowBackToTasks] = useState(false);
+
+  const handleTaskClick = useCallback((taskNumber: number) => {
+    const el = document.getElementById(`task-${taskNumber}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const scrollBackToTasks = useCallback(() => {
+    headerCardRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, []);
+
+  useEffect(() => {
+    const mainEl = document.querySelector("main");
+    if (!mainEl) return;
+    const onScroll = () => {
+      if (!headerCardRef.current) return;
+      const rect = headerCardRef.current.getBoundingClientRect();
+      const mainTop = mainEl.getBoundingClientRect().top;
+      setShowBackToTasks(rect.bottom < mainTop);
+    };
+    mainEl.addEventListener("scroll", onScroll, { passive: true });
+    return () => mainEl.removeEventListener("scroll", onScroll);
+  }, []);
+
   const projectParam = selectedProject
     ? `?project=${encodeURIComponent(selectedProject)}`
     : "";
@@ -333,7 +361,13 @@ export function SpecView() {
         </Card>
       ) : parsed && currentSpec ? (
         <>
-          <SpecHeaderCard parsed={parsed} spec={currentSpec} />
+          <div ref={headerCardRef}>
+            <SpecHeaderCard
+              parsed={parsed}
+              spec={currentSpec}
+              onTaskClick={handleTaskClick}
+            />
+          </div>
           <WorktreePanel />
           {parsed.implementationSection && (
             <Card>
@@ -345,6 +379,15 @@ export function SpecView() {
                 <SpecContent content={parsed.implementationSection} />
               </CardBody>
             </Card>
+          )}
+          {showBackToTasks && (
+            <button
+              onClick={scrollBackToTasks}
+              className="fixed bottom-6 right-6 btn btn-primary btn-sm shadow-lg gap-1.5 z-50"
+            >
+              <Icon icon="lucide:arrow-up" size={14} />
+              Task List
+            </button>
           )}
         </>
       ) : null}

@@ -120,7 +120,7 @@ const ModelRoutingSection = () => {
               <span className="text-primary font-medium">
                 Fully configurable
               </span>{" "}
-              via the Pilot Console Settings tab (
+              via the Pilot Shell Console Settings tab (
               <code className="text-primary">localhost:41777/#/settings</code>
               ). Choose between Sonnet 4.6 and Opus 4.6 for the main session,
               each command, and each sub-agent independently. Enable the{" "}

@@ -33,7 +33,7 @@ export function DashboardView() {
         <p className="text-base-content/60">
           {selectedProject
             ? `Filtered by: ${selectedProject}`
-            : "Overview of your Pilot Console"}
+            : "Overview of your Pilot Shell Console"}
         </p>
       </div>
 

@@ -43,7 +43,7 @@ const tocItems = [
   { id: "rules", label: "Rules & Standards" },
   { id: "mcp-servers", label: "MCP Servers" },
   { id: "language-servers", label: "Language Servers" },
-  { id: "console", label: "Pilot Console" },
+  { id: "console", label: "Pilot Shell Console" },
   { id: "cli", label: "Pilot CLI" },
   { id: "model-routing", label: "Smart Model Routing" },
 ];
@@ -55,7 +55,7 @@ const docsStructuredData = {
   "@type": "TechArticle",
   name: "Pilot Shell Documentation",
   description:
-    "Complete technical reference for Pilot Shell — installation, commands, hooks pipeline, MCP servers, language servers, and the Pilot Console.",
+    "Complete technical reference for Pilot Shell — installation, commands, hooks pipeline, MCP servers, language servers, and the Pilot Shell Console.",
   url: "https://pilot-shell.com/docs",
   author: {
     "@type": "Person",
@@ -108,8 +108,8 @@ const DocsPage = () => {
     <>
       <SEO
         title="Documentation - Pilot Shell"
-        description="Complete technical reference for Pilot Shell — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Console, and CLI commands."
-        keywords="Pilot Shell documentation, install Pilot Shell, spec-driven development, hooks pipeline, MCP servers, language servers, Pilot Console, Claude Code enhancement"
+        description="Complete technical reference for Pilot Shell — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Shell Console, and CLI commands."
+        keywords="Pilot Shell documentation, install Pilot Shell, spec-driven development, hooks pipeline, MCP servers, language servers, Pilot Shell Console, Claude Code enhancement"
         canonicalUrl="https://pilot-shell.com/docs"
         structuredData={docsStructuredData}
       />

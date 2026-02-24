@@ -1,5 +1,5 @@
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface SpecContentProps {
   content: string;
@@ -11,22 +11,36 @@ export function SpecContent({ content }: SpecContentProps) {
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h3: ({ children }) => (
-            <h3 className="text-lg font-semibold mt-6 mb-3 pb-2 border-b border-base-300/50 first:mt-0">
-              {children}
-            </h3>
-          ),
+          h3: ({ children }) => {
+            const text = String(children ?? "");
+            const taskMatch = text.match(/Task\s+(\d+)/);
+            const id = taskMatch ? `task-${taskMatch[1]}` : undefined;
+            return (
+              <h3
+                id={id}
+                className="text-lg font-semibold mt-6 mb-3 pb-2 border-b border-base-300/50 first:mt-0 scroll-mt-4"
+              >
+                {children}
+              </h3>
+            );
+          },
           h4: ({ children }) => (
-            <h4 className="text-base font-medium mt-4 mb-2 text-base-content/90">{children}</h4>
+            <h4 className="text-base font-medium mt-4 mb-2 text-base-content/90">
+              {children}
+            </h4>
           ),
           p: ({ children }) => (
-            <p className="text-sm text-base-content/80 mb-3 leading-relaxed">{children}</p>
+            <p className="text-sm text-base-content/80 mb-3 leading-relaxed">
+              {children}
+            </p>
           ),
           ul: ({ children }) => (
             <ul className="text-sm space-y-1.5 mb-4 ml-1">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="text-sm space-y-1.5 mb-4 ml-1 list-decimal list-inside">{children}</ol>
+            <ol className="text-sm space-y-1.5 mb-4 ml-1 list-decimal list-inside">
+              {children}
+            </ol>
           ),
           li: ({ children }) => (
             <li className="text-base-content/80 flex items-start gap-2">
@@ -55,7 +69,9 @@ export function SpecContent({ content }: SpecContentProps) {
             </pre>
           ),
           strong: ({ children }) => (
-            <strong className="font-semibold text-base-content">{children}</strong>
+            <strong className="font-semibold text-base-content">
+              {children}
+            </strong>
           ),
           table: ({ children }) => (
             <div className="overflow-x-auto mb-4">
@@ -66,10 +82,14 @@ export function SpecContent({ content }: SpecContentProps) {
             <thead className="bg-base-200">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="text-left text-xs font-medium text-base-content/70 p-2">{children}</th>
+            <th className="text-left text-xs font-medium text-base-content/70 p-2">
+              {children}
+            </th>
           ),
           td: ({ children }) => (
-            <td className="text-sm p-2 border-t border-base-300/50">{children}</td>
+            <td className="text-sm p-2 border-t border-base-300/50">
+              {children}
+            </td>
           ),
           blockquote: ({ children }) => (
             <blockquote className="border-l-4 border-primary/50 pl-4 py-1 my-3 text-sm text-base-content/70 italic">

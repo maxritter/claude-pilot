@@ -21,7 +21,7 @@ const hooksPipeline = [
     trigger: "SessionStart",
     description: "On startup, clear, or after compaction",
     hooks: [
-      "Load persistent memory from Pilot Console",
+      "Load persistent memory from Pilot Shell Console",
       "Restore plan state after compaction (post_compact_restore.py)",
       "Initialize session tracking (async)",
     ],

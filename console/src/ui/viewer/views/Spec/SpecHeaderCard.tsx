@@ -35,9 +35,11 @@ const statusConfig = {
 export function SpecHeaderCard({
   parsed,
   spec,
+  onTaskClick,
 }: {
   parsed: ParsedPlan;
   spec: SpecMeta;
+  onTaskClick?: (taskNumber: number) => void;
 }) {
   const config = statusConfig[spec.status];
   const completedCount = parsed.tasks.filter((t) => t.completed).length;
@@ -80,9 +82,12 @@ export function SpecHeaderCard({
           {parsed.tasks.map((task) => (
             <div
               key={task.number}
-              className={`flex items-center gap-3 p-2 rounded-lg ${
-                task.completed ? "bg-success/10" : "bg-base-200/50"
+              className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                task.completed
+                  ? "bg-success/10 hover:bg-success/15"
+                  : "bg-base-200/50 hover:bg-base-200"
               }`}
+              onClick={() => onTaskClick?.(task.number)}
             >
               <div
                 className={`w-5 h-5 rounded-md flex items-center justify-center ${

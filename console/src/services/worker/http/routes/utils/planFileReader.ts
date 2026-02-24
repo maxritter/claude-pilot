@@ -165,6 +165,35 @@ function getAllPlansDirs(projectRoot: string): string[] {
   return dirs;
 }
 
+/**
+ * Deduplicate plans by name. When the same plan exists in both the main
+ * docs/plans/ dir and a .worktrees/ copy, keep the worktree version
+ * (that's where active work happens). For same-source duplicates, keep
+ * the most recently modified.
+ */
+export function deduplicatePlans(plans: PlanInfo[]): PlanInfo[] {
+  const byName = new Map<string, PlanInfo>();
+  for (const plan of plans) {
+    const existing = byName.get(plan.name);
+    if (!existing) {
+      byName.set(plan.name, plan);
+      continue;
+    }
+    const planIsWorktree = plan.filePath.includes("/.worktrees/");
+    const existingIsWorktree = existing.filePath.includes("/.worktrees/");
+    if (planIsWorktree && !existingIsWorktree) {
+      byName.set(plan.name, plan);
+    } else if (!planIsWorktree && existingIsWorktree) {
+    } else if (
+      new Date(plan.modifiedAt).getTime() >
+      new Date(existing.modifiedAt).getTime()
+    ) {
+      byName.set(plan.name, plan);
+    }
+  }
+  return Array.from(byName.values());
+}
+
 export function getActivePlans(projectRoot: string): PlanInfo[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -209,7 +238,7 @@ export function getActivePlans(projectRoot: string): PlanInfo[] {
     }
   }
 
-  return activePlans;
+  return deduplicatePlans(activePlans);
 }
 
 export function getAllPlans(projectRoot: string): PlanInfo[] {
@@ -219,7 +248,7 @@ export function getAllPlans(projectRoot: string): PlanInfo[] {
     allPlans.push(...scanPlansDir(plansDir));
   }
 
-  return allPlans
+  return deduplicatePlans(allPlans)
     .sort(
       (a, b) =>
         new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime(),
@@ -234,7 +263,7 @@ export function getActiveSpecs(projectRoot: string): PlanInfo[] {
     allPlans.push(...scanPlansDir(plansDir));
   }
 
-  return allPlans.sort(
+  return deduplicatePlans(allPlans).sort(
     (a, b) =>
       new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime(),
   );
@@ -251,11 +280,13 @@ export function getPlanStats(projectRoot: string): {
   completionTimeline: Array<{ date: string; count: number }>;
   recentlyVerified: Array<{ name: string; verifiedAt: string }>;
 } {
-  const allPlans: PlanInfo[] = [];
+  const rawPlans: PlanInfo[] = [];
 
   for (const plansDir of getAllPlansDirs(projectRoot)) {
-    allPlans.push(...scanPlansDir(plansDir));
+    rawPlans.push(...scanPlansDir(plansDir));
   }
+
+  const allPlans = deduplicatePlans(rawPlans);
 
   if (allPlans.length === 0) {
     return {

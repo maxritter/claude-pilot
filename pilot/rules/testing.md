@@ -36,6 +36,22 @@ External dependencies? NO → Unit test | YES → Integration test
 Complete user workflow? YES → E2E test | NO → Unit or integration
 ```
 
+### Property-Based Testing (PBT)
+
+**Use PBT when behavior depends on data shape, ranges, or combinations — not a single known input.**
+
+| Language | Tool | Example |
+|----------|------|---------|
+| Python | `hypothesis` | `@given(st.lists(st.integers()))` |
+| TypeScript | `fast-check` | `fc.assert(fc.property(fc.array(fc.integer()), ...))` |
+| Go | `go test -fuzz` | `func FuzzFoo(f *testing.F) { f.Fuzz(...) }` |
+
+**When to use:** Parsers, serializers, data structure invariants, encode/decode roundtrips, bugfix preservation properties (see `/spec` bugfix workflow).
+
+**When NOT to use:** Simple CRUD, UI interactions, fixed-input validation, config changes.
+
+**Rules:** PBT supplements example-based tests — don't replace them. Keep strategies simple (avoid deeply nested custom strategies). Set `max_examples` / `numRuns` low enough for CI (100–200).
+
 ### Running Tests
 
 ```bash

@@ -1,14 +1,14 @@
-import React from 'react';
-import { Sidebar } from './Sidebar';
-import { Topbar } from './Topbar';
+import React from "react";
+import { Sidebar } from "./Sidebar";
+import { Topbar } from "./Topbar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   currentPath: string;
-  workerStatus: 'online' | 'offline' | 'processing';
+  workerStatus: "online" | "offline" | "processing";
   version?: string;
   queueDepth?: number;
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   onToggleTheme: () => void;
   onToggleLogs?: () => void;
   sidebarCollapsed: boolean;
@@ -27,10 +27,10 @@ export function DashboardLayout({
   sidebarCollapsed,
   onToggleSidebar,
 }: DashboardLayoutProps) {
-  const themeName = theme === 'dark' ? 'pilot-shell' : 'pilot-shell-light';
+  const themeName = theme === "dark" ? "pilot-shell" : "pilot-shell-light";
 
   return (
-    <div className="dashboard-layout flex min-h-screen" data-theme={themeName}>
+    <div className="dashboard-layout flex h-screen" data-theme={themeName}>
       <Sidebar
         currentPath={currentPath}
         workerStatus={workerStatus}
@@ -39,15 +39,13 @@ export function DashboardLayout({
         collapsed={sidebarCollapsed}
         onToggleCollapse={onToggleSidebar}
       />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <Topbar
           theme={theme}
           onToggleTheme={onToggleTheme}
           onToggleLogs={onToggleLogs}
         />
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-6 overflow-y-auto min-h-0">{children}</main>
       </div>
     </div>
   );

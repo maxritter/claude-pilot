@@ -44,7 +44,7 @@ const steps = [
   {
     icon: Brain,
     label: "Memory Loads",
-    detail: "Past sessions, decisions, and debugging context injected automatically via Pilot Console.",
+    detail: "Past sessions, decisions, and debugging context injected automatically via Pilot Shell Console.",
     color: "text-rose-400",
     bgColor: "bg-rose-400/10",
     borderColor: "border-rose-400/30",

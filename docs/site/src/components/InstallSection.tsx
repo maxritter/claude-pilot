@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Check, Copy, Terminal, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-in-view";
-import ImageModal from "@/components/ImageModal";
 
 const InstallSection = () => {
   const [copied, setCopied] = useState(false);
@@ -29,7 +28,8 @@ const InstallSection = () => {
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
             Works with any existing project — no matter how complex.{" "}
-            <code className="text-primary">cd</code> into your project folder, then run:
+            <code className="text-primary">cd</code> into your project folder,
+            then run:
           </p>
         </div>
 
@@ -42,7 +42,9 @@ const InstallSection = () => {
 
           <div className="flex items-center gap-2 mb-3">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="text-foreground font-medium text-sm">One-Command Installation</span>
+            <span className="text-foreground font-medium text-sm">
+              One-Command Installation
+            </span>
           </div>
 
           <div className="bg-background/60 rounded-lg p-3 font-mono text-sm border border-border/50">
@@ -76,33 +78,34 @@ const InstallSection = () => {
             <div className="flex items-start gap-3">
               <Rocket className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <p className="text-foreground font-medium mb-1">After installation:</p>
+                <p className="text-foreground font-medium mb-1">
+                  After installation:
+                </p>
                 <p className="text-muted-foreground text-xs">
-                  Run <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">pilot</code>{" "}
-                  to launch. Use{" "}
-                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">/sync</code> to
-                  load rules,{" "}
-                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">/spec</code> for
-                  planned features,{" "}
-                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">/learn</code> to
-                  extract reusable knowledge, and{" "}
-                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">/vault</code> to
-                  share with your team.
+                  Run{" "}
+                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    pilot
+                  </code>{" "}
+                  to launch, then{" "}
+                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    /sync
+                  </code>{" "}
+                  to load rules.{" "}
+                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    /spec
+                  </code>{" "}
+                  plans features,{" "}
+                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    /learn
+                  </code>{" "}
+                  extracts knowledge,{" "}
+                  <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    /vault
+                  </code>{" "}
+                  shares with your team.
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Demo GIF */}
-        <div className={`mt-10 ${codeInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}>
-          <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
-            <ImageModal
-              src="/demo.gif"
-              alt="Pilot Shell Demo"
-              className="w-full rounded-xl"
-            />
-            <p className="text-xs text-muted-foreground text-center mt-2 mb-1">Click to enlarge</p>
           </div>
         </div>
       </div>

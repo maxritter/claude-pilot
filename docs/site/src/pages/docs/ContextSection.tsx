@@ -6,7 +6,7 @@ const cycleSteps = [
     name: "PreCompact",
     color: "text-violet-400",
     bg: "bg-violet-400/10",
-    desc: "pre_compact.py captures active plan, task list, recent decisions, and key context to Pilot Console memory.",
+    desc: "pre_compact.py captures active plan, task list, recent decisions, and key context to Pilot Shell Console memory.",
   },
   {
     name: "Compact",
@@ -28,7 +28,7 @@ const preserved = [
   "Key decisions made during the session",
   "Recently modified files and their context",
   "Error messages and debugging progress",
-  "Memory observations from the Pilot Console",
+  "Memory observations from the Pilot Shell Console",
 ];
 
 const ContextSection = () => {

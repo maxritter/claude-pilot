@@ -12,7 +12,7 @@ const hookGroups = [
       {
         name: "Memory loader",
         type: "Blocking",
-        desc: "Loads persistent context from Pilot Console memory into the session",
+        desc: "Loads persistent context from Pilot Shell Console memory into the session",
       },
       {
         name: "post_compact_restore.py",
@@ -36,7 +36,7 @@ const hookGroups = [
       {
         name: "Session initializer",
         type: "Async",
-        desc: "Initializes and registers the session with the Pilot Console worker daemon on first user message.",
+        desc: "Initializes and registers the session with the Pilot Shell Console worker daemon on first user message.",
       },
     ],
   },

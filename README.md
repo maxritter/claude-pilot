@@ -22,10 +22,6 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.
 
 **Works on macOS, Linux, and Windows (WSL2).**
 
-<br>
-
-<img src="docs/img/demo.gif" alt="Pilot Shell Demo" width="800">
-
 </div>
 
 ---
@@ -36,7 +32,7 @@ I'm a senior IT freelancer from Germany. My clients hire me to ship production-q
 
 Claude Code writes code fast. But without structure, it skips tests, loses context, and produces inconsistent results — especially on complex, established codebases where there are real conventions to follow and real regressions to catch. I tried other frameworks — they burned tokens on bloated prompts without adding real value. Some added process without enforcement. Others were prompt templates that Claude ignored when context got tight. None made Claude reliably produce production-grade code.
 
-So I built Pilot. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is monitored and preserved across sessions. Every piece of work goes through verification before it's marked done.
+So I built Pilot Shell. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is monitored and preserved across sessions. Every piece of work goes through verification before it's marked done.
 
 ---
 
@@ -60,12 +56,12 @@ Each `/spec` prompt one-shotted a complete feature — plan, TDD implementation,
 
 ## Before & After
 
-| Without Pilot               | With Pilot                                                      |
+| Without Pilot Shell         | With Pilot Shell                                                |
 | --------------------------- | --------------------------------------------------------------- |
 | Writes code, skips tests    | TDD enforced — RED, GREEN, REFACTOR on every feature            |
 | No quality checks           | Hooks auto-lint, format, type-check on every file edit          |
 | Context degrades mid-task   | Hooks preserve and restore state across compaction cycles       |
-| Every session starts fresh  | Persistent memory across sessions via Pilot Console             |
+| Every session starts fresh  | Persistent memory across sessions via Pilot Shell Console             |
 | Hope it works               | Verifier sub-agents perform code review before marking complete |
 | No codebase knowledge       | Production-tested rules loaded into every session               |
 | Generic suggestions         | Coding standards activated conditionally by file type           |
@@ -79,7 +75,7 @@ Each `/spec` prompt one-shotted a complete feature — plan, TDD implementation,
 
 There are other AI coding frameworks out there. I tried them. They add complexity — dozens of agents, elaborate scaffolding, thousands of lines of instruction files — but the output doesn't improve proportionally. More machinery burns more tokens, increases latency, and creates more failure modes. Complexity is not a feature.
 
-**Pilot optimizes for output quality, not system complexity.** The rules are minimal and focused. There's no big learning curve, no project scaffolding to set up, no state files to manage. You install it in any existing project — no matter how complex — run `pilot`, then `/sync` to learn your codebase, and the quality guardrails are just there — hooks, TDD, type checking, formatting — enforced automatically on every edit, in every session.
+**Pilot Shell optimizes for output quality, not system complexity.** The rules are minimal and focused. There's no big learning curve, no project scaffolding to set up, no state files to manage. You install it in any existing project — no matter how complex — run `pilot`, then `/sync` to learn your codebase, and the quality guardrails are just there — hooks, TDD, type checking, formatting — enforced automatically on every edit, in every session.
 
 This isn't a vibe coding tool. It's built for developers who ship to production and need code that actually works. Every rule in the system comes from daily professional use: real bugs caught, real regressions prevented, real sessions where the AI cut corners and the hooks stopped it. The rules are continuously refined based on what measurably improves output.
 
@@ -97,7 +93,7 @@ The system stays fast because it stays simple. Quick mode is direct execution wi
 
 ### Installation
 
-**Works with any existing project.** Pilot doesn't scaffold or restructure your code — it installs alongside your project and adapts to your conventions. `cd` into your project folder, then run:
+**Works with any existing project.** Pilot Shell doesn't scaffold or restructure your code — it installs alongside your project and adapts to your conventions. `cd` into your project folder, then run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
@@ -151,7 +147,7 @@ This removes the Pilot binary, plugin files, managed commands/rules, settings an
 
 ### /sync — Sync Rules & Standards
 
-Run `/sync` to learn your existing codebase and sync rules with it. Explores your project structure, builds a semantic search index, discovers your conventions and undocumented patterns, updates project documentation, and creates new custom skills. This is how Pilot adapts to your project — not the other way around. Run it once initially, then anytime again:
+Run `/sync` to learn your existing codebase and sync rules with it. Explores your project structure, builds a semantic search index, discovers your conventions and undocumented patterns, updates project documentation, and creates new custom skills. This is how Pilot Shell adapts to your project — not the other way around. Run it once initially, then anytime again:
 
 ```bash
 pilot
@@ -237,7 +233,7 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 
 ### Smart Model Routing
 
-Pilot uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
+Pilot Shell uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
 
 | Phase                 | Default | Why                                                                                                                                               |
 | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -246,9 +242,9 @@ Pilot uses the right model for each phase — Opus where reasoning quality matte
 | **Implementation**    | Sonnet  | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec.   |
 | **Code Verification** | Opus    | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
 
-**The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
+**The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot Shell invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
 
-**Configurable:** All model assignments are configurable per-component via the Pilot Console (`localhost:41777/#/settings`). Choose between Sonnet 4.6 and Opus 4.6 for the main session, each command, and sub-agents. A global "Extended Context (1M)" toggle enables the 1M token context window across all models simultaneously. **Note:** 1M context models require a Max (20x) or Enterprise subscription — not available to all users.
+**Configurable:** All model assignments are configurable per-component via the Pilot Shell Console settings. Choose between Sonnet 4.6 and Opus 4.6 for the main session, each command, and sub-agents. A global "Extended Context (1M)" toggle enables the 1M token context window across all models simultaneously. **Note:** 1M context models require a Max (20x) or Enterprise subscription — not available to all users.
 
 ### Quick Mode
 
@@ -284,18 +280,18 @@ pilot
 
 ### Pilot CLI
 
-The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing, and context. Run `pilot` or `ccp` with no arguments to start Claude with Pilot enhancements.
+The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing, and context. Run `pilot` or `ccp` with no arguments to start Claude with Pilot Shell enhancements.
 
 <details>
 <summary><b>Session & Context</b></summary>
 
 | Command                               | Purpose                                                              |
 | ------------------------------------- | -------------------------------------------------------------------- |
-| `pilot`                               | Start Claude with Pilot enhancements, auto-update, and license check |
+| `pilot`                               | Start Claude with Pilot Shell enhancements, auto-update, and license check |
 | `pilot run [args...]`                 | Same as above, with optional flags (e.g., `--skip-update-check`)     |
 | `pilot check-context --json`          | Get current context usage percentage                                 |
 | `pilot register-plan <path> <status>` | Associate a plan file with the current session                       |
-| `pilot sessions [--json]`             | Show count of active Pilot sessions                                  |
+| `pilot sessions [--json]`             | Show count of active Pilot Shell sessions                                  |
 
 </details>
 
@@ -327,7 +323,7 @@ The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing
 
 </details>
 
-All commands support `--json` for structured output. Multiple Pilot sessions can run in parallel on the same project — each session tracks its own worktree and context state independently.
+All commands support `--json` for structured output. Multiple Pilot Shell sessions can run in parallel on the same project — each session tracks its own worktree and context state independently.
 
 ### Rules, Commands & Skills
 
@@ -357,7 +353,7 @@ Add your own MCP servers in `.mcp.json`. Run `/sync` after adding servers to gen
 
 | Hook                      | Type     | What it does                                                           |
 | ------------------------- | -------- | ---------------------------------------------------------------------- |
-| Memory loader             | Blocking | Loads persistent context from Pilot Console memory                     |
+| Memory loader             | Blocking | Loads persistent context from Pilot Shell Console memory                     |
 | `post_compact_restore.py` | Blocking | After auto-compaction: re-injects active plan, task state, and context |
 | Session tracker           | Async    | Initializes user message tracking for the session                      |
 
@@ -382,7 +378,7 @@ After **every single file edit**, these hooks fire:
 
 | Hook             | Type     | What it does                                                                                             |
 | ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| `pre_compact.py` | Blocking | Captures Pilot state (active plan, task list, key context) to persistent memory before compaction fires. |
+| `pre_compact.py` | Blocking | Captures Pilot Shell state (active plan, task list, key context) to persistent memory before compaction fires. |
 
 #### Stop (when Claude tries to finish)
 
@@ -395,18 +391,18 @@ After **every single file edit**, these hooks fire:
 
 | Hook             | Type     | What it does                                                                                             |
 | ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| `session_end.py` | Blocking | Stops the worker daemon when no other Pilot sessions are active. Sends real-time dashboard notification. |
+| `session_end.py` | Blocking | Stops the worker daemon when no other Pilot Shell sessions are active. Sends real-time dashboard notification. |
 
 ### Context Preservation
 
-Pilot preserves context automatically across compaction boundaries:
+Pilot Shell preserves context automatically across compaction boundaries:
 
-- `pre_compact.py` captures Pilot state (active plan, tasks, key context) to persistent memory
-- `post_compact_restore.py` re-injects Pilot context after compaction — agent continues seamlessly
-- Multiple Pilot sessions can run in parallel on the same project without interference
+- `pre_compact.py` captures Pilot Shell state (active plan, tasks, key context) to persistent memory
+- `post_compact_restore.py` re-injects Pilot Shell context after compaction — agent continues seamlessly
+- Multiple Pilot Shell sessions can run in parallel on the same project without interference
 - Status line shows live context usage, memory status, active plan, and license info
 
-**Effective context display:** Claude Code reserves ~16.5% of the context window as a compaction buffer, triggering auto-compaction at ~83.5% raw usage. Pilot rescales this to an **effective 0–100% range** so the status bar fills naturally to 100% right before compaction fires. A `▓` buffer indicator at the end of the bar shows the reserved zone. The context monitor warns at ~80% effective (informational) and ~90%+ effective (caution) — no confusing raw percentages.
+**Effective context display:** Claude Code reserves ~16.5% of the context window as a compaction buffer, triggering auto-compaction at ~83.5% raw usage. Pilot Shell rescales this to an **effective 0–100% range** so the status bar fills naturally to 100% right before compaction fires. A `▓` buffer indicator at the end of the bar shows the reserved zone. The context monitor warns at ~80% effective (informational) and ~90%+ effective (caution) — no confusing raw percentages.
 
 ### Built-in Rules & Standards
 
@@ -485,7 +481,7 @@ All configured via `.lsp.json` with stdio transport.
 
 ### Pilot Shell Console
 
-A local web dashboard at `localhost:41777` for monitoring and managing your Pilot sessions.
+A local web dashboard at `localhost:41777` for monitoring and managing your Pilot Shell sessions.
 
 | View               | What it shows                                                                            |
 | ------------------ | ---------------------------------------------------------------------------------------- |
@@ -507,7 +503,7 @@ A local web dashboard at `localhost:41777` for monitoring and managing your Pilo
 
 > "I stopped reviewing every line Claude writes. The hooks catch formatting and type errors automatically, TDD catches logic errors, and the spec verifier catches everything else. I review the plan, approve it, and the output is production-grade."
 
-> "Other frameworks I tried added so much overhead that half my tokens went to the system itself. Pilot is lean — quick mode has zero scaffolding, and even /spec only adds structure where it matters. More of my context goes to actual work."
+> "Other frameworks I tried added so much overhead that half my tokens went to the system itself. Pilot Shell is lean — quick mode has zero scaffolding, and even /spec only adds structure where it matters. More of my context goes to actual work."
 
 > "The persistent memory changed everything. I can pick up a project after a week and Claude already knows my architecture decisions, the bugs we fixed, and why we chose certain patterns. No more re-explaining the same context every session."
 
@@ -531,11 +527,11 @@ Details and licensing at [pilot-shell.com](https://pilot-shell.com).
 ## FAQ
 
 <details>
-<summary><b>Does Pilot send my code or data to external services?</b></summary>
+<summary><b>Does Pilot Shell send my code or data to external services?</b></summary>
 
-**No code, files, prompts, project data, or personal information ever leaves your machine through Pilot.** All development tools — vector search (Vexor), persistent memory (Pilot Console), session state, and quality hooks — run entirely locally.
+**No code, files, prompts, project data, or personal information ever leaves your machine through Pilot Shell.** All development tools — vector search (Vexor), persistent memory (Pilot Shell Console), session state, and quality hooks — run entirely locally.
 
-Pilot makes external calls **only for licensing**. Here is the complete list:
+Pilot Shell makes external calls **only for licensing**. Here is the complete list:
 
 | When                              | Where              | What is sent                       |
 | --------------------------------- | ------------------ | ---------------------------------- |
@@ -543,56 +539,56 @@ Pilot makes external calls **only for licensing**. Here is the complete list:
 | License activation (once)         | `api.polar.sh`     | License key, machine fingerprint   |
 | Trial start (once)                | `pilot-shell.com` | Hashed hardware fingerprint        |
 
-That's it — three calls total, each sent at most once (validation re-checks daily). No OS, no architecture, no Python version, no locale, no analytics, no heartbeats. The validation result is cached locally, and Pilot works fully offline for up to 7 days between checks. Beyond these licensing calls, the only external communication is between Claude Code and Anthropic's API — using your own subscription or API key.
+That's it — three calls total, each sent at most once (validation re-checks daily). No OS, no architecture, no Python version, no locale, no analytics, no heartbeats. The validation result is cached locally, and Pilot Shell works fully offline for up to 7 days between checks. Beyond these licensing calls, the only external communication is between Claude Code and Anthropic's API — using your own subscription or API key.
 
 </details>
 
 <details>
-<summary><b>Is Pilot enterprise-compliant for data privacy?</b></summary>
+<summary><b>Is Pilot Shell enterprise-compliant for data privacy?</b></summary>
 
-Yes. Your source code, project files, and development context never leave your machine through Pilot. The only external calls are license validation (daily, license key only) and one-time activation/trial start (machine fingerprint only). No OS info, no version strings, no analytics, no telemetry. Enterprises using Claude Code with their own API key or Anthropic Enterprise subscription can add Pilot without changing their data compliance posture.
+Yes. Your source code, project files, and development context never leave your machine through Pilot Shell. The only external calls are license validation (daily, license key only) and one-time activation/trial start (machine fingerprint only). No OS info, no version strings, no analytics, no telemetry. Enterprises using Claude Code with their own API key or Anthropic Enterprise subscription can add Pilot Shell without changing their data compliance posture.
 
 </details>
 
 <details>
-<summary><b>What are the licenses of Pilot's dependencies?</b></summary>
+<summary><b>What are the licenses of Pilot Shell's dependencies?</b></summary>
 
-All external tools and dependencies that Pilot installs and uses are open source with permissive licenses (MIT, Apache 2.0, BSD). This includes ruff, basedpyright, Prettier, ESLint, gofmt, uv, Vexor, playwright-cli, and all MCP servers. No copyleft or restrictive-licensed dependencies are introduced into your environment.
+All external tools and dependencies that Pilot Shell installs and uses are open source with permissive licenses (MIT, Apache 2.0, BSD). This includes ruff, basedpyright, Prettier, ESLint, gofmt, uv, Vexor, playwright-cli, and all MCP servers. No copyleft or restrictive-licensed dependencies are introduced into your environment.
 
 </details>
 
 <details>
 <summary><b>Do I need a separate Anthropic subscription?</b></summary>
 
-Yes. Pilot enhances Claude Code — it doesn't replace it. You need an active Claude subscription — [Max 5x or 20x](https://claude.com/pricing) for solo developers, or [Team Premium](https://claude.com/pricing) for teams and companies. Using the Anthropic API directly is also possible but may lead to much higher costs. Pilot adds quality automation on top of whatever Claude Code access you already have.
+Yes. Pilot Shell enhances Claude Code — it doesn't replace it. You need an active Claude subscription — [Max 5x or 20x](https://claude.com/pricing) for solo developers, or [Team Premium](https://claude.com/pricing) for teams and companies. Using the Anthropic API directly is also possible but may lead to much higher costs. Pilot Shell adds quality automation on top of whatever Claude Code access you already have.
 
 </details>
 
 <details>
-<summary><b>Does Pilot work with existing projects?</b></summary>
+<summary><b>Does Pilot Shell work with existing projects?</b></summary>
 
-Yes — that's the primary use case. Pilot doesn't scaffold or restructure your code. You install it, run `/sync`, and it explores your codebase to discover your tech stack, conventions, and patterns. From there, every session has full context about your project. The more complex and established your codebase, the more value Pilot adds — quality hooks catch regressions, persistent memory preserves decisions across sessions, and `/spec` plans features against your real architecture.
-
-</details>
-
-<details>
-<summary><b>Does Pilot work with any programming language?</b></summary>
-
-Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, persistent memory, context preservation hooks, and all rules and standards work with any language that Claude Code supports. You can add custom hooks for additional languages.
+Yes — that's the primary use case. Pilot Shell doesn't scaffold or restructure your code. You install it, run `/sync`, and it explores your codebase to discover your tech stack, conventions, and patterns. From there, every session has full context about your project. The more complex and established your codebase, the more value Pilot Shell adds — quality hooks catch regressions, persistent memory preserves decisions across sessions, and `/spec` plans features against your real architecture.
 
 </details>
 
 <details>
-<summary><b>Can I use Pilot on multiple projects?</b></summary>
+<summary><b>Does Pilot Shell work with any programming language?</b></summary>
 
-Yes. Pilot installs once and works across all your projects. Each project can have its own `.claude/` rules, custom skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and standards.
+Pilot Shell's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, persistent memory, context preservation hooks, and all rules and standards work with any language that Claude Code supports. You can add custom hooks for additional languages.
+
+</details>
+
+<details>
+<summary><b>Can I use Pilot Shell on multiple projects?</b></summary>
+
+Yes. Pilot Shell installs once and works across all your projects. Each project can have its own `.claude/` rules, custom skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and standards.
 
 </details>
 
 <details>
 <summary><b>Can I add my own rules, commands, and skills?</b></summary>
 
-Yes. Create your own in your project's `.claude/` folder — rules, commands, and skills are all plain markdown files. Your project-level assets are loaded alongside Pilot's built-in defaults and take precedence when they overlap. `/sync` auto-discovers your codebase patterns and generates project-specific rules for you. `/learn` extracts reusable knowledge from sessions into custom skills. Hooks can be extended for additional languages. Use `/vault` to share your custom assets across your team.
+Yes. Create your own in your project's `.claude/` folder — rules, commands, and skills are all plain markdown files. Your project-level assets are loaded alongside Pilot Shell's built-in defaults and take precedence when they overlap. `/sync` auto-discovers your codebase patterns and generates project-specific rules for you. `/learn` extracts reusable knowledge from sessions into custom skills. Hooks can be extended for additional languages. Use `/vault` to share your custom assets across your team.
 
 </details>
 
@@ -606,7 +602,7 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 
 ## Contributing
 
-**Pull Requests** — New features, improvements, and bug fixes are welcome. You can improve Pilot with Pilot — a self-improving loop where your contributions make the tool that makes contributions better.
+**Pull Requests** — New features, improvements, and bug fixes are welcome. You can improve Pilot Shell with Pilot Shell — a self-improving loop where your contributions make the tool that makes contributions better.
 
 **Bug Reports** — Found a bug? [Open an issue](https://github.com/maxritter/pilot-shell/issues) on GitHub.
 

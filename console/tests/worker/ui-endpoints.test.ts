@@ -116,7 +116,7 @@ describe('UI Required Endpoints', () => {
       ]);
     });
 
-    it('does NOT include /api/settings (removed in Pilot Console refactor)', () => {
+    it('does NOT include /api/settings (removed in Pilot Shell Console refactor)', () => {
       expect(USE_STATS_ENDPOINTS).not.toContain('/api/settings');
     });
   });

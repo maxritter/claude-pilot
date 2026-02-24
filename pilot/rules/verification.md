@@ -13,6 +13,25 @@ Unit tests with mocks prove nothing about real-world behavior. After tests pass:
 
 **Skip only for:** documentation-only, test-only, pure internal refactoring (no entry points), config-only changes.
 
+### ⛔ Frontend Changes Require playwright-cli Verification
+
+**Unit tests and typechecks are NOT sufficient for frontend/UI changes.** After tests pass, you MUST verify with `playwright-cli` that the change works in the actual running application.
+
+| Step | Command |
+|------|---------|
+| Build | Build the viewer/bundle and deploy to the served location |
+| Open | `playwright-cli -s="$PW_SESSION" open <url>` |
+| Verify | `snapshot`, `click`, `run-code` — confirm the UI behaves correctly |
+| Close | `playwright-cli -s="$PW_SESSION" close` |
+
+**Common pitfalls to verify against:**
+- Built bundle not deployed to the location the server actually reads from
+- Server/worker caching stale bundles (check DOM classes match source)
+- CSS layout issues invisible to unit tests (scroll containers, overflow, z-index)
+- Elements present in DOM but not visible/interactive at runtime
+
+**If you skip this step, you WILL ship broken UI.** A passing `renderToString` test does not prove the feature works.
+
 ### Output Correctness
 
 **Running without errors ≠ correct output.** If code processes external data, fetch that data independently and compare. Numbers and content MUST match.

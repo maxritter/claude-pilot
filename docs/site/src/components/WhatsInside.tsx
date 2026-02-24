@@ -46,7 +46,7 @@ const insideItems: InsideItem[] = [
     title: "Persistent Memory",
     description: "Context carries across sessions",
     summary:
-      "Every decision, discovery, and debugging insight is captured to Pilot Console. Pick up any project after days or weeks — Claude already knows your architecture, patterns, and past work.",
+      "Every decision, discovery, and debugging insight is captured to Pilot Shell Console. Pick up any project after days or weeks — Claude already knows your architecture, patterns, and past work.",
   },
   {
     icon: Plug2,
@@ -133,7 +133,7 @@ const ConsoleShowcase = ({ visible }: { visible: boolean }) => {
     >
       <div className="text-center mb-6">
         <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">
-          Pilot Console
+          Pilot Shell Console
         </h3>
         <p className="text-muted-foreground text-sm sm:text-base">
           Real-time notifications, session management, usage analytics, and

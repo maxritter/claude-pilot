@@ -85,7 +85,7 @@
       "[PILOT] Pilot Memory: Claude remembers your past sessions and relevant context automatically",
       "[PILOT] Auto-compaction preserves state seamlessly — no context is ever lost between compaction cycles",
       "[PILOT] Context Monitor tracks usage — auto-compaction fires automatically, no context is ever lost",
-      "[PILOT] Pilot Console: Browse your memory, sessions, and specs at localhost:41777",
+      "[PILOT] Pilot Shell Console: Browse your memory, sessions, and specs at localhost:41777",
       "[PILOT] Vexor: Semantic search that finds code by meaning, not just text matching",
       "[PILOT] Context7: Claude fetches up-to-date library docs when you use unfamiliar packages",
       "[PILOT] grep-mcp: Search 1M+ public GitHub repos for real-world code patterns and examples",

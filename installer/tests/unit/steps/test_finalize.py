@@ -19,7 +19,7 @@ class TestGetPilotVersion:
 
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout="Claude Pilot v5.2.3",
+            stdout="Pilot Shell v5.2.3",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -27,7 +27,7 @@ class TestGetPilotVersion:
                 bin_dir = Path(tmpdir) / ".pilot" / "bin"
                 bin_dir.mkdir(parents=True)
                 pilot_path = bin_dir / "pilot"
-                pilot_path.write_text("#!/bin/bash\necho 'Claude Pilot v5.2.3'")
+                pilot_path.write_text("#!/bin/bash\necho 'Pilot Shell v5.2.3'")
 
                 version = _get_pilot_version()
                 assert version == "5.2.3"
@@ -39,7 +39,7 @@ class TestGetPilotVersion:
 
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout="Claude Pilot vdev-abc1234-20260125",
+            stdout="Pilot Shell vdev-abc1234-20260125",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:

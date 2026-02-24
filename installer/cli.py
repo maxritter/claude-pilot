@@ -106,7 +106,7 @@ def _start_trial(
                 data = json.loads(output)
                 if data.get("error") == "trial_already_used":
                     console.error("Trial has already been used on this machine")
-                    console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
+                    console.print("  [cyan]Subscribe at: https://pilot-shell.com[/cyan]")
                 else:
                     detail = data.get("detail", data.get("error", "Unknown error"))
                     console.error(f"Failed to start trial: {detail}")
@@ -256,12 +256,12 @@ def _prompt_license_key(
         if attempt < max_attempts - 1:
             console.print()
             console.print("  [dim]Please check your license key and try again.[/dim]")
-            console.print("  [dim]Subscribe: https://claude-pilot.com[/dim]")
+            console.print("  [dim]Subscribe: https://pilot-shell.com[/dim]")
             console.print()
 
     console.print()
     console.error(f"License validation failed after {max_attempts} attempts.")
-    console.print("  [bold]Subscribe at:[/bold] [cyan]https://claude-pilot.com[/cyan]")
+    console.print("  [bold]Subscribe at:[/bold] [cyan]https://pilot-shell.com[/cyan]")
     console.print()
     return False
 
@@ -281,7 +281,7 @@ def _handle_license_flow(
 
         if tier == "trial" and is_expired:
             console.print()
-            console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
+            console.print("  [cyan]Subscribe at: https://pilot-shell.com[/cyan]")
             console.print()
             console.print("  [bold]Enter your license key to continue:[/bold]")
             console.print()
@@ -299,7 +299,7 @@ def _handle_license_flow(
 
     if trial_used and not can_reactivate:
         console.print("  [bold yellow]Trial has expired on this machine.[/bold yellow]")
-        console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
+        console.print("  [cyan]Subscribe at: https://pilot-shell.com[/cyan]")
         console.print()
         console.print("  Please enter a license key to continue.")
         console.print()
@@ -316,7 +316,7 @@ def _handle_license_flow(
                 console.success("Your trial is active!")
                 console.print("  Trial ends today.")
             console.print()
-            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://claude-pilot.com[/cyan]")
+            console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://pilot-shell.com[/cyan]")
             console.print()
         else:
             console.print()
@@ -329,7 +329,7 @@ def _handle_license_flow(
 
 
 def cmd_install(args: argparse.Namespace) -> int:
-    """Install Claude Pilot."""
+    """Install Pilot Shell."""
     console = Console(non_interactive=args.non_interactive, quiet=args.quiet)
 
     effective_local_repo_dir = args.local_repo_dir if args.local_repo_dir else (Path.cwd() if args.local else None)
@@ -412,11 +412,11 @@ def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser(
         prog="installer",
-        description="Claude Pilot Installer",
+        description="Pilot Shell Installer",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    install_parser = subparsers.add_parser("install", help="Install Claude Pilot")
+    install_parser = subparsers.add_parser("install", help="Install Pilot Shell")
     install_parser.add_argument(
         "-n",
         "--non-interactive",

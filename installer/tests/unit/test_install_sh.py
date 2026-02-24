@@ -118,7 +118,7 @@ def test_install_sh_no_global_install_mode():
 
 
 def test_install_sh_replaces_devcontainer_project_name():
-    """Verify install.sh has sed commands to replace claude-pilot with project name."""
+    """Verify install.sh has sed commands to replace pilot-shell with project name."""
     install_sh = Path(__file__).parent.parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
@@ -126,10 +126,10 @@ def test_install_sh_replaces_devcontainer_project_name():
     assert "basename" in content, "Must use basename to get directory name"
     assert "tr '[:upper:]' '[:lower:]'" in content, "Must convert to lowercase"
 
-    assert '"claude-pilot"' in content, "Must have pattern for quoted claude-pilot"
+    assert '"pilot-shell"' in content, "Must have pattern for quoted pilot-shell"
     assert "${PROJECT_SLUG}" in content, "Must substitute PROJECT_SLUG"
 
-    assert "/workspaces/claude-pilot" in content, "Must have pattern for workspace path"
+    assert "/workspaces/pilot-shell" in content, "Must have pattern for workspace path"
 
 
 def test_install_sh_preserves_github_url_in_devcontainer(tmp_path: Path):
@@ -138,16 +138,16 @@ def test_install_sh_preserves_github_url_in_devcontainer(tmp_path: Path):
     devcontainer_dir.mkdir()
     devcontainer_json = devcontainer_dir / "devcontainer.json"
     devcontainer_json.write_text("""{
-  "name": "claude-pilot",
-  "runArgs": ["--name", "claude-pilot"],
-  "workspaceFolder": "/workspaces/claude-pilot",
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/v5.0.6/install.sh | bash"
+  "name": "pilot-shell",
+  "runArgs": ["--name", "pilot-shell"],
+  "workspaceFolder": "/workspaces/pilot-shell",
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/v5.0.6/install.sh | bash"
 }""")
 
     project_slug = "my-cool-project"
     content = devcontainer_json.read_text()
-    content = content.replace('"claude-pilot"', f'"{project_slug}"')
-    content = content.replace("/workspaces/claude-pilot", f"/workspaces/{project_slug}")
+    content = content.replace('"pilot-shell"', f'"{project_slug}"')
+    content = content.replace("/workspaces/pilot-shell", f"/workspaces/{project_slug}")
     devcontainer_json.write_text(content)
 
     result = devcontainer_json.read_text()
@@ -156,7 +156,7 @@ def test_install_sh_preserves_github_url_in_devcontainer(tmp_path: Path):
     assert f'"--name", "{project_slug}"' in result, "runArgs name must be replaced"
     assert f'"/workspaces/{project_slug}"' in result, "workspaceFolder must be replaced"
 
-    assert "maxritter/claude-pilot/v5.0.6" in result, "GitHub URL must be preserved"
+    assert "maxritter/pilot-shell/v5.0.6" in result, "GitHub URL must be preserved"
 
 
 def test_install_sh_sed_handles_special_project_names(tmp_path: Path):
@@ -180,8 +180,8 @@ def test_install_sh_sed_handles_special_project_names(tmp_path: Path):
         devcontainer_dir.mkdir(exist_ok=True)
         devcontainer_json = devcontainer_dir / "devcontainer.json"
         devcontainer_json.write_text("""{
-  "name": "claude-pilot",
-  "workspaceFolder": "/workspaces/claude-pilot"
+  "name": "pilot-shell",
+  "workspaceFolder": "/workspaces/pilot-shell"
 }""")
 
         project_slug = slugify(project_name)
@@ -190,8 +190,8 @@ def test_install_sh_sed_handles_special_project_names(tmp_path: Path):
         )
 
         content = devcontainer_json.read_text()
-        content = content.replace('"claude-pilot"', f'"{project_slug}"')
-        content = content.replace("/workspaces/claude-pilot", f"/workspaces/{project_slug}")
+        content = content.replace('"pilot-shell"', f'"{project_slug}"')
+        content = content.replace("/workspaces/pilot-shell", f"/workspaces/{project_slug}")
         devcontainer_json.write_text(content)
 
         content = devcontainer_json.read_text()

@@ -7,7 +7,8 @@ CLAUDE_DIR="$HOME/.claude"
 PILOT_PLUGIN_DIR="$CLAUDE_DIR/pilot"
 MANIFEST_FILE="$CLAUDE_DIR/.pilot-manifest.json"
 
-CLAUDE_ALIAS_MARKER="# Claude Pilot"
+CLAUDE_ALIAS_MARKER="# Pilot Shell"
+OLD_CLAUDE_PILOT_MARKER="# Claude Pilot"
 OLD_CCP_MARKER="# Claude CodePro alias"
 
 removed_items=()
@@ -16,7 +17,7 @@ get_pilot_version() {
 	local pilot_path="$PILOT_DIR/bin/pilot"
 	if [ -x "$pilot_path" ]; then
 		local version
-		version=$("$pilot_path" --version 2>/dev/null | sed -n 's/.*Pilot v\(.*\)/\1/p') || true
+		version=$("$pilot_path" --version 2>/dev/null | sed -n 's/.* v\([^ ]*\).*/\1/p') || true
 		if [ -n "$version" ]; then
 			echo "$version"
 			return
@@ -41,6 +42,7 @@ get_affected_shell_configs() {
 	)
 	for config_file in "${config_files[@]}"; do
 		if [ -f "$config_file" ] && grep -q -e "$CLAUDE_ALIAS_MARKER" \
+			-e "$OLD_CLAUDE_PILOT_MARKER" \
 			-e "$OLD_CCP_MARKER" \
 			-e "alias ccp=" \
 			-e "alias pilot=" \
@@ -58,7 +60,7 @@ confirm_uninstall() {
 
 	echo ""
 	echo "======================================================================"
-	echo "  Claude Pilot Uninstaller (v${version})"
+	echo "  Pilot Shell Uninstaller (v${version})"
 	echo "======================================================================"
 	echo ""
 
@@ -143,6 +145,7 @@ remove_shell_aliases() {
 		fi
 
 		if ! grep -q -e "$CLAUDE_ALIAS_MARKER" \
+			-e "$OLD_CLAUDE_PILOT_MARKER" \
 			-e "$OLD_CCP_MARKER" \
 			-e "alias ccp=" \
 			-e "alias pilot=" \
@@ -156,6 +159,7 @@ remove_shell_aliases() {
 		tmp_file=$(mktemp)
 
 		awk '
+		/# Pilot Shell/ { next }
 		/# Claude Pilot/ { next }
 		/# Claude CodePro alias/ { next }
 		/^[[:space:]]*alias ccp=/ { next }
@@ -349,9 +353,9 @@ print_summary() {
 	echo "======================================================================"
 
 	if [ ${#removed_items[@]} -eq 0 ]; then
-		echo "  Nothing to remove. Claude Pilot does not appear to be installed."
+		echo "  Nothing to remove. Pilot Shell does not appear to be installed."
 	else
-		echo "  Claude Pilot has been uninstalled."
+		echo "  Pilot Shell has been uninstalled."
 		echo ""
 		echo "  Removed ${#removed_items[@]} items:"
 		for item in "${removed_items[@]}"; do
@@ -389,7 +393,7 @@ while [ $# -gt 0 ]; do
 	--help | -h)
 		echo "Usage: uninstall.sh [--yes|-y]"
 		echo ""
-		echo "Uninstall Claude Pilot and remove all installed files."
+		echo "Uninstall Pilot Shell and remove all installed files."
 		echo ""
 		echo "Options:"
 		echo "  --yes, -y    Skip confirmation prompt"
@@ -407,10 +411,10 @@ done
 if ! [ -d "$PILOT_DIR" ] && ! [ -d "$PILOT_PLUGIN_DIR" ] && ! [ -f "$MANIFEST_FILE" ]; then
 	echo ""
 	echo "======================================================================"
-	echo "  Claude Pilot Uninstaller"
+	echo "  Pilot Shell Uninstaller"
 	echo "======================================================================"
 	echo ""
-	echo "  Nothing to remove. Claude Pilot does not appear to be installed."
+	echo "  Nothing to remove. Pilot Shell does not appear to be installed."
 	echo ""
 	echo "======================================================================"
 	echo ""
@@ -422,12 +426,12 @@ if [ "$SKIP_CONFIRM" = false ]; then
 else
 	echo ""
 	echo "======================================================================"
-	echo "  Claude Pilot Uninstaller"
+	echo "  Pilot Shell Uninstaller"
 	echo "======================================================================"
 fi
 
 echo ""
-echo "  Uninstalling Claude Pilot..."
+echo "  Uninstalling Pilot Shell..."
 echo ""
 
 remove_shell_aliases

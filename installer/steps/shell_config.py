@@ -9,7 +9,8 @@ from installer.platform_utils import get_shell_config_files
 from installer.steps.base import BaseStep
 
 OLD_CCP_MARKER = "# Claude CodePro alias"
-CLAUDE_ALIAS_MARKER = "# Claude Pilot"
+OLD_CLAUDE_PILOT_MARKER = "# Claude Pilot"
+CLAUDE_ALIAS_MARKER = "# Pilot Shell"
 PILOT_BIN = "$HOME/.pilot/bin/pilot"
 PILOT_BIN_DIR = "$HOME/.pilot/bin"
 BUN_BIN_PATH = "$HOME/.bun/bin"
@@ -31,6 +32,7 @@ def alias_exists_in_file(config_file: Path) -> bool:
     content = config_file.read_text()
     return (
         CLAUDE_ALIAS_MARKER in content
+        or OLD_CLAUDE_PILOT_MARKER in content
         or OLD_CCP_MARKER in content
         or "alias ccp" in content
         or "alias claude" in content
@@ -46,6 +48,7 @@ def remove_old_alias(config_file: Path) -> bool:
     content = config_file.read_text()
     has_old = (
         OLD_CCP_MARKER in content
+        or OLD_CLAUDE_PILOT_MARKER in content
         or CLAUDE_ALIAS_MARKER in content
         or "alias ccp" in content
         or "alias claude" in content
@@ -70,7 +73,7 @@ def remove_old_alias(config_file: Path) -> bool:
     for line in lines:
         stripped = line.strip()
 
-        if OLD_CCP_MARKER in line or CLAUDE_ALIAS_MARKER in line:
+        if OLD_CCP_MARKER in line or OLD_CLAUDE_PILOT_MARKER in line or CLAUDE_ALIAS_MARKER in line:
             continue
 
         if (

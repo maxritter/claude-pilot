@@ -24,7 +24,7 @@ def _get_pilot_version() -> str:
                 timeout=5,
             )
             if result.returncode == 0:
-                match = re.search(r"Pilot v(.+)$", result.stdout.strip())
+                match = re.search(r" v(\S+)$", result.stdout.strip())
                 if match:
                     return match.group(1)
         except Exception:
@@ -95,7 +95,7 @@ class FinalizeStep(BaseStep):
         if not ui.quiet:
             ui.rule()
             ui.print()
-            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/claude-pilot")
+            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/pilot-shell")
             ui.print()
             ui.print(f"  [dim]Installed version: {_get_pilot_version()}[/dim]")
             ui.print()

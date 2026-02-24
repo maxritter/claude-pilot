@@ -2,7 +2,7 @@
 
 set -e
 
-REPO="maxritter/claude-pilot"
+REPO="maxritter/pilot-shell"
 
 VERSION="${VERSION:-}"
 VERSION="${VERSION#v}"
@@ -195,8 +195,8 @@ setup_devcontainer() {
 		PROJECT_NAME="$(basename "$(pwd)")"
 		PROJECT_SLUG="$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')"
 		if [ -f ".devcontainer/devcontainer.json" ]; then
-			sed -i.bak 's/"claude-pilot"/"'"${PROJECT_SLUG}"'"/g' ".devcontainer/devcontainer.json"
-			sed -i.bak 's|/workspaces/claude-pilot|/workspaces/'"${PROJECT_SLUG}"'|g' ".devcontainer/devcontainer.json"
+			sed -i.bak 's/"pilot-shell"/"'"${PROJECT_SLUG}"'"/g' ".devcontainer/devcontainer.json"
+			sed -i.bak 's|/workspaces/pilot-shell|/workspaces/'"${PROJECT_SLUG}"'|g' ".devcontainer/devcontainer.json"
 			rm -f ".devcontainer/devcontainer.json.bak"
 		fi
 
@@ -399,7 +399,7 @@ download_pilot_binary() {
 	fi
 
 	local installed_version
-	installed_version=$(echo "$pilot_version" | sed -n 's/.*Pilot v\(.*\)/\1/p')
+	installed_version=$(echo "$pilot_version" | sed -n 's/.* v\([^ ]*\).*/\1/p')
 
 	if [ -z "$installed_version" ]; then
 		echo "  [!!] Could not determine pilot version"
@@ -441,7 +441,7 @@ is_native_windows() {
 if is_native_windows && ! is_in_container; then
 	echo ""
 	echo "======================================================================"
-	echo "  Claude Pilot — Windows Detected (no WSL2)"
+	echo "  Pilot Shell — Windows Detected (no WSL2)"
 	echo "======================================================================"
 	echo ""
 	echo "  Pilot's local mode requires a Unix environment (macOS, Linux, or WSL2)."
@@ -487,7 +487,7 @@ fi
 if ! is_in_container; then
 	echo ""
 	echo "======================================================================"
-	echo "  Claude Pilot Installer (v${VERSION})"
+	echo "  Pilot Shell Installer (v${VERSION})"
 	echo "======================================================================"
 	echo ""
 	echo "  Current project folder: $(pwd)"
@@ -534,7 +534,7 @@ if ! is_in_container; then
 fi
 
 echo ""
-echo "Downloading Claude Pilot (v${VERSION})..."
+echo "Downloading Pilot Shell (v${VERSION})..."
 echo ""
 
 if check_uv; then
@@ -572,7 +572,7 @@ if [ "$USE_LOCAL_INSTALLER" = true ]; then
 		ln -sf "$(pwd)/installer" "$HOME/.pilot/installer/installer"
 		ln -sf "$(pwd)/pyproject.toml" "$HOME/.pilot/installer/pyproject.toml"
 	else
-		echo "  [!!] --local requires running from claude-pilot repo root"
+		echo "  [!!] --local requires running from pilot-shell repo root"
 		echo "  [!!] Missing: installer/ directory or pyproject.toml"
 		exit 1
 	fi
@@ -587,7 +587,7 @@ if [ "$RESTART_PILOT" = true ]; then
 	PILOT_BIN="$HOME/.pilot/bin/pilot"
 	if [ -x "$PILOT_BIN" ]; then
 		echo ""
-		echo "  Restarting Claude Pilot..."
+		echo "  Restarting Pilot Shell..."
 		echo ""
 		exec "$PILOT_BIN" --skip-update-check
 	fi

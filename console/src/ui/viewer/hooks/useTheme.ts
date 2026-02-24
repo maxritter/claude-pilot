@@ -30,7 +30,7 @@ function resolveTheme(preference: ThemePreference): ResolvedTheme {
 }
 
 function getThemeName(theme: ResolvedTheme): string {
-  return theme === 'dark' ? 'claude-pilot' : 'claude-pilot-light';
+  return theme === 'dark' ? 'pilot-shell' : 'pilot-shell-light';
 }
 
 export function useTheme() {

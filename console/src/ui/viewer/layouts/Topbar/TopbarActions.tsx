@@ -63,7 +63,7 @@ export function TopbarActions({
       </Tooltip>
       <Tooltip text="Repository" position="bottom">
         <a
-          href="https://github.com/maxritter/claude-pilot"
+          href="https://github.com/maxritter/pilot-shell"
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-ghost btn-sm"

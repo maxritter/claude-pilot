@@ -68,12 +68,12 @@ export function ActivationModal({ open, onClose, onActivated }: ActivationModalP
           <p className="text-xs text-base-content/60">
             Don't have a key? Get one at{' '}
             <a
-              href="https://claude-pilot.com/#pricing"
+              href="https://pilot-shell.com/#pricing"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline font-medium"
             >
-              claude-pilot.com
+              pilot-shell.com
             </a>
           </p>
         </div>

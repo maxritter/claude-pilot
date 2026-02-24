@@ -105,7 +105,7 @@ export function App() {
       <div
         className="min-h-screen flex items-center justify-center bg-base-200"
         data-theme={
-          resolvedTheme === "dark" ? "claude-pilot" : "claude-pilot-light"
+          resolvedTheme === "dark" ? "pilot-shell" : "pilot-shell-light"
         }
       >
         <span className="loading loading-spinner loading-lg text-primary" />
@@ -117,7 +117,7 @@ export function App() {
     return (
       <div
         data-theme={
-          resolvedTheme === "dark" ? "claude-pilot" : "claude-pilot-light"
+          resolvedTheme === "dark" ? "pilot-shell" : "pilot-shell-light"
         }
       >
         <LicenseGate license={license} onActivated={refetchLicense} />

@@ -22,7 +22,7 @@ class TestSpecStopGuard:
     @patch("sys.stdin")
     def test_allows_stop_when_waiting_for_input(self, mock_stdin, mock_waiting, mock_find_plan):
         """Should allow stop (return 0) when waiting for user input."""
-        mock_find_plan.return_value = (Path("/plan.md"), "PENDING", True)
+        mock_find_plan.return_value = (Path("/plan.md"), "PENDING")
         mock_waiting.return_value = True
         mock_stdin.read.return_value = json.dumps({"transcript_path": "/transcript.jsonl", "stop_hook_active": False})
 
@@ -38,7 +38,7 @@ class TestSpecStopGuard:
         self, mock_stdin, mock_time, mock_guard_path, mock_waiting, mock_find_plan
     ):
         """Should allow stop when cooldown escape hatch is triggered (double-stop)."""
-        mock_find_plan.return_value = (Path("/plan.md"), "PENDING", True)
+        mock_find_plan.return_value = (Path("/plan.md"), "PENDING")
         mock_waiting.return_value = False
         mock_time.return_value = 100.0
 
@@ -59,7 +59,7 @@ class TestSpecStopGuard:
     @patch("sys.stdin")
     def test_allows_stop_when_no_active_plan(self, mock_stdin, mock_find_plan):
         """Should allow stop when there's no active plan."""
-        mock_find_plan.return_value = (None, None, False)
+        mock_find_plan.return_value = (None, None)
         mock_stdin.read.return_value = json.dumps({"transcript_path": "/transcript.jsonl", "stop_hook_active": False})
 
         result = main()
@@ -74,7 +74,7 @@ class TestSpecStopGuard:
         self, mock_stdin, mock_time, mock_guard_path, mock_waiting, mock_find_plan, capsys
     ):
         """Should block stop and output JSON when outside cooldown window."""
-        mock_find_plan.return_value = (Path("/plan.md"), "PENDING", True)
+        mock_find_plan.return_value = (Path("/plan.md"), "PENDING")
         mock_waiting.return_value = False
         mock_time.return_value = 200.0
 

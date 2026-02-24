@@ -49,8 +49,8 @@ export function LicenseGate({ license, onActivated }: LicenseGateProps) {
   const isExpired = license?.isExpired === true;
   const title = isExpired ? 'License Expired' : 'License Required';
   const subtitle = isExpired
-    ? 'Your Claude Pilot license has expired. Please activate a new license to continue using the Console.'
-    : 'Claude Pilot Console requires an active license or trial. Activate your license key below to get started.';
+    ? 'Your Pilot Shell license has expired. Please activate a new license to continue using the Console.'
+    : 'Pilot Shell Console requires an active license or trial. Activate your license key below to get started.';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-200 p-4">
@@ -91,7 +91,7 @@ export function LicenseGate({ license, onActivated }: LicenseGateProps) {
           <div className="divider text-base-content/40 text-xs my-1">or</div>
 
           <a
-            href="https://claude-pilot.com/#pricing"
+            href="https://pilot-shell.com/#pricing"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-outline btn-sm w-full"
@@ -102,14 +102,14 @@ export function LicenseGate({ license, onActivated }: LicenseGateProps) {
           <p className="text-base-content/40 text-xs mt-2">
             Visit{' '}
             <a
-              href="https://claude-pilot.com"
+              href="https://pilot-shell.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              claude-pilot.com
+              pilot-shell.com
             </a>
-            {' '}to learn more about Claude Pilot.
+            {' '}to learn more about Pilot Shell.
           </p>
         </div>
       </div>

@@ -74,7 +74,7 @@ function insertSummary(
 
 describe("Cross-session memory isolation (integration)", () => {
   let store: SessionStore;
-  const PROJECT = "claude-pilot";
+  const PROJECT = "pilot-shell";
   const config = makeConfig();
 
   beforeEach(() => {

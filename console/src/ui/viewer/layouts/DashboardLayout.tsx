@@ -27,7 +27,7 @@ export function DashboardLayout({
   sidebarCollapsed,
   onToggleSidebar,
 }: DashboardLayoutProps) {
-  const themeName = theme === 'dark' ? 'claude-pilot' : 'claude-pilot-light';
+  const themeName = theme === 'dark' ? 'pilot-shell' : 'pilot-shell-light';
 
   return (
     <div className="dashboard-layout flex min-h-screen" data-theme={themeName}>

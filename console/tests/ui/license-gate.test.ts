@@ -53,14 +53,14 @@ describe("LicenseGate", () => {
   it("should contain link to pricing page", () => {
     const html = renderGate(null);
 
-    expect(html).toContain("claude-pilot.com/#pricing");
+    expect(html).toContain("pilot-shell.com/#pricing");
     expect(html).toContain("Get a License");
   });
 
   it("should contain link to main site", () => {
     const html = renderGate(null);
 
-    expect(html).toContain("claude-pilot.com");
+    expect(html).toContain("pilot-shell.com");
   });
 
   it("should render activate button as disabled by default (empty key)", () => {

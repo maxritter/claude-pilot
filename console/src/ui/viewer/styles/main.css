@@ -3,9 +3,9 @@
     exclude: rootscrollgutter, radialprogress, properties;
 }
 
-/* == Custom Dark Theme (Claude Pilot) == */
+/* == Custom Dark Theme (Pilot Shell) == */
 @plugin "daisyui/theme" {
-    name: "claude-pilot";
+    name: "pilot-shell";
     default: true;
     color-scheme: dark;
     prefersdark: true;
@@ -49,7 +49,7 @@
 
 /* == Light Theme == */
 @plugin "daisyui/theme" {
-    name: "claude-pilot-light";
+    name: "pilot-shell-light";
     color-scheme: light;
 
     /* == Layout Colors == */

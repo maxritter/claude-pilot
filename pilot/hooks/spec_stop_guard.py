@@ -31,52 +31,39 @@ def get_stop_guard_path() -> Path:
     return guard_dir / "spec-stop-guard"
 
 
-def find_active_plan() -> tuple[Path | None, str | None, bool]:
+def find_active_plan() -> tuple[Path | None, str | None]:
     """Find the active plan for THIS session via session-scoped active_plan.json."""
     plan_json = get_session_plan_path()
     if not plan_json.exists():
-        return None, None, False
+        return None, None
 
     try:
         data = json.loads(plan_json.read_text())
         plan_path_str = data.get("plan_path", "")
     except (json.JSONDecodeError, OSError):
-        return None, None, False
+        return None, None
 
     if not plan_path_str:
-        return None, None, False
+        return None, None
 
     plan_file = Path(plan_path_str)
     if not plan_file.is_absolute():
         project_root = os.environ.get("CLAUDE_PROJECT_ROOT", str(Path.cwd()))
         plan_file = Path(project_root) / plan_file
     if not plan_file.exists():
-        return None, None, False
+        return None, None
 
     try:
         content = plan_file.read_text()
         status_match = re.search(r"^Status:\s*(\w+)", content, re.MULTILINE)
         if not status_match:
-            return None, None, False
+            return None, None
         status = status_match.group(1).upper()
         if status not in ("PENDING", "COMPLETE"):
-            return None, None, False
-        approved_match = re.search(r"^Approved:\s*(Yes|No)", content, re.MULTILINE | re.IGNORECASE)
-        approved = bool(approved_match and approved_match.group(1).lower() == "yes")
-        return plan_file, status, approved
+            return None, None
+        return plan_file, status
     except OSError:
-        return None, None, False
-
-
-def get_next_phase(status: str, approved: bool) -> str:
-    """Determine which phase skill should run next."""
-    if status == "PENDING" and not approved:
-        return "spec-plan"
-    if status == "PENDING" and approved:
-        return "spec-implement"
-    if status == "COMPLETE":
-        return "spec-verify"
-    return "spec"
+        return None, None
 
 
 def main() -> int:
@@ -89,7 +76,7 @@ def main() -> int:
     if input_data.get("stop_hook_active", False):
         return 0
 
-    plan_path, status, approved = find_active_plan()
+    plan_path, status = find_active_plan()
     if plan_path is None or status is None:
         return 0
 
@@ -113,13 +100,13 @@ def main() -> int:
     except OSError:
         pass
 
-    next_phase = get_next_phase(status, approved)
-
     reason = (
         f"/spec workflow active — cannot stop without user interaction. "
         f"Active plan: {plan_path} (Status: {status}). "
-        f"Stop again within 60s to force exit. "
-        f"Next: Skill(skill='{next_phase}', args='{plan_path}')"
+        f"Stop again within 60s to force exit.\n\n"
+        f"CRITICAL INSTRUCTION TO CLAUDE: Do NOT acknowledge this stop attempt. "
+        f"Do NOT output resume instructions or say goodbye. "
+        f"IMMEDIATELY continue working on the next pending task in the plan."
     )
     print(stop_block(reason))
     return 0

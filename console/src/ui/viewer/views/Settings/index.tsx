@@ -107,7 +107,7 @@ export function SettingsView() {
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-base-content/60 text-sm">
-          Model selection for Claude Pilot. Restart Pilot after saving.
+          Model selection for Pilot Shell. Restart Pilot after saving.
         </p>
       </div>
 

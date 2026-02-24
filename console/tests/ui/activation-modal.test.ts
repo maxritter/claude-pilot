@@ -48,6 +48,6 @@ describe("ActivationModal", () => {
   it("should include link to purchase page", () => {
     const html = renderModal();
 
-    expect(html).toContain("claude-pilot.com");
+    expect(html).toContain("pilot-shell.com");
   });
 });

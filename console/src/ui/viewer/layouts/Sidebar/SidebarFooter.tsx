@@ -21,7 +21,7 @@ export function SidebarFooter({ workerStatus, version, queueDepth = 0, collapsed
   if (collapsed) {
     return (
       <div className="p-3 border-t border-base-300/50">
-        <Tooltip text={`Claude Pilot ${versionLabel ?? ''} · Worker ${config.label}`}>
+        <Tooltip text={`Pilot Shell ${versionLabel ?? ''} · Worker ${config.label}`}>
           <div className="flex justify-center">
             <Icon
               icon={config.icon}
@@ -51,7 +51,7 @@ export function SidebarFooter({ workerStatus, version, queueDepth = 0, collapsed
       </div>
       {versionLabel && (
         <div className="text-xs text-base-content/40 text-center">
-          Claude Pilot {versionLabel}
+          Pilot Shell {versionLabel}
         </div>
       )}
     </div>

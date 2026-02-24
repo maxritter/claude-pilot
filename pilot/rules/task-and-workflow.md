@@ -185,3 +185,7 @@ Update plan file after EACH task: `[ ]` → `[x]`, increment Done, decrement Lef
 ## No Stopping — Automatic Continuation
 
 The ONLY user interaction points are worktree choice (+ type confirmation when ambiguous), plan approval, and worktree sync approval.
+
+### ⛔ Stop Guard — NEVER Acknowledge Blocked Stops
+
+When the stop guard blocks a stop during `/spec`, **do NOT acknowledge the stop, output resume instructions, or say goodbye.** Continue working as if nothing happened — either proceed with the next pending task or invoke the appropriate phase transition, whichever applies.

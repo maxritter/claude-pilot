@@ -84,7 +84,7 @@ describe("Topbar no longer contains project selector", () => {
     );
 
     expect(html).not.toContain("<select");
-    expect(html).toContain("Claude Pilot");
+    expect(html).toContain("Pilot Shell");
     expect(html).toContain("Max Ritter");
   });
 });

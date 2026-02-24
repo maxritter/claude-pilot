@@ -22,12 +22,12 @@ export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
         <span>
           &copy; {new Date().getFullYear()}{' '}
           <a
-            href="https://claude-pilot.com"
+            href="https://pilot-shell.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary/70 hover:text-primary transition-colors"
           >
-            Claude Pilot
+            Pilot Shell
           </a>
         </span>
         <span className="text-base-content/20">|</span>
@@ -48,7 +48,7 @@ export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
           <>
             <span className="text-base-content/20">|</span>
             <a
-              href="https://claude-pilot.com/#pricing"
+              href="https://pilot-shell.com/#pricing"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary/70 hover:text-primary transition-colors"

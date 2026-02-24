@@ -204,7 +204,7 @@ export function SpecView() {
                 <code className="text-primary bg-base-300 px-1 rounded">
                   /spec
                 </code>{" "}
-                in Claude Pilot to start a spec-driven development workflow.
+                in Pilot Shell to start a spec-driven development workflow.
               </p>
             </div>
           </CardBody>

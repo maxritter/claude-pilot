@@ -115,7 +115,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Pilot S
 If the current version has issues, you can install a specific stable version (see [releases](https://github.com/maxritter/pilot-shell/releases)):
 
 ```bash
-export VERSION=7.0.1
+export VERSION=7.0.2
 curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 

@@ -2,6 +2,17 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.0.2] - 2026-02-24
+
+### Bug Fixes
+
+- Vexor test mocking, site responsiveness, and README consolidation
+- Add vexor runtime check to installer and update dependencies
+
+### Miscellaneous
+
+- Update logo images and fix footer tagline wrapping
+
 ## [7.0.1] - 2026-02-24
 
 ### Bug Fixes

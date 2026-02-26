@@ -85,7 +85,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Pilot S
 **Specific version** (see [releases](https://github.com/maxritter/pilot-shell/releases)):
 
 ```bash
-export VERSION=7.0.4
+export VERSION=7.0.5
 curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 

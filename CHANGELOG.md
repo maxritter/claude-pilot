@@ -2,6 +2,13 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.0.5] - 2026-02-26
+
+### Bug Fixes
+
+- Remove aggressive comment stripping from quality hooks and preserve user permission settings
+- Mock all subprocess-calling functions in unit tests
+
 ## [7.0.4] - 2026-02-25
 
 ### Bug Fixes
